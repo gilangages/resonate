@@ -1,0 +1,284 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Notes API",
+        "description": "Public notes API with authentication and ownership control",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Local server"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "Token"
+            }
+        },
+        "schemas": {
+            "Note": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "content": {
+                        "type": "string",
+                        "example": "This is a public note"
+                    },
+                    "is_anonymous": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "author": {
+                        "type": "string",
+                        "example": "Abdi"
+                    },
+                    "spotify_track_id": {
+                        "type": "string",
+                        "example": "3n3Ppam7vgaVa1iaRUc9Lp"
+                    },
+                    "spotify_track_name": {
+                        "type": "string",
+                        "example": "Mr. Brightside"
+                    },
+                    "spotify_artist": {
+                        "type": "string",
+                        "example": "The Killers"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-01-03T10:20:30Z"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/api/notes": {
+            "get": {
+                "summary": "Get public notes",
+                "tags": ["Notes"],
+                "responses": {
+                    "200": {
+                        "description": "List of public notes",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "list": {
+                                        "summary": "Public notes list",
+                                        "value": [
+                                            {
+                                                "id": 1,
+                                                "content": "Hello world",
+                                                "is_anonymous": true,
+                                                "author": "Anonymous",
+                                                "spotify_track_name": "Yellow",
+                                                "spotify_artist": "Coldplay",
+                                                "created_at": "2026-01-03T08:00:00Z"
+                                            },
+                                            {
+                                                "id": 2,
+                                                "content": "Keep going 💪",
+                                                "is_anonymous": false,
+                                                "author": "Abdi",
+                                                "spotify_track_name": "Numb",
+                                                "spotify_artist": "Linkin Park",
+                                                "created_at": "2026-01-03T09:00:00Z"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Create new note",
+                "tags": ["Notes"],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["content"],
+                                "properties": {
+                                    "content": {
+                                        "type": "string"
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean"
+                                    },
+                                    "spotify_track_id": {
+                                        "type": "string"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "create_note": {
+                                    "summary": "Create note example",
+                                    "value": {
+                                        "content": "This song describes my mood today",
+                                        "is_anonymous": false,
+                                        "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Note created successfully",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "success": {
+                                        "summary": "Create success",
+                                        "value": {
+                                            "id": 10,
+                                            "content": "This song describes my mood today",
+                                            "is_anonymous": false,
+                                            "author": "Abdi",
+                                            "spotify_track_name": "Mr. Brightside",
+                                            "spotify_artist": "The Killers",
+                                            "created_at": "2026-01-03T10:20:30Z"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                }
+            }
+        },
+        "/api/notes/{id}": {
+            "get": {
+                "summary": "Get note detail",
+                "tags": ["Notes"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Note detail",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "detail": {
+                                        "summary": "Note detail example",
+                                        "value": {
+                                            "id": 2,
+                                            "content": "Keep going 💪",
+                                            "is_anonymous": false,
+                                            "author": "Abdi",
+                                            "spotify_track_name": "Numb",
+                                            "spotify_artist": "Linkin Park",
+                                            "created_at": "2026-01-03T09:00:00Z"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Note not found"
+                    }
+                }
+            },
+            "put": {
+                "summary": "Update note",
+                "tags": ["Notes"],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "examples": {
+                                "update_note": {
+                                    "summary": "Update note example",
+                                    "value": {
+                                        "content": "Updated note content",
+                                        "is_anonymous": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Note updated successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden (not owner)"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete note",
+                "tags": ["Notes"],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Note deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden (not owner)"
+                    }
+                }
+            }
+        }
+    }
+}

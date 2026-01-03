@@ -1,0 +1,236 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "User API",
+        "description": "User authentication API for Notes Application",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8000",
+            "description": "Local server"
+        }
+    ],
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "Token"
+            }
+        },
+        "schemas": {
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Abdi"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "abdi@mail.com"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/api/users": {
+            "post": {
+                "summary": "Register new user",
+                "tags": ["User"],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "register": {
+                                    "summary": "Register example",
+                                    "value": {
+                                        "name": "Abdi",
+                                        "email": "abdi@mail.com",
+                                        "password": "secret123",
+                                        "password_confirmation": "secret123"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "success": {
+                                        "summary": "Register success",
+                                        "value": {
+                                            "message": "User registered successfully"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "validation_error": {
+                                        "summary": "Email already taken",
+                                        "value": {
+                                            "message": "The given data was invalid.",
+                                            "errors": {
+                                                "email": [
+                                                    "The email has already been taken."
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/login": {
+            "post": {
+                "summary": "Login user",
+                "tags": ["User"],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["email", "password"],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                }
+                            },
+                            "examples": {
+                                "login": {
+                                    "summary": "Login example",
+                                    "value": {
+                                        "email": "abdi@mail.com",
+                                        "password": "secret123"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "success": {
+                                        "summary": "Login success",
+                                        "value": {
+                                            "user": {
+                                                "id": 1,
+                                                "name": "Abdi",
+                                                "email": "abdi@mail.com"
+                                            },
+                                            "token": "1|abcdef1234567890"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "invalid": {
+                                        "summary": "Wrong password",
+                                        "value": {
+                                            "message": "Invalid credentials"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/logout": {
+            "delete": {
+                "summary": "Logout user",
+                "tags": ["User"],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Logged out successfully"
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "unauthenticated": {
+                                        "summary": "Missing token",
+                                        "value": {
+                                            "message": "Unauthenticated."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
