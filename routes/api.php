@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\MusicController;
 use App\Http\Controllers\Api\Auth\NoteController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,3 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
 //music
 Route::get('/music/search', [MusicController::class, 'search']);
+
+Route::middleware('auth:sanctum')->group(function () {
+    // ... route notes yang sudah ada ...
+
+    // Tambahkan fitur Edit Profile di sini
+    Route::get('/users/current', [UserController::class, 'show']);
+    Route::patch('/users/current', [UserController::class, 'update']);
+
+    // ... route logout ...
+});
