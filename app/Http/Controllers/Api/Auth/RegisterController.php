@@ -25,11 +25,7 @@ class RegisterController extends Controller
 
         return response()->json([
             'message' => 'User registered successfully',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
+            'user' => $user, // <--- Lebih simpel, photo_url otomatis masuk
         ], 201);
     }
 }

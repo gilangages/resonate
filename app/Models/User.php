@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\Note;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -28,6 +29,12 @@ class User extends Authenticatable
     ];
 
     /**
+     * Tambahkan 'photo_url' ke dalam JSON response
+     * Jadi saat frontend request user, field ini otomatis ada.
+     */
+    protected $appends = ['photo_url'];
+
+    /**
      * The attributes that should be hidden for serialization.
      *
      * @var list<string>
@@ -48,6 +55,26 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Membuat Virtual Column: photo_url
+     */
+    protected function photoUrl(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                // Kita ambil nama user, misal "Abdi An"
+                $name = urlencode($this->name);
+
+                // Warna Tema Resonate (Maroon & Pinkish White)
+                $background = '9A203E';
+                $color = 'FFE4E6';
+
+                // Style: "notionists" (mirip gambar sketch Notion, cocok banget buat app Catatan!)
+                return "https://api.dicebear.com/9.x/notionists/svg?seed={$name}&backgroundColor=9a203e";
+            },
+        );
     }
 
     //user punya banyak notes

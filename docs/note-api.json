@@ -31,6 +31,11 @@
                         "type": "string",
                         "example": "This is a public note"
                     },
+                    "recipient": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Untuk Mantan Terindah"
+                    },
                     "is_anonymous": {
                         "type": "boolean",
                         "example": false
@@ -38,6 +43,10 @@
                     "author": {
                         "type": "string",
                         "example": "Abdi"
+                    },
+                    "author_avatar": {
+                        "type": "string",
+                        "example": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e"
                     },
                     "spotify_track_id": {
                         "type": "string",
@@ -95,8 +104,10 @@
                                             {
                                                 "id": 1,
                                                 "content": "Hello world",
+                                                "recipient": null,
                                                 "is_anonymous": true,
                                                 "author": "Anonymous",
+                                                "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Anon&backgroundColor=333",
                                                 "spotify_track_name": "Yellow",
                                                 "spotify_artist": "Coldplay",
                                                 "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273abc123",
@@ -107,8 +118,10 @@
                                             {
                                                 "id": 2,
                                                 "content": "Keep going 💪",
+                                                "recipient": "My Future Self",
                                                 "is_anonymous": false,
                                                 "author": "Abdi",
+                                                "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
                                                 "spotify_track_name": "Numb",
                                                 "spotify_artist": "Linkin Park",
                                                 "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273def456",
@@ -144,6 +157,11 @@
                                         "type": "string",
                                         "example": "This song describes my mood today"
                                     },
+                                    "recipient": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "Untuk Mantan Terindah"
+                                    },
                                     "is_anonymous": {
                                         "type": "boolean",
                                         "example": false
@@ -160,6 +178,7 @@
                                     "summary": "Create note example",
                                     "value": {
                                         "content": "This song describes my mood today",
+                                        "recipient": "Untuk Mantan Terindah",
                                         "is_anonymous": false,
                                         "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
                                     }
@@ -179,8 +198,10 @@
                                         "value": {
                                             "id": 10,
                                             "content": "This song describes my mood today",
+                                            "recipient": "Untuk Mantan Terindah",
                                             "is_anonymous": false,
                                             "author": "Abdi",
+                                            "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
                                             "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp",
                                             "spotify_track_name": "Mr. Brightside",
                                             "spotify_artist": "The Killers",
@@ -225,8 +246,10 @@
                                         "value": {
                                             "id": 2,
                                             "content": "Keep going 💪",
+                                            "recipient": "My Future Self",
                                             "is_anonymous": false,
                                             "author": "Abdi",
+                                            "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
                                             "spotify_track_id": "1kXn1fgj4GheIa3JkO9lmn",
                                             "spotify_track_name": "Numb",
                                             "spotify_artist": "Linkin Park",
@@ -274,6 +297,11 @@
                                         "type": "string",
                                         "example": "Updated note content"
                                     },
+                                    "recipient": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "Revised Recipient"
+                                    },
                                     "is_anonymous": {
                                         "type": "boolean",
                                         "example": true
@@ -290,6 +318,7 @@
                                     "summary": "Update note example",
                                     "value": {
                                         "content": "Updated note content",
+                                        "recipient": "Revised Recipient",
                                         "is_anonymous": true,
                                         "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
                                     }

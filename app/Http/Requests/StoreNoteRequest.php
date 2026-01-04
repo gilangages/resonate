@@ -15,6 +15,7 @@ class StoreNoteRequest extends FormRequest
     {
         return [
             'content' => 'required|string|max:1000',
+            'recipient' => 'nullable|string|max:50',
             'spotify_track_id' => 'nullable|string|max:255',
             'spotify_track_name' => 'nullable|string|max:255',
             'spotify_artist' => 'nullable|string|max:255',

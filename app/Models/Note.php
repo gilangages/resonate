@@ -12,6 +12,7 @@ class Note extends Model
 
     protected $fillable = [
         'content', // pastikan ini sesuai nama kolom di DB
+        'recipient',
         'spotify_track_id',
         'spotify_track_name',
         'spotify_artist',

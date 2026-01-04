@@ -17,24 +17,31 @@ class NoteController extends Controller
      */
     public function index()
     {
-        $notes = Note::with('user:id,name')
+        $notes = Note::with('user:id,name') // Ambil id & name dari relasi user
             ->latest()
             ->get()
             ->map(function ($note) {
                 return [
                     'id' => $note->id,
-                    'content' => $note->content, // Ubah 'message' jadi 'content'
-                    'spotify_track_id' => $note->spotify_track_id, // Ubah 'music_track_id' jadi 'spotify_track_id'
-
-                    // Tambahan: Masukkan juga data spotify lainnya agar sesuai API Spec
+                    'content' => $note->content,
+                    'recipient' => $note->recipient,
+                    'spotify_track_id' => $note->spotify_track_id,
                     'spotify_track_name' => $note->spotify_track_name,
                     'spotify_artist' => $note->spotify_artist,
                     'spotify_album_image' => $note->spotify_album_image,
                     'spotify_preview_url' => $note->spotify_preview_url,
 
-                    'author' => $note->is_anonymous ? null : $note->user->name,
+                    // Logic Penulis & Avatar
+                    'author' => $note->is_anonymous ? 'Anonymous' : $note->user->name,
+
+                    // Panggil 'photo_url' yang tadi kita buat di User.php
+                    // Jika anonim, pakai gambar default (misal: hantu/kosong)
+                    'author_avatar' => $note->is_anonymous
+                    ? 'https://api.dicebear.com/9.x/notionists/svg?seed=Anon&backgroundColor=333'
+                    : $note->user->photo_url,
+                    // Jika user asli, panggil accessor 'photo_url' dari User model
+
                     'created_at' => $note->created_at,
-                    'updated_at' => $note->updated_at,
                 ];
             });
 
@@ -52,6 +59,7 @@ class NoteController extends Controller
         return response()->json([
             'id' => $note->id,
             'content' => $note->content, // Ubah ini
+            'recipient' => $note->recipient,
             'spotify_track_id' => $note->spotify_track_id, // Ubah ini
 
             // Tambahan data spotify

@@ -32,11 +32,7 @@ class LoginController extends Controller
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-            ],
+            'user' => $user, // <--- Lebih simpel, photo_url otomatis masuk
         ]);
     }
 }
