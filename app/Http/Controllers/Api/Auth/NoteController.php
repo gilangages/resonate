@@ -23,10 +23,18 @@ class NoteController extends Controller
             ->map(function ($note) {
                 return [
                     'id' => $note->id,
-                    'message' => $note->message,
-                    'music_track_id' => $note->music_track_id,
+                    'content' => $note->content, // Ubah 'message' jadi 'content'
+                    'spotify_track_id' => $note->spotify_track_id, // Ubah 'music_track_id' jadi 'spotify_track_id'
+
+                    // Tambahan: Masukkan juga data spotify lainnya agar sesuai API Spec
+                    'spotify_track_name' => $note->spotify_track_name,
+                    'spotify_artist' => $note->spotify_artist,
+                    'spotify_album_image' => $note->spotify_album_image,
+                    'spotify_preview_url' => $note->spotify_preview_url,
+
                     'author' => $note->is_anonymous ? null : $note->user->name,
                     'created_at' => $note->created_at,
+                    'updated_at' => $note->updated_at,
                 ];
             });
 
@@ -43,10 +51,18 @@ class NoteController extends Controller
 
         return response()->json([
             'id' => $note->id,
-            'message' => $note->message,
-            'music_track_id' => $note->music_track_id,
+            'content' => $note->content, // Ubah ini
+            'spotify_track_id' => $note->spotify_track_id, // Ubah ini
+
+            // Tambahan data spotify
+            'spotify_track_name' => $note->spotify_track_name,
+            'spotify_artist' => $note->spotify_artist,
+            'spotify_album_image' => $note->spotify_album_image,
+            'spotify_preview_url' => $note->spotify_preview_url,
+
             'author' => $note->is_anonymous ? null : $note->user->name,
             'created_at' => $note->created_at,
+            'updated_at' => $note->updated_at,
         ]);
     }
 
@@ -67,10 +83,16 @@ class NoteController extends Controller
      * 🔐 PUT /api/notes/{id}
      * Auth + owner only
      */
-    public function update(UpdateNoteRequest $request, Note $note)
+    public function update(UpdateNoteRequest $request, $id) // Ubah "Note $note" jadi "$id"
     {
+        // 1. Cari manual note-nya berdasarkan ID
+        $note = Note::findOrFail($id);
+
+        // 2. Cek otorisasi (Policy)
+        // Sekarang $note berisi data asli dr DB, jadi user_id-nya ada isinya.
         $this->authorize('update', $note);
 
+        // 3. Update data
         $note->update($request->validated());
 
         return response()->json($note);

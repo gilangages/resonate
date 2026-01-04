@@ -15,7 +15,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->text('message');
+            $table->text('content');
             $table->string('music_track_id')->nullable(); // spotify track id
             $table->boolean('is_anonymous')->default(false);
 
