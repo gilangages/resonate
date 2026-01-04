@@ -41,20 +41,38 @@
                     },
                     "spotify_track_id": {
                         "type": "string",
+                        "nullable": true,
                         "example": "3n3Ppam7vgaVa1iaRUc9Lp"
                     },
                     "spotify_track_name": {
                         "type": "string",
+                        "nullable": true,
                         "example": "Mr. Brightside"
                     },
                     "spotify_artist": {
                         "type": "string",
+                        "nullable": true,
                         "example": "The Killers"
+                    },
+                    "spotify_album_image": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "https://i.scdn.co/image/ab67616d0000b273d8f4e6b8f5b2f7e6c7d1a2b3"
+                    },
+                    "spotify_preview_url": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "https://p.scdn.co/mp3-preview/abcd1234"
                     },
                     "created_at": {
                         "type": "string",
                         "format": "date-time",
                         "example": "2026-01-03T10:20:30Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-01-03T10:25:30Z"
                     }
                 }
             }
@@ -81,7 +99,10 @@
                                                 "author": "Anonymous",
                                                 "spotify_track_name": "Yellow",
                                                 "spotify_artist": "Coldplay",
-                                                "created_at": "2026-01-03T08:00:00Z"
+                                                "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273abc123",
+                                                "spotify_preview_url": "https://p.scdn.co/mp3-preview/xyz123",
+                                                "created_at": "2026-01-03T08:00:00Z",
+                                                "updated_at": "2026-01-03T08:05:00Z"
                                             },
                                             {
                                                 "id": 2,
@@ -90,7 +111,10 @@
                                                 "author": "Abdi",
                                                 "spotify_track_name": "Numb",
                                                 "spotify_artist": "Linkin Park",
-                                                "created_at": "2026-01-03T09:00:00Z"
+                                                "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273def456",
+                                                "spotify_preview_url": "https://p.scdn.co/mp3-preview/abc456",
+                                                "created_at": "2026-01-03T09:00:00Z",
+                                                "updated_at": "2026-01-03T09:05:00Z"
                                             }
                                         ]
                                     }
@@ -117,13 +141,17 @@
                                 "required": ["content"],
                                 "properties": {
                                     "content": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "This song describes my mood today"
                                     },
                                     "is_anonymous": {
-                                        "type": "boolean"
+                                        "type": "boolean",
+                                        "example": false
                                     },
                                     "spotify_track_id": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "3n3Ppam7vgaVa1iaRUc9Lp"
                                     }
                                 }
                             },
@@ -153,9 +181,13 @@
                                             "content": "This song describes my mood today",
                                             "is_anonymous": false,
                                             "author": "Abdi",
+                                            "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp",
                                             "spotify_track_name": "Mr. Brightside",
                                             "spotify_artist": "The Killers",
-                                            "created_at": "2026-01-03T10:20:30Z"
+                                            "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273d8f4e6b8f5b2f7e6c7d1a2b3",
+                                            "spotify_preview_url": "https://p.scdn.co/mp3-preview/abcd1234",
+                                            "created_at": "2026-01-03T10:20:30Z",
+                                            "updated_at": "2026-01-03T10:25:30Z"
                                         }
                                     }
                                 }
@@ -195,9 +227,13 @@
                                             "content": "Keep going 💪",
                                             "is_anonymous": false,
                                             "author": "Abdi",
+                                            "spotify_track_id": "1kXn1fgj4GheIa3JkO9lmn",
                                             "spotify_track_name": "Numb",
                                             "spotify_artist": "Linkin Park",
-                                            "created_at": "2026-01-03T09:00:00Z"
+                                            "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273def456",
+                                            "spotify_preview_url": "https://p.scdn.co/mp3-preview/abc456",
+                                            "created_at": "2026-01-03T09:00:00Z",
+                                            "updated_at": "2026-01-03T09:05:00Z"
                                         }
                                     }
                                 }
@@ -231,12 +267,31 @@
                     "required": true,
                     "content": {
                         "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Updated note content"
+                                    },
+                                    "is_anonymous": {
+                                        "type": "boolean",
+                                        "example": true
+                                    },
+                                    "spotify_track_id": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "3n3Ppam7vgaVa1iaRUc9Lp"
+                                    }
+                                }
+                            },
                             "examples": {
                                 "update_note": {
                                     "summary": "Update note example",
                                     "value": {
                                         "content": "Updated note content",
-                                        "is_anonymous": true
+                                        "is_anonymous": true,
+                                        "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
                                     }
                                 }
                             }

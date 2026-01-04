@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreNoteRequest;
+use App\Http\Requests\UpdateNoteRequest;
 use App\Models\Note;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Http\Request;
 
 class NoteController extends Controller
 {
@@ -53,42 +54,24 @@ class NoteController extends Controller
      * 🔐 POST /api/notes
      * Auth: buat note
      */
-    public function store(Request $request)
+    public function store(StoreNoteRequest $request)
     {
-        $validated = $request->validate([
-            'message' => 'required|string',
-            'music_track_id' => 'nullable|string',
-            'is_anonymous' => 'boolean',
-        ]);
+        $note = $request->user()->notes()->create(
+            $request->validated()
+        );
 
-        $note = Note::create([
-            'user_id' => $request->user()->id,
-            'message' => $validated['message'],
-            'music_track_id' => $validated['music_track_id'] ?? null,
-            'is_anonymous' => $validated['is_anonymous'] ?? false,
-        ]);
-
-        return response()->json([
-            'message' => 'Note created successfully',
-            'note' => $note,
-        ], 201);
+        return response()->json($note, 201);
     }
 
     /**
      * 🔐 PUT /api/notes/{id}
      * Auth + owner only
      */
-    public function update(Request $request, $id)
+    public function update(UpdateNoteRequest $request, Note $note)
     {
-        $note = Note::findOrFail($id);
-
         $this->authorize('update', $note);
 
-        $note->update($request->only([
-            'message',
-            'music_track_id',
-            'is_anonymous',
-        ]));
+        $note->update($request->validated());
 
         return response()->json($note);
     }

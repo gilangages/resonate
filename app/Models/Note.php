@@ -11,10 +11,17 @@ class Note extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
-        'message',
-        'music_track_id',
+        'content', // pastikan ini sesuai nama kolom di DB
+        'spotify_track_id',
+        'spotify_track_name',
+        'spotify_artist',
+        'spotify_album_image',
+        'spotify_preview_url',
         'is_anonymous',
+    ];
+
+    protected $casts = [
+        'is_anonymous' => 'boolean',
     ];
 
     // Note milik satu user
