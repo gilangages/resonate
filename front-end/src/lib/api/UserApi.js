@@ -96,3 +96,19 @@ export const userLogout = async (token) => {
     },
   });
 };
+
+export const forgotPassword = (email) => {
+  return fetch(`${import.meta.env.VITE_APP_PATH}/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+};
+
+export const resetPassword = (data) => {
+  return fetch(`${import.meta.env.VITE_APP_PATH}/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+};

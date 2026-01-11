@@ -49,6 +49,13 @@ class UserController extends Controller
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $path;
         }
+        // Cek apakah user mengisi kolom password
+        if ($request->filled('password')) {
+            $validated['password'] = Hash::make($request->password);
+        } else {
+            // Jangan update password jika inputnya kosong
+            unset($validated['password']);
+        }
 
         $user->save();
 

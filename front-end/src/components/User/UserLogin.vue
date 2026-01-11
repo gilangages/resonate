@@ -41,7 +41,7 @@ const loginWithGoogle = () => {
   <div
     class="min-h-screen flex flex-col justify-center items-center py-12 px-4 sm:px-6 md:px-8 -mt-[2.8em] sm:-mt-[2.5em] md:-mt-[1em] mb-[4em] overflow-y-auto">
     <div
-      class="bg-[#1c1516] text-[#e5e5e5] text-[14px] rounded-[30px] w-full max-w-[560px] px-6 py-8 shadow-2xl border border-[#2c2021]">
+      class="bg-[#1c1516] text-[#e5e5e5] text-[14px] rounded-[30px] w-full max-w-[560px] px-4 py-8 shadow-2xl border border-[#2c2021]">
       <div class="flex flex-col items-center text-[#9a203e] mb-6">
         <h1 class="text-[28px] font-bold leading-tight">Masuk</h1>
         <p class="mt-1 text-[13px] text-[#8c8a8a]">Lanjutkan ke akunmu</p>
@@ -59,7 +59,14 @@ const loginWithGoogle = () => {
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-[#8c8a8a] uppercase tracking-wider mb-1">Password</label>
+          <div class="flex justify-between items-center mb-1">
+            <label class="block text-xs font-bold text-[#8c8a8a] uppercase tracking-wider">Password</label>
+            <RouterLink
+              to="/forgot-password"
+              class="text-[11px] font-bold text-[#9a203e] hover:text-[#b82b4d] transition-colors">
+              Lupa Password?
+            </RouterLink>
+          </div>
           <div class="relative">
             <input
               v-model="user.password"

@@ -1,9 +1,10 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { userDetail, userUpdatePassword, userUpdatePhoto, userUpdateProfile } from "../../lib/api/UserApi";
 import { alertError, alertSuccess } from "../../lib/alert";
 import { getAvatarUrl, userState } from "../../lib/store";
+import { store } from "../../lib/store";
 
 const token = useLocalStorage("token", "");
 const name = ref("");
@@ -22,6 +23,8 @@ const isLoading = ref(true);
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 
+const userHasPassword = computed(() => store.user?.has_password);
+
 // ... (SEMUA FUNCTION FETCH, UPDATE, DLL TETAP SAMA, TIDAK ADA YANG DIUBAH DI LOGIC SINI) ...
 async function fetchUser() {
   isLoading.value = true;
@@ -33,6 +36,7 @@ async function fetchUser() {
       userState.value = responseBody.data;
       name.value = responseBody.data.name;
       email.value = responseBody.data.email;
+      store.setUser(responseBody.data);
     } else {
       const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
       await alertError(pesanError);
@@ -88,20 +92,33 @@ async function handleChangePassword() {
     await alertError("Password tidak sama!");
     return;
   }
-  const response = await userUpdatePassword(token.value, {
-    password: password.value,
-    password_confirmation: password_confirmation.value,
-  });
-  const responseBody = await response.json();
-  console.log(responseBody);
 
-  if (response.ok) {
-    password.value = "";
-    password_confirmation.value = "";
-    await alertSuccess("Password berhasil diperbarui!");
-  } else {
-    const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
-    await alertError(pesanError);
+  try {
+    const response = await userUpdatePassword(token.value, {
+      password: password.value,
+      password_confirmation: password_confirmation.value,
+    });
+    const responseBody = await response.json();
+
+    if (response.ok) {
+      // 1. Kosongkan field input
+      password.value = "";
+      password_confirmation.value = "";
+
+      // 2. UPDATE STORE secara reaktif agar hint hilang
+      if (store.user) {
+        // Ambil data user lama, timpa has_password menjadi true
+        const updatedUser = { ...store.user, has_password: true };
+        store.setUser(updatedUser);
+      }
+
+      await alertSuccess("Password berhasil diperbarui!");
+    } else {
+      const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
+      await alertError(pesanError);
+    }
+  } catch (error) {
+    await alertError("Terjadi kesalahan sistem.");
   }
 }
 
@@ -240,50 +257,58 @@ onMounted(() => {
             </div>
 
             <div class="input">
-              <label>Password baru</label>
-              <div class="relative my-[8px] mb-[20px]">
-                <input
-                  :type="showPassword ? 'text' : 'password'"
-                  required
-                  v-model="password"
-                  placeholder="Kosongkan jika tidak ingin mengganti"
-                  class="w-full bg-[#2b2122] text-[#e5e5e5] caret-[#e5e5e5] rounded-[15px] p-[1em] border-none focus:outline-[2px] focus:outline-[#9a203e] pr-[3.5em]" />
+              <div class="form-grup">
+                <label for="password_baru">Password Baru</label>
 
-                <button
-                  type="button"
-                  @click="showPassword = !showPassword"
-                  class="absolute inset-y-0 right-0 px-4 flex items-center text-[#8c8a8a] hover:text-[#9a203e] transition-colors cursor-pointer"
-                  title="Lihat Password">
-                  <svg
-                    v-if="showPassword"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                  <svg
-                    v-else
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path
-                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                    <line x1="1" y1="1" x2="23" y2="23"></line>
-                  </svg>
-                </button>
+                <small v-if="!userHasPassword" class="text-[#9a203e] block mb-2 text-sm italic font-medium">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  Kamu mendaftar dengan Google. Isi password ini jika ingin bisa login secara manual nanti.
+                </small>
+
+                <div class="relative my-[8px] mb-[20px]">
+                  <input
+                    id="password_baru"
+                    :type="showPassword ? 'text' : 'password'"
+                    v-model="password"
+                    placeholder="Kosongkan jika tidak ingin mengganti"
+                    class="w-full bg-[#2b2122] text-[#e5e5e5] caret-[#e5e5e5] rounded-[15px] p-[1em] border-none focus:outline-[2px] focus:outline-[#9a203e] pr-[3.5em]" />
+
+                  <button
+                    type="button"
+                    @click="showPassword = !showPassword"
+                    class="absolute inset-y-0 right-0 px-4 flex items-center text-[#8c8a8a] hover:text-[#9a203e] transition-colors cursor-pointer"
+                    title="Lihat Password">
+                    <svg
+                      v-if="showPassword"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg
+                      v-else
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 

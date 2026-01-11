@@ -14,6 +14,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role,
+            'has_password' => !is_null($this->password),
 
             // KITA PAKAI LOGIKA YANG SAMA DENGAN NOTERESOURCE:
             'avatar' => $this->avatar ? url('storage/' . $this->avatar) : null,

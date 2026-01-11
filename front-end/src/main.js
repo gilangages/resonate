@@ -13,6 +13,8 @@ import DashboardUser from "./components/Dashboard/DashboardUser.vue";
 import DashboardGlobal from "./components/Dashboard/DashboardGlobal.vue";
 import NotFound from "./components/NotFound.vue";
 import AuthCallback from "./components/User/AuthCallback.vue";
+import UserForgotPassword from "./components/User/UserForgotPassword.vue";
+import UserResetPassword from "./components/User/UserResetPassword.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,6 +34,14 @@ const router = createRouter({
         {
           path: "login",
           component: UserLogin,
+        },
+        {
+          path: "forgot-password",
+          component: UserForgotPassword,
+        },
+        {
+          path: "reset-password",
+          component: UserResetPassword,
         },
       ],
     },

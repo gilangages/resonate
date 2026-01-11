@@ -46,7 +46,7 @@ const registerWithGoogle = () => {
   <div
     class="min-h-screen flex flex-col justify-center items-center py-12 px-4 sm:px-6 md:px-8 -mt-[2.8em] sm:-mt-[2.5em] md:-mt-[1em] md:mb-[4em] overflow-y-auto">
     <div
-      class="bg-[#1c1516] text-[#e5e5e5] text-[14px] rounded-[30px] w-full max-w-[560px] px-6 py-8 shadow-2xl border border-[#2c2021]">
+      class="bg-[#1c1516] text-[#e5e5e5] text-[14px] rounded-[30px] w-full max-w-[560px] px-4 py-8 shadow-2xl border border-[#2c2021]">
       <div class="flex flex-col items-center text-[#9a203e] mb-6">
         <h1 class="text-[28px] font-bold leading-tight">Daftar</h1>
         <p class="mt-1 text-[13px] text-[#8c8a8a]">Buat akun Resonate baru</p>

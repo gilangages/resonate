@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -22,21 +23,31 @@ class LoginController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Email atau password salah.',
-            ], 401);
+        // 1. Jika user tidak ditemukan sama sekali
+        if (!$user) {
+            return response()->json(['message' => 'Email tidak terdaftar.'], 401);
         }
 
-        // optional: hapus token lama
-        $user->tokens()->delete();
+        // 2. Jika user ditemukan, tapi password di database NULL (User Google belum buat password)
+        if (is_null($user->password) && $user->google_id) {
+            return response()->json([
+                'message' => 'Akun ini terdaftar melalui Google. Silakan login menggunakan tombol Google atau gunakan fitur Lupa Password untuk membuat password manual.',
+            ], 422);
+        }
 
+        // 3. Jika user ada, tapi password salah
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Password salah.'], 401);
+        }
+
+        // Jika lolos semua pengecekan di atas, lanjut buat token...
+        // $user->tokens()->delete(); biar bisa login di HP dan Laptop secara bersamaan
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
-            'user' => $user, // <--- Lebih simpel, photo_url otomatis masuk
+            'user' => new UserResource($user), // <--- Lebih simpel, photo_url otomatis masuk
         ]);
     }
 }

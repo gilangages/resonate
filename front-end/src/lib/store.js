@@ -1,10 +1,19 @@
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 
 export const userState = ref({
   name: "",
   email: "",
   avatar: null, // Pastikan ini namanya 'avatar', bukan 'author_avatar' biar konsisten
   photo_url: "",
+});
+
+export const store = reactive({
+  user: JSON.parse(localStorage.getItem("user")) || null,
+
+  setUser(userData) {
+    this.user = userData;
+    localStorage.setItem("user", JSON.stringify(userData));
+  },
 });
 
 export const resetUserState = () => {
