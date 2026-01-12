@@ -150,13 +150,14 @@ export const noteBulkDelete = async (token, ids) => {
   });
 };
 
-export const deleteNoteByAdmin = async (token, id) => {
+export const deleteNoteByAdmin = async (token, id, reason) => {
   return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/notes/${id}`, {
     method: "DELETE",
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify({ reason: reason }),
   });
 };
 

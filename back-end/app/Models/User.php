@@ -29,6 +29,8 @@ class User extends Authenticatable
         'avatar',
         'google_id',
         'role', // <--- Tambahkan ini
+        'is_banned', // <--- TAMBAHKAN INI
+        'ban_reason', // <--- TAMBAHKAN INI
     ];
 
     /**

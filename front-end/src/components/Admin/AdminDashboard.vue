@@ -5,6 +5,7 @@ import { getAdminUsers, deleteUserByAdmin } from "../../lib/api/UserApi";
 import { getAdminNotes, deleteNoteByAdmin } from "../../lib/api/NoteApi"; // Pastikan sudah dibuat di NoteApi.js
 import { alertConfirm, alertSuccess } from "../../lib/alert";
 import { getAvatarUrl } from "../../lib/store";
+import Swal from "sweetalert2";
 
 const token = useLocalStorage("token", "");
 const activeTab = ref("users"); // 'users' atau 'notes'
@@ -33,20 +34,31 @@ const deleteUser = async (id) => {
   }
 
   try {
-    // 1. Panggil API Hapus/Ban ke Backend
     await deleteUserByAdmin(token.value, id);
 
-    // 2. JANGAN panggil fetchData() lagi, tapi hapus manual dari list lokal
-    // Ini membuat UI langsung update tanpa loading ulang
-    users.value = users.value.filter((user) => user.id !== id);
+    // --- PERBAIKAN DI SINI ---
+    // Jangan dihapus (filter), tapi update statusnya di local state
+    const userIndex = users.value.findIndex((u) => u.id === id);
+    if (userIndex !== -1) {
+      users.value[userIndex].is_banned = 1; // Atau true, sesuaikan return DB
+    }
 
-    alertSuccess("User berhasil dihapus/banned.");
+    alertSuccess("User berhasil diblokir.");
   } catch (error) {
     console.error(error);
-    // Handle error jika perlu
   }
 };
+
 const deleteNote = async (id) => {
+  const { value: reason, isConfirmed } = await Swal.fire({
+    title: "Hapus Note?",
+    text: "Masukkan alasan penghapusan:",
+    input: "text", // Input text muncul
+    inputPlaceholder: "Contoh: Kasar, SARA, Spam...",
+    showCancelButton: true,
+    confirmButtonText: "Hapus",
+    confirmButtonColor: "#d33",
+  });
   if (!(await alertConfirm("Apakah kamu yakin ingin menghapus pesan ini?"))) {
     return;
   }
@@ -117,10 +129,13 @@ onMounted(fetchData);
               <td class="p-4">{{ user.email }}</td>
               <td class="p-4 text-sm">{{ user.role }}</td>
               <td class="p-4 text-center">
-                <button v-if="user.role !== 'admin'" @click="deleteUser(user.id)" class="text-red-500 hover:underline">
+                <span v-if="user.role === 'admin'" class="text-gray-500">N/A</span>
+
+                <button v-else-if="!user.is_banned" @click="deleteUser(user.id)" class="text-red-500 hover:underline">
                   Ban User
                 </button>
-                <span v-else class="text-gray-500">N/A</span>
+
+                <span v-else class="text-red-400 font-bold italic text-sm">Banned</span>
               </td>
             </tr>
           </tbody>

@@ -7,6 +7,7 @@ use App\Models\Note;
 use App\Models\User;
 use App\Notifications\NoteDeletedNotification;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -15,7 +16,8 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = User::select('id', 'name', 'email', 'avatar', 'role', 'created_at')
+        // Tambahkan 'is_banned' ke dalam select
+        $users = User::select('id', 'name', 'email', 'avatar', 'role', 'created_at', 'is_banned')
             ->latest()
             ->get();
 
@@ -64,12 +66,14 @@ class UserController extends Controller
     /**
      * 4. Hapus Note yang melanggar aturan
      */
-    public function destroyNote($id): JsonResponse
+    public function destroyNote(Request $request, $id): JsonResponse
     {
         $note = Note::with('user')->findOrFail($id);
+
+        $reason = $request->input('reason', 'Melanggar Pedoman Komunitas');
         // Kirim Notifikasi ke Pemilik Note
         if ($note->user) {
-            $note->user->notify(new NoteDeletedNotification($note->content));
+            $note->user->notify(new NoteDeletedNotification($note->content, $reason));
         }
         $note->delete();
 

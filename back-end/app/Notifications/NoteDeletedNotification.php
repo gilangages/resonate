@@ -28,7 +28,7 @@ class NoteDeletedNotification extends Notification
     {
         return [
             'title' => 'Catatan Dihapus Admin',
-            'message' => "Catatan Anda: \"{$this->noteContentSnippet}\" telah dihapus.",
+            'message' => "Pesanmu: \"{$this->noteContentSnippet}\" telah dihapus oleh admin. Alasan: {$this->reason}",
             'reason' => $this->reason,
             'type' => 'alert', // Bisa dipakai untuk styling di frontend
             'time' => now(),
