@@ -40,11 +40,20 @@ class LoginController extends Controller
             return response()->json(['message' => 'Password salah.'], 401);
         }
 
+        // 4. CEK STATUS BANNED (Implementation Baru)
+        if ($user->is_banned) {
+            return response()->json([
+                'message' => 'AKUN_DIBEKUKAN', // Kode khusus untuk frontend
+                'reason' => $user->ban_reason ?? 'Pelanggaran Aturan.',
+            ], 403);
+        }
+
         // Jika lolos semua pengecekan di atas, lanjut buat token...
         // $user->tokens()->delete(); biar bisa login di HP dan Laptop secara bersamaan
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
+            'message' => 'Login berhasil',
             'token' => $token,
             'token_type' => 'Bearer',
             'user' => new UserResource($user), // <--- Lebih simpel, photo_url otomatis masuk

@@ -30,6 +30,9 @@ async function handleSubmit() {
         path: "/dashboard/admin",
       }); // atau rute admin kamu
     } else {
+      if (response.status === 403 && responseBody.message === "AKUN_DIBEKUKAN") {
+        alertError(responseBody.reason);
+      }
       await router.push({
         path: "/dashboard/global",
       });

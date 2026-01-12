@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Note;
 use App\Models\User;
+use App\Notifications\NoteDeletedNotification;
 use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
@@ -24,21 +25,26 @@ class UserController extends Controller
     /**
      * 2. Hapus user yang nakal
      */
+    // File: app/Http/Controllers/Api/Admin/UserController.php
+
     public function destroy($id)
     {
         $user = User::findOrFail($id);
 
-        // Proteksi ID 1 (Biasanya Super Admin pertama)
-        if ($user->id === 1) {
-            return response()->json(['message' => 'Akun Super Admin utama tidak boleh dihapus!'], 403);
+        if ($user->id === 1 || $user->role === 'admin') {
+            return response()->json(['message' => 'Tidak bisa menghapus admin.'], 403);
         }
 
-        if ($user->role === 'admin') {
-            return response()->json(['message' => 'Tidak bisa menghapus akun admin.'], 403);
-        }
+        // UPDATE: Jangan delete(), tapi set banned
+        $user->update([
+            'is_banned' => true,
+            'ban_reason' => 'Akun Anda dinonaktifkan karena melanggar pedoman komunitas.',
+        ]);
 
-        $user->delete();
-        return response()->json(['message' => 'User berhasil dihapus.']);
+        // Opsional: Cabut token agar user yang sedang login langsung logout
+        $user->tokens()->delete();
+
+        return response()->json(['message' => 'User berhasil diblokir.']);
     }
 
     /**
@@ -60,9 +66,13 @@ class UserController extends Controller
      */
     public function destroyNote($id): JsonResponse
     {
-        $note = Note::findOrFail($id);
+        $note = Note::with('user')->findOrFail($id);
+        // Kirim Notifikasi ke Pemilik Note
+        if ($note->user) {
+            $note->user->notify(new NoteDeletedNotification($note->content));
+        }
         $note->delete();
 
-        return response()->json(['message' => 'Catatan berhasil dihapus oleh admin.']);
+        return response()->json(['message' => 'Catatan dihapus dan user telah diberitahu.']);
     }
 }

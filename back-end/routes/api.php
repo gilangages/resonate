@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\ImageProxyController;
 use App\Http\Controllers\Api\MusicController;
 use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,10 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 // 🔐 AUTH ROUTES (Prioritas Tinggi)
 Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/logout', LogoutController::class);
+
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead']);
 
     // ✅ POSISI 'my' AMAN DI SINI
     // Karena route {id} belum didefinisikan di atasnya
