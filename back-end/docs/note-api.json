@@ -91,6 +91,64 @@
         }
     },
     "paths": {
+        "/api/music/search": {
+            "get": {
+                "summary": "Search tracks (Mock/Spotify)",
+                "tags": ["Music"],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Song title or artist name",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 2
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of tracks found",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "success": {
+                                        "value": {
+                                            "tracks": {
+                                                "items": [
+                                                    {
+                                                        "id": "mock_001",
+                                                        "name": "Mock Song One",
+                                                        "artists": [
+                                                            {
+                                                                "name": "Mock Artist"
+                                                            }
+                                                        ],
+                                                        "album": {
+                                                            "images": [
+                                                                {
+                                                                    "url": "https://placehold.co/300"
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/notes": {
             "get": {
                 "summary": "Get public notes",

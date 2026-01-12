@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api; // <--- Namespace yang BENAR (tanpa Auth)
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note; // <--- WAJIB: Import Request
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // <--- Import Resource
@@ -37,23 +38,17 @@ class NoteController extends Controller
     }
 
     /**
-     * POST /api/notes
-     * Auth: buat note
+     * Ganti Request biasa menjadi StoreNoteRequest
      */
-    public function store(Request $request)
+    public function store(StoreNoteRequest $request)
     {
-        // Validasi
-        $validated = $request->validate([
-            'content' => 'required|string',
-            'recipient' => 'nullable|string',
-            'initial_name' => 'nullable|string',
-            'spotify_track_id' => 'nullable|string',
-        ]);
+        // Tidak perlu $request->validate manual lagi karena sudah dihandle StoreNoteRequest
+        // Langsung ambil data yang sudah divalidasi
+        $validated = $request->validated();
 
         // Create Note
         $note = $request->user()->notes()->create($validated);
 
-        // WRAPPING: Gunakan new NoteResource() karena datanya cuma satu
         return new NoteResource($note);
     }
 

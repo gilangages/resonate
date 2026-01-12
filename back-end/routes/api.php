@@ -21,35 +21,28 @@ Route::get('/test-sanctum', function () {
 
 Route::post('/users', RegisterController::class);
 Route::post('/users/login', LoginController::class);
-Route::middleware('auth:sanctum')
-    ->delete('/users/logout', LogoutController::class);
 
-//protected route
-Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return $request->user();
-});
-
-//create note
-// 🌍 PUBLIC
+// 🌍 PUBLIC: Get Notes List & Detail
 Route::get('/notes', [NoteController::class, 'index']);
 Route::get('/notes/{id}', [NoteController::class, 'show']);
 
-// 🔐 AUTH
+// 🔐 AUTH (Harus Login)
 Route::middleware('auth:sanctum')->group(function () {
+    Route::delete('/users/logout', LogoutController::class);
+
+    Route::get('/me', function (Request $request) {
+        return $request->user();
+    });
+
+    // CRUD Notes
     Route::post('/notes', [NoteController::class, 'store']);
     Route::put('/notes/{id}', [NoteController::class, 'update']);
     Route::delete('/notes/{id}', [NoteController::class, 'destroy']);
-});
 
-//music
-Route::get('/music/search', [MusicController::class, 'search']);
+    // 👇 PINDAHKAN KE SINI (Sekarang butuh token)
+    Route::get('/music/search', [MusicController::class, 'search']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    // ... route notes yang sudah ada ...
-
-    // Tambahkan fitur Edit Profile di sini
+    // User Profile
     Route::get('/users/current', [UserController::class, 'show']);
     Route::patch('/users/current', [UserController::class, 'update']);
-
-    // ... route logout ...
 });
