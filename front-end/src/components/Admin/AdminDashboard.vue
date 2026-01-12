@@ -59,13 +59,13 @@ const deleteNote = async (id) => {
     confirmButtonText: "Hapus",
     confirmButtonColor: "#d33",
   });
-  if (!(await alertConfirm("Apakah kamu yakin ingin menghapus pesan ini?"))) {
-    return;
-  }
+  if (!isConfirmed) return;
+  // if (!(await alertConfirm("Apakah kamu yakin ingin menghapus pesan ini?"))) {
+  //   return;
 
   try {
     // 1. Panggil API Hapus Note
-    await deleteNoteByAdmin(token.value, id);
+    await deleteNoteByAdmin(token.value, id, reason);
 
     // 2. Hapus manual dari list lokal agar instan hilang
     notes.value = notes.value.filter((note) => note.id !== id);

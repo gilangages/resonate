@@ -154,6 +154,7 @@ export const deleteNoteByAdmin = async (token, id, reason) => {
   return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/notes/${id}`, {
     method: "DELETE",
     headers: {
+      "Content-Type": "application/json",
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },

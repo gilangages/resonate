@@ -63,4 +63,14 @@ class NotificationController extends Controller
 
         return response()->json(['message' => 'Semua notifikasi ditandai sudah dibaca.']);
     }
+
+    public function markAllRead(Request $request)
+    {
+        // Cara Laravel yang sangat efisien (1 query update langsung ke semua yang unread)
+        $request->user()
+            ->unreadNotifications
+            ->markAsRead();
+
+        return response()->json(['message' => 'Semua notifikasi telah ditandai sudah dibaca.']);
+    }
 }

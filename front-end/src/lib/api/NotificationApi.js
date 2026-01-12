@@ -36,3 +36,13 @@ export const markNotificationsRead = async (token, id) => {
     body: JSON.stringify({ id }),
   });
 };
+
+export const markAllNotificationsRead = async (token) => {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notifications/mark-all-read`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

@@ -14,23 +14,30 @@ class NoteDeletedNotification extends Notification
 
     public function __construct($noteContent, $reason = 'Konten mengandung unsur negatif.')
     {
-        // Simpan potongan konten agar user ingat note mana yg dihapus
-        $this->noteContentSnippet = substr($noteContent, 0, 50) . '...';
+        $this->noteContentSnippet = substr($noteContent, 0, 30) . '...'; // Pendek saja
         $this->reason = $reason;
     }
 
     public function via($notifiable)
     {
-        return ['database']; // Simpan ke database
+        return ['database'];
     }
 
     public function toArray($notifiable)
     {
         return [
+            // Title singkat untuk header notif
             'title' => 'Catatan Dihapus Admin',
-            'message' => "Pesanmu: \"{$this->noteContentSnippet}\" telah dihapus oleh admin. Alasan: {$this->reason}",
+
+            // Message fokus ke "Apa yang terjadi"
+            'message' => "Pesanmu: \"{$this->noteContentSnippet}\" telah dihapus.",
+
+            // Reason dikirim terpisah agar frontend bisa styling khusus (misal warna merah)
             'reason' => $this->reason,
-            'type' => 'alert', // Bisa dipakai untuk styling di frontend
+
+            // Tipe ini kunci untuk membedakan icon di frontend
+            'type' => 'alert',
+
             'time' => now(),
         ];
     }

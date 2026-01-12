@@ -55,6 +55,10 @@ const decrementCount = () => {
   if (unreadCount.value > 0) unreadCount.value--;
 };
 
+const resetCount = () => {
+  unreadCount.value = 0;
+};
+
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value;
   if (showDropdown.value) showNotif.value = false; // Tutup notif jika buka profil
@@ -129,7 +133,7 @@ onBeforeMount(async () => {
 
         <div v-if="showNotif">
           <div class="fixed inset-0 z-40 cursor-default" @click="showNotif = false"></div>
-          <NotificationDropdown @read="decrementCount" />
+          <NotificationDropdown @read="decrementCount" @read-all="resetCount" />
         </div>
       </div>
       <div class="relative">
