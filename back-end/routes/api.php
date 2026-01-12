@@ -8,12 +8,11 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
+use App\Http\Controllers\Api\ImageProxyController;
 use App\Http\Controllers\Api\MusicController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\UserController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 Route::get('/test', function () {
     return response()->json(['status' => 'API works!']);
@@ -69,26 +68,4 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 });
 
 // ROUTE KHUSUS UNTUK BYPASS CORS IMAGE;
-Route::get('/image-proxy', function (Request $request) {
-    $url = $request->query('url');
-    if (!$url) {
-        return response()->json(['error' => 'URL required'], 400);
-    }
-
-    $baseUrl = url('/storage');
-    $relativePath = str_replace($baseUrl, '', $url);
-    $relativePath = ltrim($relativePath, '/');
-
-    if (Storage::disk('public')->exists($relativePath)) {
-        $path = Storage::disk('public')->path($relativePath);
-
-        // --- PERBAIKAN: Tambahkan Header Anti-Cache ---
-        return response()->file($path, [
-            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Pragma' => 'no-cache',
-            'Expires' => 'Sat, 01 Jan 2000 00:00:00 GMT',
-        ]);
-    }
-
-    return response()->json(['error' => 'Image not found'], 404);
-});
+Route::get('/image-proxy', [ImageProxyController::class, 'proxy']);
