@@ -2,9 +2,9 @@
 
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
-use App\Http\Controllers\Api\Auth\MusicController;
-use App\Http\Controllers\Api\Auth\NoteController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\MusicController;
+use App\Http\Controllers\Api\NoteController; // ✅ Benar, folder Api langsung
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;

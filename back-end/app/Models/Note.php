@@ -13,16 +13,12 @@ class Note extends Model
     protected $fillable = [
         'content', // pastikan ini sesuai nama kolom di DB
         'recipient',
+        'initial_name',
         'spotify_track_id',
         'spotify_track_name',
         'spotify_artist',
         'spotify_album_image',
         'spotify_preview_url',
-        'is_anonymous',
-    ];
-
-    protected $casts = [
-        'is_anonymous' => 'boolean',
     ];
 
     // Note milik satu user
