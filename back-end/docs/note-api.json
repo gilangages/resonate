@@ -3,7 +3,7 @@
     "info": {
         "title": "Notes API",
         "description": "Public notes API with authentication and ownership control",
-        "version": "1.0.0"
+        "version": "1.0.1"
     },
     "servers": [
         {
@@ -36,17 +36,19 @@
                         "nullable": true,
                         "example": "Untuk Mantan Terindah"
                     },
-                    "is_anonymous": {
-                        "type": "boolean",
-                        "example": false
+                    "initial_name": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Nama samaran/inisial. Jika null, menggunakan nama asli user.",
+                        "example": "Secret Admirer"
                     },
                     "author": {
                         "type": "string",
-                        "example": "Abdi"
+                        "example": "Secret Admirer"
                     },
                     "author_avatar": {
                         "type": "string",
-                        "example": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e"
+                        "example": "https://ui-avatars.com/api/?name=Secret+Admirer&background=random"
                     },
                     "spotify_track_id": {
                         "type": "string",
@@ -105,29 +107,23 @@
                                                 "id": 1,
                                                 "content": "Hello world",
                                                 "recipient": null,
-                                                "is_anonymous": true,
-                                                "author": "Anonymous",
-                                                "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Anon&backgroundColor=333",
+                                                "initial_name": "Mr. X",
+                                                "author": "Mr. X",
+                                                "author_avatar": "https://ui-avatars.com/api/?name=Mr+X&background=random",
                                                 "spotify_track_name": "Yellow",
                                                 "spotify_artist": "Coldplay",
-                                                "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273abc123",
-                                                "spotify_preview_url": "https://p.scdn.co/mp3-preview/xyz123",
-                                                "created_at": "2026-01-03T08:00:00Z",
-                                                "updated_at": "2026-01-03T08:05:00Z"
+                                                "created_at": "2026-01-03T08:00:00Z"
                                             },
                                             {
                                                 "id": 2,
                                                 "content": "Keep going 💪",
                                                 "recipient": "My Future Self",
-                                                "is_anonymous": false,
+                                                "initial_name": null,
                                                 "author": "Abdi",
                                                 "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
                                                 "spotify_track_name": "Numb",
                                                 "spotify_artist": "Linkin Park",
-                                                "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273def456",
-                                                "spotify_preview_url": "https://p.scdn.co/mp3-preview/abc456",
-                                                "created_at": "2026-01-03T09:00:00Z",
-                                                "updated_at": "2026-01-03T09:05:00Z"
+                                                "created_at": "2026-01-03T09:00:00Z"
                                             }
                                         ]
                                     }
@@ -162,9 +158,11 @@
                                         "nullable": true,
                                         "example": "Untuk Mantan Terindah"
                                     },
-                                    "is_anonymous": {
-                                        "type": "boolean",
-                                        "example": false
+                                    "initial_name": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "description": "Kirim string untuk nama samaran, kirim null untuk nama asli.",
+                                        "example": "Si Galau"
                                     },
                                     "spotify_track_id": {
                                         "type": "string",
@@ -174,12 +172,21 @@
                                 }
                             },
                             "examples": {
-                                "create_note": {
-                                    "summary": "Create note example",
+                                "create_note_alias": {
+                                    "summary": "Create note with Initial Name",
                                     "value": {
                                         "content": "This song describes my mood today",
                                         "recipient": "Untuk Mantan Terindah",
-                                        "is_anonymous": false,
+                                        "initial_name": "Si Galau",
+                                        "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
+                                    }
+                                },
+                                "create_note_real": {
+                                    "summary": "Create note with Real Name",
+                                    "value": {
+                                        "content": "Semangat pagi!",
+                                        "recipient": "Teman Kantor",
+                                        "initial_name": null,
                                         "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
                                     }
                                 }
@@ -199,16 +206,10 @@
                                             "id": 10,
                                             "content": "This song describes my mood today",
                                             "recipient": "Untuk Mantan Terindah",
-                                            "is_anonymous": false,
-                                            "author": "Abdi",
-                                            "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
+                                            "initial_name": "Si Galau",
+                                            "author": "Si Galau",
                                             "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp",
-                                            "spotify_track_name": "Mr. Brightside",
-                                            "spotify_artist": "The Killers",
-                                            "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273d8f4e6b8f5b2f7e6c7d1a2b3",
-                                            "spotify_preview_url": "https://p.scdn.co/mp3-preview/abcd1234",
-                                            "created_at": "2026-01-03T10:20:30Z",
-                                            "updated_at": "2026-01-03T10:25:30Z"
+                                            "created_at": "2026-01-03T10:20:30Z"
                                         }
                                     }
                                 }
@@ -218,6 +219,70 @@
                     "401": {
                         "description": "Unauthenticated"
                     }
+                }
+            },
+            "put": {
+                "summary": "Update note",
+                "tags": ["Notes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Updated content"
+                                    },
+                                    "recipient": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "Updated Recipient"
+                                    },
+                                    "initial_name": {
+                                        "type": "string",
+                                        "nullable": true,
+                                        "example": "Updated Alias"
+                                    },
+                                    "spotify_track_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": { "description": "Note updated successfully" },
+                    "403": { "description": "Forbidden" }
+                }
+            },
+            "delete": {
+                "summary": "Delete note",
+                "tags": ["Notes"],
+                "security": [{ "bearerAuth": [] }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": { "type": "integer" }
+                    }
+                ],
+                "responses": {
+                    "204": { "description": "Note deleted successfully" },
+                    "403": { "description": "Forbidden" }
                 }
             }
         },
@@ -247,16 +312,11 @@
                                             "id": 2,
                                             "content": "Keep going 💪",
                                             "recipient": "My Future Self",
-                                            "is_anonymous": false,
+                                            "initial_name": null,
                                             "author": "Abdi",
                                             "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
                                             "spotify_track_id": "1kXn1fgj4GheIa3JkO9lmn",
-                                            "spotify_track_name": "Numb",
-                                            "spotify_artist": "Linkin Park",
-                                            "spotify_album_image": "https://i.scdn.co/image/ab67616d0000b273def456",
-                                            "spotify_preview_url": "https://p.scdn.co/mp3-preview/abc456",
-                                            "created_at": "2026-01-03T09:00:00Z",
-                                            "updated_at": "2026-01-03T09:05:00Z"
+                                            "created_at": "2026-01-03T09:00:00Z"
                                         }
                                     }
                                 }
@@ -265,101 +325,6 @@
                     },
                     "404": {
                         "description": "Note not found"
-                    }
-                }
-            },
-            "put": {
-                "summary": "Update note",
-                "tags": ["Notes"],
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "content": {
-                                        "type": "string",
-                                        "example": "Updated note content"
-                                    },
-                                    "recipient": {
-                                        "type": "string",
-                                        "nullable": true,
-                                        "example": "Revised Recipient"
-                                    },
-                                    "is_anonymous": {
-                                        "type": "boolean",
-                                        "example": true
-                                    },
-                                    "spotify_track_id": {
-                                        "type": "string",
-                                        "nullable": true,
-                                        "example": "3n3Ppam7vgaVa1iaRUc9Lp"
-                                    }
-                                }
-                            },
-                            "examples": {
-                                "update_note": {
-                                    "summary": "Update note example",
-                                    "value": {
-                                        "content": "Updated note content",
-                                        "recipient": "Revised Recipient",
-                                        "is_anonymous": true,
-                                        "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Note updated successfully"
-                    },
-                    "403": {
-                        "description": "Forbidden (not owner)"
-                    }
-                }
-            },
-            "delete": {
-                "summary": "Delete note",
-                "tags": ["Notes"],
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Note deleted successfully"
-                    },
-                    "403": {
-                        "description": "Forbidden (not owner)"
                     }
                 }
             }

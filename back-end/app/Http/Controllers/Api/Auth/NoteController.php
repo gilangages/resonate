@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api\Auth;
+namespace App\Http\Controllers\Auth\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
+use App\Http\Resources\NoteResource;
 use App\Models\Note;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -17,35 +17,11 @@ class NoteController extends Controller
      */
     public function index()
     {
-        $notes = Note::with('user:id,name') // Ambil id & name dari relasi user
-            ->latest()
-            ->get()
-            ->map(function ($note) {
-                return [
-                    'id' => $note->id,
-                    'content' => $note->content,
-                    'recipient' => $note->recipient,
-                    'spotify_track_id' => $note->spotify_track_id,
-                    'spotify_track_name' => $note->spotify_track_name,
-                    'spotify_artist' => $note->spotify_artist,
-                    'spotify_album_image' => $note->spotify_album_image,
-                    'spotify_preview_url' => $note->spotify_preview_url,
+        // Ambil notes terbaru beserta data user-nya
+        $notes = Note::with('user')->latest()->get();
 
-                    // Logic Penulis & Avatar
-                    'author' => $note->is_anonymous ? 'Anonymous' : $note->user->name,
-
-                    // Panggil 'photo_url' yang tadi kita buat di User.php
-                    // Jika anonim, pakai gambar default (misal: hantu/kosong)
-                    'author_avatar' => $note->is_anonymous
-                    ? 'https://api.dicebear.com/9.x/notionists/svg?seed=Anon&backgroundColor=333'
-                    : $note->user->photo_url,
-                    // Jika user asli, panggil accessor 'photo_url' dari User model
-
-                    'created_at' => $note->created_at,
-                ];
-            });
-
-        return response()->json($notes);
+        // WRAPPING: Gunakan collection() karena datanya banyak (list)
+        return NoteResource::collection($notes);
     }
 
     /**
@@ -78,15 +54,15 @@ class NoteController extends Controller
      * 🔐 POST /api/notes
      * Auth: buat note
      */
-    public function store(StoreNoteRequest $request)
+    public function store(Request $request)
     {
-        $note = $request->user()->notes()->create(
-            $request->validated()
-        );
+        // ... validasi dan save kode lama kamu ...
 
-        return response()->json($note, 201);
+        $note = $request->user()->notes()->create($validated);
+
+        // WRAPPING: Gunakan new NoteResource() karena datanya cuma satu
+        return new NoteResource($note);
     }
-
     /**
      * 🔐 PUT /api/notes/{id}
      * Auth + owner only
