@@ -3,7 +3,7 @@
     "info": {
         "title": "User API",
         "description": "User authentication API for Notes Application",
-        "version": "1.0.0"
+        "version": "1.0.1"
     },
     "servers": [
         {
@@ -35,6 +35,19 @@
                         "type": "string",
                         "format": "email",
                         "example": "abdi@mail.com"
+                    },
+                    "email_verified_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
                     }
                 }
             }
@@ -59,30 +72,23 @@
                                 ],
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Abdi"
                                     },
                                     "email": {
                                         "type": "string",
-                                        "format": "email"
+                                        "format": "email",
+                                        "example": "abdi@mail.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "format": "password"
+                                        "format": "password",
+                                        "example": "secret123"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
-                                        "format": "password"
-                                    }
-                                }
-                            },
-                            "examples": {
-                                "register": {
-                                    "summary": "Register example",
-                                    "value": {
-                                        "name": "Abdi",
-                                        "email": "abdi@mail.com",
-                                        "password": "secret123",
-                                        "password_confirmation": "secret123"
+                                        "format": "password",
+                                        "example": "secret123"
                                     }
                                 }
                             }
@@ -98,7 +104,14 @@
                                     "success": {
                                         "summary": "Register success",
                                         "value": {
-                                            "message": "User registered successfully"
+                                            "message": "User registered successfully",
+                                            "user": {
+                                                "id": 1,
+                                                "name": "Abdi",
+                                                "email": "abdi@mail.com",
+                                                "updated_at": "2026-01-12T10:00:00Z",
+                                                "created_at": "2026-01-12T10:00:00Z"
+                                            }
                                         }
                                     }
                                 }
@@ -106,24 +119,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "examples": {
-                                    "validation_error": {
-                                        "summary": "Email already taken",
-                                        "value": {
-                                            "message": "The given data was invalid.",
-                                            "errors": {
-                                                "email": [
-                                                    "The email has already been taken."
-                                                ]
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        "description": "Validation error"
                     }
                 }
             }
@@ -142,20 +138,13 @@
                                 "properties": {
                                     "email": {
                                         "type": "string",
-                                        "format": "email"
+                                        "format": "email",
+                                        "example": "abdi@mail.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "format": "password"
-                                    }
-                                }
-                            },
-                            "examples": {
-                                "login": {
-                                    "summary": "Login example",
-                                    "value": {
-                                        "email": "abdi@mail.com",
-                                        "password": "secret123"
+                                        "format": "password",
+                                        "example": "secret123"
                                     }
                                 }
                             }
@@ -171,12 +160,16 @@
                                     "success": {
                                         "summary": "Login success",
                                         "value": {
+                                            "token": "1|abcdef1234567890",
+                                            "token_type": "Bearer",
                                             "user": {
                                                 "id": 1,
                                                 "name": "Abdi",
-                                                "email": "abdi@mail.com"
-                                            },
-                                            "token": "1|abcdef1234567890"
+                                                "email": "abdi@mail.com",
+                                                "email_verified_at": null,
+                                                "created_at": "2026-01-12T10:00:00Z",
+                                                "updated_at": "2026-01-12T10:00:00Z"
+                                            }
                                         }
                                     }
                                 }
@@ -184,19 +177,7 @@
                         }
                     },
                     "401": {
-                        "description": "Invalid credentials",
-                        "content": {
-                            "application/json": {
-                                "examples": {
-                                    "invalid": {
-                                        "summary": "Wrong password",
-                                        "value": {
-                                            "message": "Invalid credentials"
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        "description": "Invalid credentials"
                     }
                 }
             }
@@ -215,8 +196,19 @@
                         "description": "User details",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/User"
+                                "examples": {
+                                    "success": {
+                                        "summary": "User Profile Data",
+                                        "value": {
+                                            "data": {
+                                                "id": 1,
+                                                "name": "Abdi",
+                                                "email": "abdi@mail.com",
+                                                "created_at": "2026-01-12T10:00:00Z",
+                                                "updated_at": "2026-01-12T10:00:00Z"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -242,11 +234,13 @@
                                 "type": "object",
                                 "properties": {
                                     "name": {
-                                        "type": "string"
+                                        "type": "string",
+                                        "example": "Abdi Baru"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "format": "password"
+                                        "format": "password",
+                                        "description": "Isi hanya jika ingin ganti password"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
@@ -262,8 +256,20 @@
                         "description": "User updated successfully",
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/User"
+                                "examples": {
+                                    "success": {
+                                        "summary": "Update Success",
+                                        "value": {
+                                            "message": "Profile updated successfully",
+                                            "data": {
+                                                "id": 1,
+                                                "name": "Abdi Baru",
+                                                "email": "abdi@mail.com",
+                                                "created_at": "2026-01-12T10:00:00Z",
+                                                "updated_at": "2026-01-12T10:05:00Z"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -291,19 +297,7 @@
                         "description": "Logged out successfully"
                     },
                     "401": {
-                        "description": "Unauthenticated",
-                        "content": {
-                            "application/json": {
-                                "examples": {
-                                    "unauthenticated": {
-                                        "summary": "Missing token",
-                                        "value": {
-                                            "message": "Unauthenticated."
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        "description": "Unauthenticated"
                     }
                 }
             }

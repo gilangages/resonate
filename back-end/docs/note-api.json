@@ -3,7 +3,7 @@
     "info": {
         "title": "Notes API",
         "description": "Public notes API with authentication and ownership control",
-        "version": "1.0.1"
+        "version": "1.0.3"
     },
     "servers": [
         {
@@ -44,6 +44,7 @@
                     },
                     "author": {
                         "type": "string",
+                        "description": "Nama yang ditampilkan (bisa nama asli atau samaran)",
                         "example": "Secret Admirer"
                     },
                     "author_avatar": {
@@ -100,32 +101,33 @@
                         "content": {
                             "application/json": {
                                 "examples": {
-                                    "list": {
-                                        "summary": "Public notes list",
-                                        "value": [
-                                            {
-                                                "id": 1,
-                                                "content": "Hello world",
-                                                "recipient": null,
-                                                "initial_name": "Mr. X",
-                                                "author": "Mr. X",
-                                                "author_avatar": "https://ui-avatars.com/api/?name=Mr+X&background=random",
-                                                "spotify_track_name": "Yellow",
-                                                "spotify_artist": "Coldplay",
-                                                "created_at": "2026-01-03T08:00:00Z"
-                                            },
-                                            {
-                                                "id": 2,
-                                                "content": "Keep going 💪",
-                                                "recipient": "My Future Self",
-                                                "initial_name": null,
-                                                "author": "Abdi",
-                                                "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
-                                                "spotify_track_name": "Numb",
-                                                "spotify_artist": "Linkin Park",
-                                                "created_at": "2026-01-03T09:00:00Z"
-                                            }
-                                        ]
+                                    "success": {
+                                        "summary": "Notes List",
+                                        "value": {
+                                            "data": [
+                                                {
+                                                    "id": 1,
+                                                    "content": "Hello world",
+                                                    "recipient": null,
+                                                    "initial_name": "Mr. X",
+                                                    "author": "Mr. X",
+                                                    "author_avatar": "https://ui-avatars.com/api/?name=Mr+X&background=random",
+                                                    "spotify_track_name": "Yellow",
+                                                    "spotify_artist": "Coldplay",
+                                                    "created_at": "2026-01-03T08:00:00Z"
+                                                },
+                                                {
+                                                    "id": 2,
+                                                    "content": "Keep going 💪",
+                                                    "recipient": "My Future Self",
+                                                    "initial_name": null,
+                                                    "author": "Abdi (Nama Asli)",
+                                                    "author_avatar": "https://ui-avatars.com/api/?name=Abdi&background=random",
+                                                    "spotify_track_id": null,
+                                                    "created_at": "2026-01-03T09:00:00Z"
+                                                }
+                                            ]
+                                        }
                                     }
                                 }
                             }
@@ -170,25 +172,16 @@
                                         "example": "3n3Ppam7vgaVa1iaRUc9Lp"
                                     }
                                 }
-                            },
-                            "examples": {
-                                "create_note_alias": {
-                                    "summary": "Create note with Initial Name",
-                                    "value": {
-                                        "content": "This song describes my mood today",
-                                        "recipient": "Untuk Mantan Terindah",
-                                        "initial_name": "Si Galau",
-                                        "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
-                                    }
-                                },
-                                "create_note_real": {
-                                    "summary": "Create note with Real Name",
-                                    "value": {
-                                        "content": "Semangat pagi!",
-                                        "recipient": "Teman Kantor",
-                                        "initial_name": null,
-                                        "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
-                                    }
+                            }
+                        },
+                        "examples": {
+                            "create": {
+                                "summary": "Create Example",
+                                "value": {
+                                    "content": "This song describes my mood today",
+                                    "recipient": "Untuk Mantan Terindah",
+                                    "initial_name": "Si Galau",
+                                    "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp"
                                 }
                             }
                         }
@@ -203,13 +196,16 @@
                                     "success": {
                                         "summary": "Create success",
                                         "value": {
-                                            "id": 10,
-                                            "content": "This song describes my mood today",
-                                            "recipient": "Untuk Mantan Terindah",
-                                            "initial_name": "Si Galau",
-                                            "author": "Si Galau",
-                                            "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp",
-                                            "created_at": "2026-01-03T10:20:30Z"
+                                            "data": {
+                                                "id": 10,
+                                                "content": "This song describes my mood today",
+                                                "recipient": "Untuk Mantan Terindah",
+                                                "initial_name": "Si Galau",
+                                                "author": "Si Galau",
+                                                "author_avatar": "https://ui-avatars.com/api/?name=Si+Galau&background=random",
+                                                "spotify_track_id": "3n3Ppam7vgaVa1iaRUc9Lp",
+                                                "created_at": "2026-01-03T10:20:30Z"
+                                            }
                                         }
                                     }
                                 }
@@ -220,17 +216,71 @@
                         "description": "Unauthenticated"
                     }
                 }
+            }
+        },
+        "/api/notes/{id}": {
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "description": "ID of the note",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
+                }
+            ],
+            "get": {
+                "summary": "Get note detail",
+                "tags": ["Notes"],
+                "responses": {
+                    "200": {
+                        "description": "Note detail",
+                        "content": {
+                            "application/json": {
+                                "examples": {
+                                    "detail": {
+                                        "summary": "Note detail",
+                                        "value": {
+                                            "data": {
+                                                "id": 10,
+                                                "content": "Detail konten",
+                                                "recipient": null,
+                                                "initial_name": null,
+                                                "author": "Abdi",
+                                                "author_avatar": "https://ui-avatars.com/api/?name=Abdi&background=random",
+                                                "spotify_track_id": "123",
+                                                "created_at": "2026-01-03T10:20:30Z",
+                                                "updated_at": "2026-01-03T10:20:30Z"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "404": {
+                            "description": "Note not found"
+                        }
+                    }
+                }
             },
             "put": {
                 "summary": "Update note",
                 "tags": ["Notes"],
-                "security": [{ "bearerAuth": [] }],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
                 "parameters": [
                     {
-                        "name": "id",
-                        "in": "path",
+                        "name": "Accept",
+                        "in": "header",
                         "required": true,
-                        "schema": { "type": "integer" }
+                        "schema": {
+                            "type": "string",
+                            "default": "application/json"
+                        }
                     }
                 ],
                 "requestBody": {
@@ -259,72 +309,77 @@
                                         "nullable": true
                                     }
                                 }
+                            },
+                            "examples": {
+                                "update": {
+                                    "summary": "Update Example",
+                                    "value": {
+                                        "content": "Updated content",
+                                        "recipient": "Updated Recipient",
+                                        "initial_name": "Updated Alias",
+                                        "spotify_track_id": "123"
+                                    }
+                                }
                             }
                         }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Note updated successfully",
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "success": {
+                                            "summary": "Update success",
+                                            "value": {
+                                                "data": {
+                                                    "id": 10,
+                                                    "content": "Updated Content",
+                                                    "recipient": "Updated Recipient",
+                                                    "initial_name": "Updated Alias",
+                                                    "author": "Updated Alias",
+                                                    "author_avatar": "https://ui-avatars.com/api/?name=Updated+Alias&background=random",
+                                                    "spotify_track_id": "123",
+                                                    "created_at": "2026-01-03T10:20:30Z",
+                                                    "updated_at": "2026-01-12T12:00:00Z"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "403": {
+                            "description": "Forbidden (Not Owner)"
+                        }
                     }
-                },
-                "responses": {
-                    "200": { "description": "Note updated successfully" },
-                    "403": { "description": "Forbidden" }
                 }
             },
             "delete": {
                 "summary": "Delete note",
                 "tags": ["Notes"],
-                "security": [{ "bearerAuth": [] }],
-                "parameters": [
+                "security": [
                     {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": { "type": "integer" }
-                    }
-                ],
-                "responses": {
-                    "204": { "description": "Note deleted successfully" },
-                    "403": { "description": "Forbidden" }
-                }
-            }
-        },
-        "/api/notes/{id}": {
-            "get": {
-                "summary": "Get note detail",
-                "tags": ["Notes"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
+                        "bearerAuth": []
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Note detail",
+                        "description": "Note deleted successfully",
                         "content": {
                             "application/json": {
                                 "examples": {
-                                    "detail": {
-                                        "summary": "Note detail example",
+                                    "success": {
                                         "value": {
-                                            "id": 2,
-                                            "content": "Keep going 💪",
-                                            "recipient": "My Future Self",
-                                            "initial_name": null,
-                                            "author": "Abdi",
-                                            "author_avatar": "https://api.dicebear.com/9.x/notionists/svg?seed=Abdi&backgroundColor=9a203e",
-                                            "spotify_track_id": "1kXn1fgj4GheIa3JkO9lmn",
-                                            "created_at": "2026-01-03T09:00:00Z"
+                                            "message": "Note deleted successfully"
                                         }
                                     }
                                 }
                             }
                         }
                     },
-                    "404": {
-                        "description": "Note not found"
+                    "403": {
+                        "description": "Forbidden (Not Owner)"
                     }
                 }
             }
