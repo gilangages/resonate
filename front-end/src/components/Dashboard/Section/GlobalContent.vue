@@ -254,7 +254,7 @@ onMounted(async () => {
                 <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
                 <div class="flex flex-col">
                   <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
-                  <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
+                  <span class="text-xs text-[#999] font-medium leading-none">{{ note.author_name }}</span>
                 </div>
                 <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
                   {{ formatTime(note.created_at) }}
@@ -409,7 +409,7 @@ onMounted(async () => {
                     class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-zoom-in hover:scale-110 transition-transform" />
                   <div>
                     <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
-                    <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
+                    <p class="text-sm font-bold text-white">{{ selectedNote?.author_name }}</p>
                   </div>
                 </div>
                 <svg
@@ -475,7 +475,7 @@ onMounted(async () => {
                 </button>
 
                 <button
-                  @click="downloadImage(`pesan-dari-${selectedNote?.author || 'user'}`)"
+                  @click="downloadImage(`pesan-dari-${selectedNote?.author_name || 'user'}`)"
                   :disabled="isDownloading"
                   :class="[
                     selectedTheme.modal_btn,
