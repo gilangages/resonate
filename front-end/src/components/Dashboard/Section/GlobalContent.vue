@@ -251,7 +251,9 @@ onMounted(async () => {
 
             <div :class="getTheme(note.id).border" class="flex flex-col gap-3 pt-4 border-t relative z-10 mt-auto">
               <div class="flex items-center gap-2">
-                <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
+                <img
+                  :src="note.author_avatar || note.author_photo_url"
+                  class="w-6 h-6 rounded-full border border-[#333] object-cover" />
                 <div class="flex flex-col">
                   <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
                   <span class="text-xs text-[#999] font-medium leading-none">{{ note.author_name }}</span>
@@ -402,9 +404,14 @@ onMounted(async () => {
               <div class="flex justify-between items-center mb-6 pb-4 border-b" :class="selectedTheme.border">
                 <div class="flex items-center gap-3">
                   <img
-                    v-if="selectedNote?.author_avatar"
-                    @click="openPreview(selectedNote?.author_avatar)"
-                    :src="getImageUrl(selectedNote?.author_avatar, selectedNote?.id + '-avatar')"
+                    v-if="selectedNote?.author_avatar || selectedNote.author_photo_url"
+                    @click="openPreview(selectedNote?.author_avatar || selectedNote.author_photo_url)"
+                    :src="
+                      getImageUrl(
+                        selectedNote?.author_avatar || selectedNote?.author_photo_url,
+                        selectedNote?.id + '-avatar'
+                      )
+                    "
                     crossorigin="anonymous"
                     class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-zoom-in hover:scale-110 transition-transform" />
                   <div>
