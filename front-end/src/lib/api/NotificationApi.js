@@ -26,7 +26,16 @@ export const getUnreadCount = async (token, id = null) => {
 
 // 3. Tandai notifikasi sebagai sudah dibaca
 // Jika id kosong, berarti "Mark All as Read"
-export const markNotificationsRead = async (id = null) => {
+export const markNotificationsRead = async (token, id = null) => {
   const body = id ? { id } : {};
-  return await customFetch("/notifications/mark-read", "POST", body);
+
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notifications/mark-read`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`, // Token wajib dikirim
+    },
+    body: JSON.stringify(body),
+  });
 };

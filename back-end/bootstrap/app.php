@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckBanned;
 use App\Http\Middleware\IsAdmin;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'admin' => IsAdmin::class,
+            'check.banned' => CheckBanned::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

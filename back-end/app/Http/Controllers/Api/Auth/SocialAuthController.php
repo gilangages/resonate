@@ -26,30 +26,37 @@ class SocialAuthController extends Controller
                 ->orWhere('email', $googleUser->getEmail())
                 ->first();
 
-            // Jika user belum ada, buat baru
+            // 1. CEK STATUS BANNED SEBELUM LOGIN/REGISTER
+            // 1. Cek apakah user ada DAN statusnya banned
+            if ($user && $user->is_banned) {
+                // Jangan buat token! Lempar balik ke login page dengan pesan error
+                return redirect(env('FRONTEND_URL') . '/login?error=Akun Anda telah dibekukan oleh Admin.');
+            }
+            // ---------------------------
+
+            // Jika user belum ada (dan jelas belum banned karena baru), buat baru
             if (!$user) {
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
-                    'password' => null, // Tidak butuh password
+                    'password' => null,
+                    // 'is_banned' => false, // Default false
                 ]);
             } else {
-                // Jika user ada tapi belum punya google_id (dulu daftar manual), update datanya
+                // Update google_id jika belum ada
                 if (!$user->google_id) {
                     $user->update([
                         'google_id' => $googleUser->getId(),
-                        'avatar' => $user->avatar ?: $googleUser->getAvatar(), // Pakai foto google jika belum ada
+                        'avatar' => $user->avatar ?: $googleUser->getAvatar(),
                     ]);
                 }
             }
 
-            // Buat Token Sanctum (Login)
+            // Buat Token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // KUNCI PENTING UNTUK SPA:
-            // Jangan return JSON, tapi REDIRECT ke Frontend membawa token di URL
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
 
             return redirect("{$frontendUrl}/auth/callback?token={$token}&name={$user->name}");

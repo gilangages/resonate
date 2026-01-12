@@ -1,10 +1,11 @@
 <script setup>
-import { reactive, ref } from "vue"; // Tambahkan import ref
+import { onMounted, reactive, ref } from "vue"; // Tambahkan import ref
 import { userLogin } from "../../lib/api/UserApi";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { alertError, alertSuccess } from "../../lib/alert"; // Import alertSuccess jika ingin notif selamat datang
 import { useLocalStorage } from "@vueuse/core";
 
+const route = useRoute();
 const router = useRouter();
 const token = useLocalStorage("token", "");
 const user = reactive({
@@ -46,6 +47,16 @@ async function handleSubmit() {
 const loginWithGoogle = () => {
   window.location.href = `${import.meta.env.VITE_APP_PATH}/auth/google/redirect`;
 };
+
+onMounted(() => {
+  // Cek apakah ada parameter error di URL (balikan dari SocialAuthController)
+  if (route.query.error) {
+    alertError(route.query.error);
+
+    // Opsional: Bersihkan URL agar bersih dari query params
+    router.replace({ query: {} });
+  }
+});
 </script>
 
 <template>

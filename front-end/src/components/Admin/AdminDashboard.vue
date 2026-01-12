@@ -4,7 +4,7 @@ import { useLocalStorage } from "@vueuse/core";
 import { getAdminUsers, deleteUserByAdmin } from "../../lib/api/UserApi";
 import { getAdminNotes, deleteNoteByAdmin } from "../../lib/api/NoteApi"; // Pastikan sudah dibuat di NoteApi.js
 import { alertConfirm, alertSuccess } from "../../lib/alert";
-import { getAvatarUrl, userState } from "../../lib/store";
+import { getAvatarUrl } from "../../lib/store";
 
 const token = useLocalStorage("token", "");
 const activeTab = ref("users"); // 'users' atau 'notes'
@@ -32,19 +32,36 @@ const deleteUser = async (id) => {
     return;
   }
 
-  await deleteUserByAdmin(token.value, id);
-  alertSuccess("User berhasil dihapus.");
-  fetchData();
-};
+  try {
+    // 1. Panggil API Hapus/Ban ke Backend
+    await deleteUserByAdmin(token.value, id);
 
+    // 2. JANGAN panggil fetchData() lagi, tapi hapus manual dari list lokal
+    // Ini membuat UI langsung update tanpa loading ulang
+    users.value = users.value.filter((user) => user.id !== id);
+
+    alertSuccess("User berhasil dihapus/banned.");
+  } catch (error) {
+    console.error(error);
+    // Handle error jika perlu
+  }
+};
 const deleteNote = async (id) => {
   if (!(await alertConfirm("Apakah kamu yakin ingin menghapus pesan ini?"))) {
     return;
   }
 
-  await deleteNoteByAdmin(token.value, id);
-  alertSuccess("Pesan berhasil dihapus.");
-  fetchData();
+  try {
+    // 1. Panggil API Hapus Note
+    await deleteNoteByAdmin(token.value, id);
+
+    // 2. Hapus manual dari list lokal agar instan hilang
+    notes.value = notes.value.filter((note) => note.id !== id);
+
+    alertSuccess("Pesan berhasil dihapus.");
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 onMounted(fetchData);

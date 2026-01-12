@@ -27,7 +27,7 @@ Route::get('/test-sanctum', function () {
 Route::post('/users', RegisterController::class);
 Route::post('/users/login', LoginController::class);
 
-//get  Global Notes (Bisa diakses siapa saja)
+// get Global Notes (Bisa diakses siapa saja)
 Route::get('/notes/global', [NoteController::class, 'globalIndex']);
 Route::get('/stream/{trackId}', [AudioStreamController::class, 'stream']);
 
@@ -38,7 +38,8 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 // 🔐 AUTH ROUTES (Prioritas Tinggi)
-Route::middleware('auth:sanctum')->group(function () {
+// ⚠️ PERUBAHAN DI SINI: Tambahkan 'check.banned' setelah 'auth:sanctum'
+Route::middleware(['auth:sanctum', 'check.banned'])->group(function () {
     Route::delete('/users/logout', LogoutController::class);
 
     Route::get('/notifications', [NotificationController::class, 'index']);
@@ -46,12 +47,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead']);
 
     // ✅ POSISI 'my' AMAN DI SINI
-    // Karena route {id} belum didefinisikan di atasnya
     Route::get('/notes/my', [NoteController::class, 'myNotes']);
 
     Route::get('/notes', [NoteController::class, 'index']);
     Route::get('/notes/{id}', [NoteController::class, 'show']);
     Route::post('/notes/bulk-delete', [NoteController::class, 'bulkDestroy']);
+
     // CRUD Notes
     Route::post('/notes', [NoteController::class, 'store']);
     Route::put('/notes/{id}', [NoteController::class, 'update']);
@@ -64,7 +65,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/users/current', [UserController::class, 'update']);
 });
 
-Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+// ⚠️ PERUBAHAN DI SINI: Tambahkan 'check.banned' juga untuk keamanan ganda
+Route::middleware(['auth:sanctum', 'check.banned', 'admin'])->prefix('admin')->group(function () {
     // Kelola User
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
@@ -72,7 +74,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Moderasi Notes
     Route::get('/notes', [AdminUserController::class, 'indexNotes']);
     Route::delete('/notes/{id}', [AdminUserController::class, 'destroyNote']);
-
 });
 
 // ROUTE KHUSUS UNTUK BYPASS CORS IMAGE;
