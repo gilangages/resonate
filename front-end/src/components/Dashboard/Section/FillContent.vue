@@ -378,7 +378,16 @@ defineExpose({
                   class="w-6 h-6 rounded-full border border-[#333] object-cover" />
                 <div class="flex flex-col">
                   <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
-                  <span class="text-xs text-[#999] font-medium leading-none">{{ note.author_name }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs text-[#999] font-medium leading-none">
+                      {{ note.author_name }}
+                    </span>
+                    <span
+                      v-if="note.is_admin"
+                      class="bg-[#9a203e] text-white text-[9px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider border border-white/10 shadow-[0_0_10px_rgba(154,32,62,0.6)]">
+                      Admin
+                    </span>
+                  </div>
                 </div>
                 <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
                   {{ formatTime(note.created_at) }}
@@ -613,7 +622,14 @@ defineExpose({
                   </div>
                   <div>
                     <p class="text-[10px] text-white/50 uppercase tracking-wide font-bold">DARI</p>
-                    <p class="text-base font-bold text-white">{{ selectedNote?.author_name }}</p>
+                    <div class="flex items-center gap-2">
+                      <p class="text-base font-bold text-white">{{ selectedNote?.author_name }}</p>
+                      <span
+                        v-if="selectedNote?.is_admin"
+                        class="bg-[#9a203e] text-white text-[9px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider border border-white/10">
+                        Admin
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <svg

@@ -255,7 +255,17 @@ onMounted(async () => {
                   class="w-6 h-6 rounded-full border border-[#333] object-cover" />
                 <div class="flex flex-col">
                   <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
-                  <span class="text-xs text-[#999] font-medium leading-none">{{ note.author_name }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs text-[#999] font-medium leading-none">
+                      {{ note.author_name }}
+                    </span>
+
+                    <span
+                      v-if="note.is_admin"
+                      class="bg-[#9a203e] text-white text-[9px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider border border-white/10 shadow-[0_0_10px_rgba(154,32,62,0.6)]">
+                      Admin
+                    </span>
+                  </div>
                 </div>
                 <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
                   {{ formatTime(note.created_at) }}
@@ -403,19 +413,20 @@ onMounted(async () => {
               <div class="flex justify-between items-center mb-6 pb-4 border-b" :class="selectedTheme.border">
                 <div class="flex items-center gap-3">
                   <img
-                    v-if="selectedNote?.author_avatar || selectedNote.author_photo_url"
-                    @click="openPreview(selectedNote?.author_avatar || selectedNote.author_photo_url)"
-                    :src="
-                      getImageUrl(
-                        selectedNote?.author_avatar || selectedNote?.author_photo_url,
-                        selectedNote?.id + '-avatar' + cacheBuster
-                      )
-                    "
-                    crossorigin="anonymous"
+                    v-if="selectedNote?.author_avatar || selectedNote?.author_photo_url"
+                    @click="openPreview(selectedNote?.author_avatar || selectedNote?.author_photo_url)"
+                    :src="selectedNote?.author_avatar || selectedNote?.author_photo_url"
                     class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-zoom-in hover:scale-110 transition-transform" />
                   <div>
                     <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
-                    <p class="text-sm font-bold text-white">{{ selectedNote?.author_name }}</p>
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-bold text-white">{{ selectedNote?.author_name }}</p>
+                      <span
+                        v-if="selectedNote?.is_admin"
+                        class="bg-[#9a203e] text-white text-[9px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider border border-white/10">
+                        Admin
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <svg

@@ -54,14 +54,16 @@ onBeforeMount(async () => {
       class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 gap-1 bg-[#0f0505] p-1 rounded-xl border border-[#2c2021]">
       <RouterLink
         to="/dashboard/global"
+        data-title="Jelajahi"
         active-class="bg-[#9a203e] text-white"
-        class="px-4 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white transition-all duration-300">
+        class="tooltip-container-mid px-4 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white transition-all duration-300">
         Jelajahi
       </RouterLink>
       <RouterLink
         to="/dashboard"
         exact-active-class="bg-[#9a203e] text-white"
-        class="px-4 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white transition-all duration-300">
+        data-title="Pesan saya"
+        class="tooltip-container-mid px-4 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white transition-all duration-300">
         Pesan Saya
       </RouterLink>
     </div>
@@ -87,11 +89,11 @@ onBeforeMount(async () => {
         <div v-if="userState.role === 'admin'">
           <hr class="border-[#4b1a1a] my-[4px]" />
           <RouterLink
-            to="/admin"
+            to="/dashboard/admin"
             class="block p-[6px] text-red-400 font-bold rounded-[10px] hover:bg-[#4b1a1a] flex items-center gap-2"
             @click="closeDropdown">
-            <span>⚡</span>
             Admin Panel
+            <span>⚡</span>
           </RouterLink>
         </div>
 

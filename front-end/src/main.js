@@ -58,15 +58,15 @@ const router = createRouter({
           component: DashboardUser,
         },
         {
-          path: "/admin",
+          path: "admin",
           component: AdminDashboard,
           beforeEnter: (to, from, next) => {
-            const user = JSON.parse(localStorage.getItem("user")); // Pastikan simpan data user saat login
+            const user = JSON.parse(sessionStorage.getItem("user")); // Pastikan simpan data user saat login
             if (user && user.role === "admin") {
               next();
             } else {
               alertError("Hanya admin yang boleh masuk!");
-              next("/dashboard");
+              next("/dashboard/global");
             }
           },
         },

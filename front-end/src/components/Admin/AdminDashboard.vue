@@ -3,7 +3,8 @@ import { ref, onMounted } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import { getAdminUsers, deleteUserByAdmin } from "../../lib/api/UserApi";
 import { getAdminNotes, deleteNoteByAdmin } from "../../lib/api/NoteApi"; // Pastikan sudah dibuat di NoteApi.js
-import { alertConfirm } from "../../lib/alert";
+import { alertConfirm, alertSuccess } from "../../lib/alert";
+import { getAvatarUrl, userState } from "../../lib/store";
 
 const token = useLocalStorage("token", "");
 const activeTab = ref("users"); // 'users' atau 'notes'
@@ -16,6 +17,7 @@ const fetchData = async () => {
   if (activeTab.value === "users") {
     const res = await getAdminUsers(token.value);
     const json = await res.json();
+    console.log(json);
     users.value = json.data;
   } else {
     const res = await getAdminNotes(token.value);
@@ -26,20 +28,22 @@ const fetchData = async () => {
 };
 
 const deleteUser = async (id) => {
-  if (!(await alertConfirm("Are you sure you want to delete this note?"))) {
+  if (!(await alertConfirm("Apakah kamu yakin ingin membatasi user ini?"))) {
     return;
   }
 
   await deleteUserByAdmin(token.value, id);
+  alertSuccess("User berhasil dihapus.");
   fetchData();
 };
 
 const deleteNote = async (id) => {
-  if (!(await alertConfirm("Are you sure you want to delete this note?"))) {
+  if (!(await alertConfirm("Apakah kamu yakin ingin menghapus pesan ini?"))) {
     return;
   }
 
   await deleteNoteByAdmin(token.value, id);
+  alertSuccess("Pesan berhasil dihapus.");
   fetchData();
 };
 
@@ -48,7 +52,7 @@ onMounted(fetchData);
 
 <template>
   <div class="p-8 text-white relative min-h-screen font-jakarta bg-[#0f0505]">
-    <h1 class="text-3xl font-bold mb-6">Admin Moderation</h1>
+    <h1 class="text-3xl font-bold mb-6">Panel Admin</h1>
 
     <div class="flex gap-4 mb-6 border-b border-white/10">
       <button
@@ -87,7 +91,10 @@ onMounted(fetchData);
           <tbody>
             <tr v-for="user in users" :key="user.id" class="border-b border-white/5 hover:bg-white/5">
               <td class="p-4 flex items-center gap-3">
-                <img :src="user.avatar || '/default-avatar.png'" class="w-8 h-8 rounded-full border border-white/20" />
+                <img
+                  :src="user.avatar ? getAvatarUrl(user.avatar) : user.photo_url || '/default-avatar.png'"
+                  class="w-8 h-8 rounded-full border border-white/20 object-cover"
+                  alt="Avatar" />
                 {{ user.name }}
               </td>
               <td class="p-4">{{ user.email }}</td>

@@ -22,10 +22,12 @@ async function handleSubmit() {
 
   if (response.ok) {
     token.value = responseBody.token;
+    // Simpan data user (termasuk role) ke localStorage agar bisa dibaca di main.js
+    sessionStorage.setItem("user", JSON.stringify(responseBody.user));
     sessionStorage.removeItem("last_anim_name");
-    if (response.data.user.role === "admin") {
+    if (responseBody.user.role === "admin") {
       await router.push({
-        path: "dashboard/admin",
+        path: "/dashboard/admin",
       }); // atau rute admin kamu
     } else {
       await router.push({
