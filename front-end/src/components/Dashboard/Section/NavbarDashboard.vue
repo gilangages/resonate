@@ -84,6 +84,17 @@ onBeforeMount(async () => {
           Edit Profil
         </RouterLink>
 
+        <div v-if="userState.role === 'admin'">
+          <hr class="border-[#4b1a1a] my-[4px]" />
+          <RouterLink
+            to="/admin"
+            class="block p-[6px] text-red-400 font-bold rounded-[10px] hover:bg-[#4b1a1a] flex items-center gap-2"
+            @click="closeDropdown">
+            <span>⚡</span>
+            Admin Panel
+          </RouterLink>
+        </div>
+
         <hr class="border-[#4b1a1a] my-[4px]" />
 
         <RouterLink

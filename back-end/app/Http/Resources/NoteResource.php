@@ -28,8 +28,7 @@ class NoteResource extends JsonResource
 
             // Gunakan initial_name jika ada, jika tidak ada pakai nama asli user
             'author_name' => $this->initial_name ?? ($user ? $user->name : 'Anonymous'),
-
-            // SEKARANG INI AKAN BERISI URL GOOGLE ATAU URL STORAGE LOKAL
+            'author_name' => $this->user->role === 'admin',
             'author_avatar' => $avatar,
 
             // Tambahkan juga photo_url (Dicebear) sebagai cadangan di frontend

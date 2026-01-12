@@ -23,9 +23,15 @@ async function handleSubmit() {
   if (response.ok) {
     token.value = responseBody.token;
     sessionStorage.removeItem("last_anim_name");
-    await router.push({
-      path: "/dashboard/global",
-    });
+    if (response.data.user.role === "admin") {
+      await router.push({
+        path: "dashboard/admin",
+      }); // atau rute admin kamu
+    } else {
+      await router.push({
+        path: "/dashboard/global",
+      });
+    }
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
     await alertError(pesanError);
