@@ -98,7 +98,7 @@ export const userLogout = async (token) => {
 };
 
 export const forgotPassword = (email) => {
-  return fetch(`${import.meta.env.VITE_APP_PATH}/forgot-password`, {
+  return customFetch(`${import.meta.env.VITE_APP_PATH}/forgot-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
@@ -106,9 +106,29 @@ export const forgotPassword = (email) => {
 };
 
 export const resetPassword = (data) => {
-  return fetch(`${import.meta.env.VITE_APP_PATH}/reset-password`, {
+  return customFetch(`${import.meta.env.VITE_APP_PATH}/reset-password`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
+  });
+};
+
+export const getAdminUsers = async (token) => {
+  return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/users`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const deleteUserByAdmin = async (token, id) => {
+  return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/users/${id}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
   });
 };

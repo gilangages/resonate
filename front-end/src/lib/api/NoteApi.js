@@ -149,3 +149,24 @@ export const noteBulkDelete = async (token, ids) => {
     body: JSON.stringify({ ids }),
   });
 };
+
+export const deleteNoteByAdmin = async (token, id) => {
+  return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/notes/${id}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+// Ambil semua notes (lintas user) untuk admin
+export const getAdminNotes = async (token) => {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/admin/notes`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

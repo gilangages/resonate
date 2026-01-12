@@ -15,6 +15,8 @@ import NotFound from "./components/NotFound.vue";
 import AuthCallback from "./components/User/AuthCallback.vue";
 import UserForgotPassword from "./components/User/UserForgotPassword.vue";
 import UserResetPassword from "./components/User/UserResetPassword.vue";
+import AdminDashboard from "./components/Admin/AdminDashboard.vue";
+import { alertError } from "./lib/alert";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -23,6 +25,7 @@ const router = createRouter({
       path: "/",
       component: LandingPage,
     },
+
     {
       path: "/",
       component: Layout,
@@ -53,6 +56,19 @@ const router = createRouter({
         {
           path: "",
           component: DashboardUser,
+        },
+        {
+          path: "/admin",
+          component: AdminDashboard,
+          beforeEnter: (to, from, next) => {
+            const user = JSON.parse(localStorage.getItem("user")); // Pastikan simpan data user saat login
+            if (user && user.role === "admin") {
+              next();
+            } else {
+              alertError("Hanya admin yang boleh masuk!");
+              next("/dashboard");
+            }
+          },
         },
         {
           path: "global",

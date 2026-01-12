@@ -64,7 +64,10 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/users', [AdminUserController::class, 'index']);
     Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
 
-    // Nanti bisa tambah: Route::delete('/notes/{id}', ...) untuk hapus pesan kasar
+    // Moderasi Notes
+    Route::get('/notes', [AdminUserController::class, 'indexNotes']);
+    Route::delete('/notes/{id}', [AdminUserController::class, 'destroyNote']);
+
 });
 
 // ROUTE KHUSUS UNTUK BYPASS CORS IMAGE;
