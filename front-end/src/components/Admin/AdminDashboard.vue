@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useLocalStorage } from "@vueuse/core";
-import { getAdminUsers, deleteUserByAdmin } from "../../lib/api/UserApi";
+import { getAdminUsers, deleteUserByAdmin, restoreUserByAdmin } from "../../lib/api/UserApi";
 import { getAdminNotes, deleteNoteByAdmin } from "../../lib/api/NoteApi"; // Pastikan sudah dibuat di NoteApi.js
 import { alertConfirm, alertSuccess } from "../../lib/alert";
 import { getAvatarUrl } from "../../lib/store";
@@ -26,6 +26,26 @@ const fetchData = async () => {
     notes.value = json.data;
   }
   loading.value = false;
+};
+
+const restoreUser = async (id) => {
+  if (!(await alertConfirm("Pulihkan akses akun user ini?"))) {
+    return;
+  }
+
+  try {
+    const res = await restoreUserByAdmin(token.value, id);
+    if (res.ok) {
+      // Update state lokal biar UI langsung berubah tanpa refresh
+      const userIndex = users.value.findIndex((u) => u.id === id);
+      if (userIndex !== -1) {
+        users.value[userIndex].is_banned = 0; // atau false
+      }
+      alertSuccess("Akun user berhasil dipulihkan.");
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 const deleteUser = async (id) => {
@@ -135,7 +155,14 @@ onMounted(fetchData);
                   Ban User
                 </button>
 
-                <span v-else class="text-red-400 font-bold italic text-sm">Banned</span>
+                <div v-else class="flex flex-col items-center gap-1">
+                  <span class="text-red-400 font-bold italic text-xs">Banned</span>
+                  <button
+                    @click="restoreUser(user.id)"
+                    class="bg-green-600/20 text-green-500 text-xs px-2 py-1 rounded hover:bg-green-600 hover:text-white transition">
+                    Pulihkan
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>

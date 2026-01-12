@@ -79,4 +79,19 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Catatan dihapus dan user telah diberitahu.']);
     }
+
+    /**
+     * 5. Memulihkan Akun (Unban)
+     */
+    public function restore($id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        $user->update([
+            'is_banned' => false,
+            'ban_reason' => null,
+        ]);
+
+        return response()->json(['message' => 'Akun user berhasil dipulihkan.']);
+    }
 }

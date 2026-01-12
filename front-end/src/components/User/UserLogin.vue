@@ -1,9 +1,10 @@
 <script setup>
-import { onMounted, reactive, ref } from "vue"; // Tambahkan import ref
-import { userLogin } from "../../lib/api/UserApi";
+import { onMounted, reactive, ref } from "vue";
+import { userLogin, sendAppeal } from "../../lib/api/UserApi";
 import { useRoute, useRouter } from "vue-router";
-import { alertError, alertSuccess } from "../../lib/alert"; // Import alertSuccess jika ingin notif selamat datang
+import { alertError, alertSuccess } from "../../lib/alert";
 import { useLocalStorage } from "@vueuse/core";
+import Swal from "sweetalert2";
 
 const route = useRoute();
 const router = useRouter();
@@ -13,34 +14,78 @@ const user = reactive({
   password: "",
 });
 
-// --- STATE TOGGLE PASSWORD ---
 const showPassword = ref(false);
 
-async function handleSubmit() {
-  const response = await userLogin(user);
-  const responseBody = await response.json();
-  console.log(responseBody);
+// --- 1. FUNGSI REUSABLE UNTUK MENANGANI USER BANNED ---
+// Fungsi ini akan dipanggil oleh Login Biasa & Login Google
+async function handleBannedUser(emailTarget, message) {
+  const { isConfirmed, value: reason } = await Swal.fire({
+    icon: "error",
+    title: "Akun Dinonaktifkan",
+    text: message || "Akun Anda telah dibekukan.",
+    footer: '<span class="text-sm">Tulis minimal 10 karakter.</span>',
+    input: "textarea",
+    inputLabel: "Alasan Banding",
+    inputPlaceholder: "Jelaskan mengapa akun Anda harus dipulihkan...",
+    inputAttributes: {
+      "aria-label": "Tulis pesan banding disini",
+    },
+    showCancelButton: true,
+    confirmButtonText: "Kirim Banding",
+    cancelButtonText: "Tutup",
+    confirmButtonColor: "#9a203e",
+  });
 
-  if (response.ok) {
-    token.value = responseBody.token;
-    // Simpan data user (termasuk role) ke localStorage agar bisa dibaca di main.js
-    sessionStorage.setItem("user", JSON.stringify(responseBody.user));
-    sessionStorage.removeItem("last_anim_name");
-    if (responseBody.user.role === "admin") {
-      await router.push({
-        path: "/dashboard/admin",
-      }); // atau rute admin kamu
-    } else {
-      if (response.status === 403 && responseBody.message === "AKUN_DIBEKUKAN") {
-        alertError(responseBody.reason);
+  // Jika user mengirim banding
+  if (isConfirmed && reason) {
+    try {
+      // Gunakan emailTarget yang dipassing ke fungsi (bisa dari form atau url google)
+      const resAppeal = await sendAppeal(emailTarget, reason);
+      const jsonAppeal = await resAppeal.json();
+
+      if (resAppeal.ok) {
+        alertSuccess("Permintaan banding terkirim ke Admin.");
+      } else {
+        alertError(jsonAppeal.message || "Gagal mengirim banding.");
       }
-      await router.push({
-        path: "/dashboard/global",
-      });
+    } catch (err) {
+      console.error(err);
+      alertError("Gagal terhubung ke server untuk banding.");
     }
-  } else {
-    const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
-    await alertError(pesanError);
+  }
+}
+
+async function handleSubmit() {
+  try {
+    const response = await userLogin(user);
+    const responseBody = await response.json();
+
+    if (response.ok) {
+      // --- LOGIN SUKSES ---
+      token.value = responseBody.token;
+      sessionStorage.setItem("user", JSON.stringify(responseBody.user));
+      sessionStorage.removeItem("last_anim_name");
+
+      if (responseBody.user.role === "admin") {
+        await router.push("/dashboard/admin");
+      } else {
+        await router.push("/dashboard/global");
+      }
+    } else {
+      // --- LOGIN GAGAL ---
+
+      // Cek Banned (Status 403)
+      if (response.status === 403 && responseBody.status === "banned") {
+        // Panggil fungsi reusable tadi, pakai email dari input form
+        await handleBannedUser(user.email, responseBody.message);
+      } else {
+        const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
+        await alertError(pesanError);
+      }
+    }
+  } catch (error) {
+    console.error("Login Error:", error);
+    alertError("Terjadi kesalahan jaringan atau server.");
   }
 }
 
@@ -48,12 +93,22 @@ const loginWithGoogle = () => {
   window.location.href = `${import.meta.env.VITE_APP_PATH}/auth/google/redirect`;
 };
 
+// --- 3. MODIFIKASI ONMOUNTED ---
 onMounted(() => {
-  // Cek apakah ada parameter error di URL (balikan dari SocialAuthController)
-  if (route.query.error) {
-    alertError(route.query.error);
+  // Ambil query params
+  const { error, status, email, message } = route.query;
 
-    // Opsional: Bersihkan URL agar bersih dari query params
+  // Skenario 1: Balik dari Google tapi BANNED
+  if (status === "banned" && email) {
+    // Bersihkan URL supaya bersih
+    router.replace({ query: {} });
+
+    // Panggil Popup Banding
+    handleBannedUser(email, message);
+  }
+  // Skenario 2: Error biasa (misal gagal connect google)
+  else if (error) {
+    alertError(error);
     router.replace({ query: {} });
   }
 });
@@ -184,4 +239,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-<style scoped></style>

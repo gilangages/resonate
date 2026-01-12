@@ -15,10 +15,10 @@ class SuperAdminSeeder extends Seeder
     {
         // Buat Akun Super Admin
         User::updateOrCreate(
-            ['email' => 'admin@gmail.com'], // Cek berdasarkan email agar tidak duplikat
+            ['email' => 'qbdian@gmail.com'], // Cek berdasarkan email agar tidak duplikat
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('password123'), // Ganti dengan password yang aman
+                'name' => 'Super Admin Abdian',
+                'password' => Hash::make('abdian123'), // Ganti dengan password yang aman
                 'role' => 'admin',
                 'email_verified_at' => now(),
             ]
@@ -27,6 +27,6 @@ class SuperAdminSeeder extends Seeder
         // Opsi: Tambahkan beberapa user dummy untuk testing moderasi
         // User::factory(10)->create();
 
-        echo "Selesai! Akun admin: admin@musicnote.com | password: password123 \n";
+        echo "Selesai! Akun admin: qbdian@gmail.com | password: abdian123 \n";
     }
 }

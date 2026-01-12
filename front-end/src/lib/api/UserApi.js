@@ -132,3 +132,26 @@ export const deleteUserByAdmin = async (token, id) => {
     },
   });
 };
+
+// Function Restore User (Untuk Admin)
+export const restoreUserByAdmin = (token, userId) => {
+  return fetch(`${import.meta.env.VITE_APP_PATH}/admin/users/${userId}/restore`, {
+    method: "PATCH", // Kita pakai PATCH sesuai route
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+// Function Kirim Banding (Public)
+export const sendAppeal = (email, reason) => {
+  return fetch(`${import.meta.env.VITE_APP_PATH}/users/appeal`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ email, reason }),
+  });
+};

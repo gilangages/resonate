@@ -29,8 +29,9 @@ class SocialAuthController extends Controller
             // 1. CEK STATUS BANNED SEBELUM LOGIN/REGISTER
             // 1. Cek apakah user ada DAN statusnya banned
             if ($user && $user->is_banned) {
-                // Jangan buat token! Lempar balik ke login page dengan pesan error
-                return redirect(env('FRONTEND_URL') . '/login?error=Akun Anda telah dibekukan oleh Admin.');
+                $message = "Akun Anda telah dibekukan oleh Admin.";
+                // Kita kirim status=banned dan email user agar frontend bisa memunculkan form banding
+                return redirect(env('FRONTEND_URL') . "/login?status=banned&email={$user->email}&message=" . urlencode($message));
             }
             // ---------------------------
 

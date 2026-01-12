@@ -44,6 +44,8 @@ class LoginController extends Controller
         if ($user->is_banned) {
             return response()->json([
                 'message' => 'AKUN_DIBEKUKAN', // Kode khusus untuk frontend
+                'status' => 'banned',
+
                 'reason' => $user->ban_reason ?? 'Pelanggaran Aturan.',
             ], 403);
         }

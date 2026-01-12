@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\AudioStreamController;
+use App\Http\Controllers\Api\Auth\AppealController;
 use App\Http\Controllers\Api\Auth\ForgotPasswordController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
@@ -26,6 +27,7 @@ Route::get('/test-sanctum', function () {
 // Route Public (Register/Login)
 Route::post('/users', RegisterController::class);
 Route::post('/users/login', LoginController::class);
+Route::post('/users/appeal', [AppealController::class, 'sendAppeal']);
 
 // get Global Notes (Bisa diakses siapa saja)
 Route::get('/notes/global', [NoteController::class, 'globalIndex']);
@@ -76,6 +78,7 @@ Route::middleware(['auth:sanctum', 'check.banned', 'admin'])->prefix('admin')->g
     // Moderasi Notes
     Route::get('/notes', [AdminUserController::class, 'indexNotes']);
     Route::delete('/notes/{id}', [AdminUserController::class, 'destroyNote']);
+    Route::patch('/users/{id}/restore', [AdminUserController::class, 'restore']);
 });
 
 // ROUTE KHUSUS UNTUK BYPASS CORS IMAGE;
