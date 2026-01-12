@@ -1,5 +1,5 @@
 <script setup>
-import { onBeforeMount, ref, computed, onMounted } from "vue";
+import { onBeforeMount, ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { userState, getAvatarUrl } from "../../../lib/store";
 import { userDetail } from "../../../lib/api/UserApi";
@@ -41,7 +41,6 @@ async function fetchNotifCount() {
   try {
     const res = await getUnreadCount(token.value);
     const json = await res.json();
-    console.log(json);
     if (res.ok) {
       unreadCount.value = json.count || 0;
     }
@@ -75,41 +74,54 @@ const closeDropdown = () => {
 
 onBeforeMount(async () => {
   await fetchUser();
-  await fetchNotifCount(); // Ambil data notif saat load
+  await fetchNotifCount();
+});
+
+onMounted(() => {
+  // Saat ada komponen lain (seperti AllNotification) yang request update, jalankan fetchNotifCount
+  window.addEventListener("notification-updated", fetchNotifCount);
+});
+
+// Bersihkan listener saat komponen dihancurkan agar tidak memori leak
+onUnmounted(() => {
+  window.removeEventListener("notification-updated", fetchNotifCount);
 });
 </script>
 
 <template>
   <div
-    class="bg-[#180808] p-[12px] flex items-center justify-between relative sticky z-50 top-0 border-b border-[#2c2021]">
+    class="bg-[#180808] px-4 py-3 flex items-center justify-between sticky z-50 top-0 border-b border-[#2c2021]/80 shadow-sm backdrop-blur-md">
     <RouterLink to="/dashboard" data-title="Resonate" class="tooltip-container no-underline">
-      <h1 class="text-[#9a203e] text-[16px] ml-[1em] font-bold sm:text-[24px]">Resonate</h1>
+      <h1
+        class="text-[#9a203e] text-[18px] sm:text-[24px] font-bold tracking-tight hover:text-[#b92b4a] transition-colors">
+        Resonate
+      </h1>
     </RouterLink>
 
     <div
       v-if="showNavigation"
-      class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 gap-1 bg-[#0f0505] p-1 rounded-xl border border-[#2c2021]">
+      class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 gap-1 bg-[#0f0505]/80 backdrop-blur-sm p-1.5 rounded-xl border border-[#2c2021]">
       <RouterLink
         to="/dashboard/global"
         data-title="Jelajahi"
-        active-class="bg-[#9a203e] text-white"
-        class="tooltip-container-mid px-4 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white transition-all duration-300">
+        active-class="bg-[#9a203e] text-white shadow-md"
+        class="tooltip-container-mid px-5 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white hover:bg-[#2c2021] transition-all duration-300">
         Jelajahi
       </RouterLink>
       <RouterLink
         to="/dashboard"
-        exact-active-class="bg-[#9a203e] text-white"
+        exact-active-class="bg-[#9a203e] text-white shadow-md"
         data-title="Pesan saya"
-        class="tooltip-container-mid px-4 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white transition-all duration-300">
+        class="tooltip-container-mid px-5 py-2 text-[14px] font-medium text-[#cdcccc] rounded-lg hover:text-white hover:bg-[#2c2021] transition-all duration-300">
         Pesan Saya
       </RouterLink>
     </div>
 
-    <div class="flex items-center gap-4 mr-[1em]">
+    <div class="flex items-center gap-3 sm:gap-4">
       <div class="relative">
         <button
           @click="toggleNotif"
-          class="relative p-2 rounded-full hover:bg-[#2c2021] transition text-[#cdcccc] hover:text-white">
+          class="relative p-2 rounded-full hover:bg-[#2c2021] transition-all duration-200 text-[#cdcccc] hover:text-white active:scale-95 group">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="22"
@@ -119,15 +131,16 @@ onBeforeMount(async () => {
             stroke="currentColor"
             stroke-width="2"
             stroke-linecap="round"
-            stroke-linejoin="round">
+            stroke-linejoin="round"
+            class="group-hover:stroke-red-400 transition-colors">
             <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
             <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
           </svg>
 
           <span
             v-if="unreadCount > 0"
-            class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full border border-[#180808]">
-            {{ unreadCount }}
+            class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-bold text-white ring-2 ring-[#180808]">
+            {{ unreadCount > 9 ? "9+" : unreadCount }}
           </span>
         </button>
 
@@ -136,62 +149,77 @@ onBeforeMount(async () => {
           <NotificationDropdown @read="decrementCount" @read-all="resetCount" />
         </div>
       </div>
+
       <div class="relative">
-        <div class="tooltip-container cursor-pointer rounded-full" :data-title="userState.name" @click="toggleDropdown">
+        <div
+          class="tooltip-container cursor-pointer rounded-full ring-2 ring-transparent hover:ring-[#4b1a1a] transition-all"
+          :data-title="userState.name"
+          @click="toggleDropdown">
           <img
             :src="getAvatarUrl(userState.avatar) || getAvatarUrl(userState.photo_url)"
             alt="me"
-            class="w-[40px] h-[40px] rounded-full object-cover block border border-[#2c2021]" />
+            class="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] rounded-full object-cover block border border-[#2c2021] shadow-sm" />
         </div>
 
-        <div
-          v-if="showDropdown"
-          class="absolute right-0 mt-[12px] w-[200px] rounded-[10px] bg-[#2c0f0f] p-[4px] z-50 shadow-xl border border-[#4b1a1a]">
-          <RouterLink
-            to="/dashboard/users/profile"
-            class="block p-[6px] text-[#e5e5e5] font-medium rounded-[10px] hover:bg-[#4b1a1a]"
-            @click="closeDropdown">
-            Edit Profil
-          </RouterLink>
-
-          <div v-if="userState.role === 'admin'">
-            <hr class="border-[#4b1a1a] my-[4px]" />
+        <Transition
+          enter-active-class="transition ease-out duration-200"
+          enter-from-class="opacity-0 translate-y-2 scale-95"
+          enter-to-class="opacity-100 translate-y-0 scale-100"
+          leave-active-class="transition ease-in duration-150"
+          leave-from-class="opacity-100 translate-y-0 scale-100"
+          leave-to-class="opacity-0 translate-y-2 scale-95">
+          <div
+            v-if="showDropdown"
+            class="absolute right-0 mt-3 w-[200px] rounded-xl bg-[#1e1e1e] p-1.5 z-50 shadow-2xl border border-[#4b1a1a] ring-1 ring-white/5 origin-top-right">
             <RouterLink
-              to="/dashboard/admin"
-              class="block p-[6px] text-red-400 font-bold rounded-[10px] hover:bg-[#4b1a1a] flex items-center gap-2"
+              to="/dashboard/users/profile"
+              class="flex items-center gap-3 px-3 py-2.5 text-sm text-[#e5e5e5] font-medium rounded-lg hover:bg-[#2c2021] hover:text-white transition-colors"
               @click="closeDropdown">
-              Admin Panel
-              <span>⚡</span>
+              <span>👤</span>
+              Edit Profil
+            </RouterLink>
+
+            <div v-if="userState.role === 'admin'">
+              <div class="h-px bg-[#4b1a1a] mx-2 my-1"></div>
+              <RouterLink
+                to="/dashboard/admin"
+                class="flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 font-bold rounded-lg hover:bg-[#2c0f0f] hover:text-red-300 transition-colors"
+                @click="closeDropdown">
+                <span>⚡</span>
+                Admin Panel
+              </RouterLink>
+            </div>
+
+            <div class="h-px bg-[#4b1a1a] mx-2 my-1"></div>
+
+            <RouterLink
+              to="/dashboard/users/logout"
+              class="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-400 font-medium rounded-lg hover:bg-[#2c2021] hover:text-red-400 transition-colors"
+              @click="closeDropdown">
+              <span>🚪</span>
+              Log out
             </RouterLink>
           </div>
-
-          <hr class="border-[#4b1a1a] my-[4px]" />
-
-          <RouterLink
-            to="/dashboard/users/logout"
-            class="block p-[6px] text-[#e5e5e5] font-medium rounded-[10px] hover:bg-[#4b1a1a]">
-            Log out
-          </RouterLink>
-        </div>
+        </Transition>
       </div>
     </div>
   </div>
 
   <div
     v-if="showNavigation"
-    class="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[300px] bg-[#180808]/90 backdrop-blur-lg p-1.5 rounded-full border border-[#2c2021] shadow-2xl transition-transform duration-300">
+    class="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[320px] bg-[#180808]/80 backdrop-blur-xl p-1.5 rounded-full border border-[#2c2021] shadow-2xl ring-1 ring-white/5 transition-transform duration-300">
     <div class="grid grid-cols-2 gap-1">
       <RouterLink
         to="/dashboard/global"
         active-class="bg-[#9a203e] text-white shadow-lg"
-        class="flex items-center justify-center px-2 py-3 text-[13px] font-medium text-[#cdcccc] rounded-full hover:text-white transition-all duration-300 whitespace-nowrap">
+        class="flex items-center justify-center px-4 py-3 text-[13px] font-medium text-[#cdcccc] rounded-full hover:text-white transition-all duration-300 whitespace-nowrap">
         Jelajahi
       </RouterLink>
 
       <RouterLink
         to="/dashboard"
         exact-active-class="bg-[#9a203e] text-white shadow-lg"
-        class="flex items-center justify-center px-2 py-3 text-[13px] font-medium text-[#cdcccc] rounded-full hover:text-white transition-all duration-300 whitespace-nowrap">
+        class="flex items-center justify-center px-4 py-3 text-[13px] font-medium text-[#cdcccc] rounded-full hover:text-white transition-all duration-300 whitespace-nowrap">
         Pesan Saya
       </RouterLink>
     </div>

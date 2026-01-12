@@ -9,19 +9,25 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     /**
-     * 1. Ambil daftar notifikasi user
+     * 1. Ambil daftar notifikasi user (Optimized for Dropdown)
      * GET /api/notifications
      */
     public function index(Request $request): JsonResponse
     {
-        // Mengambil semua notifikasi milik user yang sedang login
-        // Diurutkan dari yang terbaru, dan dipagination (10 per halaman)
+        // OPTIMISASI: Gunakan take(10) -> get() alih-alih paginate()
+        // Ini menghindari query "count(*)" yang berat jika data ribuan.
+        // Dropdown hanya butuh intip 10 data terbaru.
         $notifications = $request->user()
             ->notifications() // Mengambil dari tabel 'notifications' via model User
             ->latest()
-            ->paginate(10);
+            ->take(10)
+            ->get();
 
-        return response()->json($notifications);
+        // Kita bungkus dalam 'data' agar struktur JSON tetap sama
+        // dengan format pagination sebelumnya (sehingga frontend tidak error baca .data)
+        return response()->json([
+            'data' => $notifications,
+        ]);
     }
 
     /**
@@ -72,5 +78,16 @@ class NotificationController extends Controller
             ->markAsRead();
 
         return response()->json(['message' => 'Semua notifikasi telah ditandai sudah dibaca.']);
+    }
+
+    public function getAll(Request $request): JsonResponse
+    {
+        // Gunakan paginate() agar bisa ada halaman 1, 2, 3, dst.
+        $notifications = $request->user()
+            ->notifications()
+            ->latest()
+            ->paginate(15); // Tampilkan 15 per halaman
+
+        return response()->json($notifications);
     }
 }

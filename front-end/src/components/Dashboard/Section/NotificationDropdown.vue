@@ -4,15 +4,11 @@ import { getNotifications, markNotificationsRead, markAllNotificationsRead } fro
 import { useLocalStorage } from "@vueuse/core";
 import { formatTime } from "../../../lib/dateFormatter";
 
-// Import Icon Gambar (Pastikan path sesuai asetmu, atau pakai SVG inline di bawah)
-// import iconTrash from "@/assets/img/stop.svg"; // Contoh jika ingin pakai gambar stop/trash
-// import iconBell from "@/assets/img/note.svg"; // Contoh icon default
-
 const token = useLocalStorage("token", "");
 const notifications = ref([]);
 const loading = ref(false);
 
-const emit = defineEmits(["read", "read-all"]);
+const emit = defineEmits(["read", "read-all", "close"]); // Tambahkan emit 'close' jika ingin menutup dropdown saat link diklik
 
 const fetchNotifs = async () => {
   loading.value = true;
@@ -20,6 +16,7 @@ const fetchNotifs = async () => {
     const res = await getNotifications(token.value);
     const json = await res.json();
     if (res.ok) {
+      // json.data akan berisi array 10 item dari backend
       notifications.value = json.data;
     }
   } catch (err) {
@@ -51,8 +48,6 @@ const markAllRead = async () => {
     if (!n.read_at) n.read_at = now;
   });
 
-  // PERBAIKAN DI SINI:
-  // Emit 'read-all' agar Navbar tahu harus nol-kan badge
   emit("read-all");
 
   try {
@@ -62,51 +57,19 @@ const markAllRead = async () => {
   }
 };
 
-// Fungsi helper untuk menentukan warna background berdasarkan tipe notif
 const getBgClass = (notif) => {
-  if (notif.read_at) return "bg-transparent opacity-60"; // Sudah dibaca
-
-  // Jika tipe alert (penghapusan), beri warna merah agak terang
+  if (notif.read_at) return "bg-transparent opacity-60";
   if (notif.data.type === "alert") return "bg-red-900/40 border-l-4 border-red-500 hover:bg-red-900/50";
-
-  // Default notif biasa
   return "bg-[#9a203e]/20 hover:bg-[#9a203e]/30";
 };
-
-// const markAllRead = async () => {
-//   // 1. Cek apakah ada notif yang belum dibaca (biar gak buang-buang request API)
-//   const hasUnread = notifications.value.some((n) => !n.read_at);
-//   if (!hasUnread) return;
-
-//   // 2. Optimistic UI: Update tampilan DULUAN biar terasa instan (tanpa loading)
-//   const now = new Date().toISOString();
-//   notifications.value.forEach((n) => {
-//     if (!n.read_at) {
-//       n.read_at = now;
-//     }
-//   });
-
-//   // 3. Emit event ke Navbar agar badge angka "merah" langsung jadi 0
-//   // (Asumsi parent component akan refresh count saat event ini muncul)
-//   emit("read");
-
-//   try {
-//     // 4. Kirim request ke backend di background
-//     await markAllNotificationsRead(token.value);
-//   } catch (err) {
-//     console.error("Gagal mark all read", err);
-//     // Opsional: Revert perubahan jika gagal (jarang diperlukan untuk fitur sepele ini)
-//   }
-// };
 
 onMounted(() => {
   fetchNotifs();
 });
 </script>
-
 <template>
   <div
-    class="absolute right-0 mt-[12px] w-[360px] bg-[#1e1e1e] border border-[#4b1a1a] rounded-xl shadow-2xl overflow-hidden z-50 ring-1 ring-white/10">
+    class="absolute -right-4 sm:right-0 mt-[12px] w-[85vw] sm:w-[360px] bg-[#1e1e1e] border border-[#4b1a1a] rounded-xl shadow-2xl overflow-hidden z-50 ring-1 ring-white/10">
     <div class="p-4 border-b border-[#4b1a1a] bg-[#2c0f0f] flex justify-between items-center">
       <h3 class="font-bold text-[#e5e5e5] text-sm">Notifikasi</h3>
 
@@ -150,7 +113,6 @@ onMounted(() => {
                 <path d="m6 6 12 12" />
               </svg>
             </div>
-
             <div
               v-else
               :class="!notif.read_at ? 'bg-[#9a203e] text-white' : 'bg-gray-700 text-gray-400'"
@@ -163,18 +125,15 @@ onMounted(() => {
             <h4 :class="!notif.read_at ? 'text-white' : 'text-gray-400'" class="font-bold text-[13px] mb-0.5">
               {{ notif.data.title || "Info" }}
             </h4>
-
             <p :class="!notif.read_at ? 'text-gray-200' : 'text-gray-500'" class="text-[12px] leading-relaxed">
               {{ notif.data.message }}
             </p>
-
             <div v-if="notif.data.reason" class="mt-2 p-2 bg-red-500/10 rounded border border-red-500/20">
               <p class="text-[11px] text-red-300">
                 <span class="font-bold">Alasan:</span>
                 {{ notif.data.reason }}
               </p>
             </div>
-
             <span class="text-[10px] text-gray-600 block mt-2">
               {{ formatTime(notif.created_at) }}
             </span>
@@ -182,11 +141,19 @@ onMounted(() => {
         </li>
       </ul>
     </div>
+
+    <div class="p-3 border-t border-[#4b1a1a] bg-[#2c0f0f] text-center">
+      <router-link
+        to="/dashboard/notifications"
+        class="text-[11px] text-red-400 hover:text-red-300 font-medium transition flex items-center justify-center gap-1">
+        Lihat Semua Notifikasi
+        <span>→</span>
+      </router-link>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* Scrollbar Styling agar rapi */
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
 }

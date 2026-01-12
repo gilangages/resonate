@@ -46,3 +46,13 @@ export const markAllNotificationsRead = async (token) => {
     },
   });
 };
+
+export const getAllNotifications = (token, page = 1) => {
+  return fetch(`${import.meta.env.VITE_APP_PATH}/notifications/all?page=${page}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/json",
+    },
+  });
+};

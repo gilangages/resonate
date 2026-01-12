@@ -17,6 +17,7 @@ import UserForgotPassword from "./components/User/UserForgotPassword.vue";
 import UserResetPassword from "./components/User/UserResetPassword.vue";
 import AdminDashboard from "./components/Admin/AdminDashboard.vue";
 import { alertError } from "./lib/alert";
+import AllNotifications from "./components/Dashboard/AllNotifications.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -73,6 +74,10 @@ const router = createRouter({
         {
           path: "global",
           component: DashboardGlobal,
+        },
+        {
+          path: "notifications",
+          component: AllNotifications,
         },
         {
           path: "users/profile",

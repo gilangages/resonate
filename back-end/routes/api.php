@@ -46,6 +46,7 @@ Route::middleware(['auth:sanctum', 'check.banned'])->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead']);
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead']);
+    Route::get('/notifications/all', [NotificationController::class, 'getAll']);
 
     // ✅ POSISI 'my' AMAN DI SINI
     Route::get('/notes/my', [NoteController::class, 'myNotes']);
