@@ -13,6 +13,7 @@ export function useShareImage() {
     try {
       const node = captureRef.value;
 
+      await new Promise((resolve) => setTimeout(resolve, 800));
       // 1. Cari elemen scrollable
       const scrollableContent = node.querySelector(".overflow-y-auto");
 
@@ -38,6 +39,10 @@ export function useShareImage() {
         backgroundColor: null,
         height: contentHeight, // Tinggi yang sudah dikurangi
         skipAutoScale: true,
+        imageTimeout: 3000,
+        includeQueryParams: true,
+        // Pastikan semua font dan gambar dimuat
+        includeGraphics: true,
 
         style: {
           height: `${contentHeight}px`,

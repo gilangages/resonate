@@ -171,17 +171,16 @@ const getImageUrl = (url, uniqueId = "global") => {
     url.includes("googleusercontent.com");
 
   if (isExternalApi) {
-    return url;
+    // Tambahkan cache buster bahkan untuk external API agar html-to-image tidak bingung
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}t=${cacheBuster.value}-${uniqueId}`;
   }
 
-  // Gunakan Proxy API
   const apiUrl = import.meta.env.VITE_APP_PATH || "http://localhost:8000/api";
   const encodedImageUrl = encodeURIComponent(url);
 
-  // Buat timestamp unik berdasarkan ID User atau Note agar tidak tertukar
-  // Kita gabung Date.now() + uniqueId
-  const timestamp = new Date().getTime();
-  return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${timestamp}-${uniqueId}`;
+  // Pastikan t= selalu unik per note yang dibuka
+  return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${cacheBuster.value}-${uniqueId}`;
 };
 
 onMounted(async () => {
@@ -355,7 +354,7 @@ onMounted(async () => {
 
                   <img
                     v-if="selectedNote?.music_album_image"
-                    :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album')"
+                    :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album' + cacheBuster)"
                     crossorigin="anonymous"
                     class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                 </div>
@@ -409,7 +408,7 @@ onMounted(async () => {
                     :src="
                       getImageUrl(
                         selectedNote?.author_avatar || selectedNote?.author_photo_url,
-                        selectedNote?.id + '-avatar'
+                        selectedNote?.id + '-avatar' + cacheBuster
                       )
                     "
                     crossorigin="anonymous"
