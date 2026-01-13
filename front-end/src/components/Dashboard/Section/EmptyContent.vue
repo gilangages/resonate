@@ -19,7 +19,7 @@ const closeModal = () => {
     <img src="../../../assets/img/add-note.svg" alt="" class="w-[240px] h-[240px]" />
 
     <div class="flex flex-col items-center justify-center px-[1em]">
-      <h3 class="m-0">Belum ada pesan</h3>
+      <h3 class="my-2 font-bold text-2xl">Belum ada pesan</h3>
       <p class="m-0 text-[#8c8a8a] text-center">Sampaikan pesanmu kepada seseorang. Padukan kata dan musik sekarang.</p>
     </div>
 

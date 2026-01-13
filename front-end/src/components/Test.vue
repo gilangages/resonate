@@ -1,73 +1,99 @@
-<script setup lang="ts">
-// belum ada logic, masih UI murni (sesuai HTML asli)
+<script setup>
+// static dulu, nanti gampang diganti v-for dari API
 </script>
 
 <template>
-  <div class="flex flex-col justify-center items-center bg-[#0f0505] text-[#e5e5e5] font-poppins">
-    <!-- FORM CONTAINER -->
-    <div class="flex min-h-screen w-full flex-col items-center justify-start px-[24px] py-[40px]">
-      <!-- FORM CARD -->
-      <div class="w-full max-w-[420px] rounded-[20px] bg-[#1c1516] p-4 sm:max-w-[560px]">
-        <!-- TITLE -->
-        <h1 class="text-center text-[#9a203e] text-[24px] font-semibold m-0">Buat Pesan Baru</h1>
-        <p class="mt-0 mb-[3em] text-center text-[12px] text-[#8c8a8a]">Pilih lagu dan tulis pesan untuk seseorang.</p>
+  <div class="flex min-h-screen flex-col bg-[#0f0505] font-poppins">
+    <!-- NAVBAR -->
+    <div class="flex items-center justify-between bg-[#180808] p-[12px]">
+      <h1 class="ml-[1em] text-[16px] font-bold text-[#9a203e] sm:ml-[3em] sm:text-[24px]">Resonate</h1>
+      <img src="../assets/img/me.jpg" alt="me" class="h-[40px] w-[40px] rounded-full object-cover block sm:mr-[1em]" />
+    </div>
 
-        <!-- PILIH LAGU -->
-        <div class="text-[14px]">
-          <label>Pilih Lagu</label>
-          <input
-            type="text"
-            placeholder="Ketik judul lagu atau nama penyani..."
-            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+    <!-- MENU -->
+    <div class="my-[2em] flex justify-center">
+      <a
+        href=""
+        class="rounded-l-[10px] bg-[#1c1516] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#130f0f] hover:text-[#cdcccc]">
+        Jelajahi Pesan
+      </a>
+      <a
+        href=""
+        class="rounded-r-[10px] bg-[#9a203e] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#821c35] hover:text-[#cdcccc]">
+        Pesan Saya
+      </a>
+    </div>
+
+    <!-- CARDS -->
+    <div class="grid grid-cols-1 gap-[2em] p-[2em] sm:grid-cols-2">
+      <!-- CARD -->
+      <div
+        v-for="i in 2"
+        :key="i"
+        class="cursor-pointer rounded-[10px] bg-[#1c1516] p-[10px] transition-transform duration-200 hover:scale-[1.02]">
+        <!-- MUSIC -->
+        <div class="flex items-center justify-between rounded-[10px] bg-[#100c0d] p-[10px]">
+          <div class="flex items-center">
+            <img src="../assets/img/me.jpg" class="h-[60px] w-[60px] object-cover block" />
+            <div class="ml-[1em] flex flex-col">
+              <p class="m-0 -mb-[4px] text-[20px] font-extrabold text-[#e5e5e5]">.love</p>
+              <p class="m-0 -mt-[4px] text-[20px] font-semibold text-[#8c8a8a]">wave to earth</p>
+            </div>
+          </div>
+
+          <img src="../assets/img/play.svg" class="h-[55px] w-[55px] -mb-[4px]" />
         </div>
 
         <!-- KEPADA -->
-        <div class="text-[14px]">
-          <label>Kepada</label>
-          <input
-            type="text"
-            placeholder="Kepada siapa pesanmu"
-            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
-        </div>
+        <p class="text-[20px] text-[#8c8a8a]">
+          kepada:
+          <span class="text-[#e5e5e5]">Anya</span>
+        </p>
 
         <!-- PESAN -->
-        <div class="text-[14px]">
-          <label>Pesan</label>
-          <textarea
-            placeholder="Tulis pesanmu"
-            class="mt-[6px] mb-[20px] h-[120px] w-full resize-y rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]"></textarea>
-        </div>
+        <p class="text-[20px] text-[#8c8a8a]">
+          pesan:
+          <br />
+          <span class="text-[#e5e5e5]">
+            i love you, but i cant say to you. i hope you find my message. this is for you anya
+          </span>
+        </p>
 
-        <!-- KIRIM SEBAGAI -->
-        <div class="text-[14px]">
-          <label class="kirim">Kirim Sebagai</label>
-          <div class="mt-[6px] mb-[20px] flex items-center gap-2">
-            <input type="radio" name="kirim" class="cursor-pointer" />
-            <span class="mr-[2em]">Hani (Asli)</span>
-
-            <input type="radio" name="kirim" class="cursor-pointer" />
-            <span>Nama Samaran</span>
+        <!-- FROM -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-[10px]">
+            <img src="../assets/img/me.jpg" class="h-[45px] w-[45px] rounded-full object-cover block" />
+            <p class="font-semibold text-[#9a203e]">Hani</p>
           </div>
-
-          <label class="text-[#9a203e]">Nama Samaran</label>
-          <input
-            type="text"
-            placeholder="Contoh: Secret Admirer, Inisial A, atau kosongkan..."
-            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+          <p class="text-[#8c8a8a]">21/01/2026</p>
         </div>
 
-        <!-- BUTTONS -->
-        <div class="mt-[26px] flex gap-[10px]">
+        <!-- ACTION -->
+        <div class="mt-[1em] flex justify-end gap-[10px]">
           <button
-            class="w-full rounded-[10px] border border-[#8c8a8a] bg-[#1c1516] px-3 py-3 font-semibold text-[#8c8a8a] hover:border-[#666565] hover:bg-[#120e0e]">
-            Kembali
+            class="rounded-[8px] border border-[#8c8a8a] bg-[#1c1516] px-[16px] py-[10px] text-[16px] font-semibold text-[#8c8a8a] hover:bg-[#130f0f]">
+            Edit
           </button>
-
-          <button class="w-full rounded-[10px] bg-[#9a203e] px-3 py-3 font-semibold text-[#e5e5e5] hover:bg-[#7d1a33]">
-            Buat Pesan
+          <button
+            class="rounded-[8px] bg-[#9a203e] px-[16px] py-[10px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#821c35]">
+            Hapus
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- LOAD MORE -->
+    <div class="mb-[5em] flex justify-end pr-[2em] text-[#e5e5e5] gap-1.5">
+      <button class="bg-[#0f0505] font-semibold uppercase hover:underline">Lihat lebih banyak cerita</button>
+      <img src="../assets/img/arrow-down.svg" alt="arrow-down" class="w-[14px]" />
+    </div>
+
+    <!-- FOOTER -->
+    <div class="mt-auto text-center text-[10px] text-[#e5e5e5]">
+      <p>
+        &copy; 2026
+        <span class="text-[12px] text-[#9a203e]">Resonate</span>
+      </p>
     </div>
   </div>
 </template>
