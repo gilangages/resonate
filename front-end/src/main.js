@@ -7,7 +7,8 @@ import UserRegister from "./components/User/UserRegister.vue";
 import Test from "./components/Test.vue";
 import UserLogin from "./components/User/UserLogin.vue";
 import LandingPage from "./components/LandingPage/LandingPage.vue";
-import LayoutDashboard from "./components/Layout/LayoutDashboard.vue";
+import LayoutDashboard from "./components/Layout/DashboardLayout.vue";
+import UserProfile from "./components/User/UserProfile.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -37,7 +38,12 @@ const router = createRouter({
     {
       path: "/dashboard",
       component: LayoutDashboard,
-      children: [],
+      children: [
+        {
+          path: "users/profile",
+          component: UserProfile,
+        },
+      ],
     },
   ],
 });
