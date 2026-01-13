@@ -1,7 +1,7 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
 import { onBeforeMount, ref } from "vue";
-import { userDetail, userUpdatePassword, userUpdateProfile } from "../../lib/api/UserApi";
+import { userDetail, userUpdatePassword, userUpdatePhoto, userUpdateProfile } from "../../lib/api/UserApi";
 import { alertError, alertSuccess } from "../../lib/alert";
 import { getAvatarUrl, userState } from "../../lib/store";
 
@@ -26,12 +26,15 @@ async function fetchUser() {
     await alertError(pesanError);
   }
 }
+
 function triggerFileInput() {
   fileInput.value.click();
 }
 
 async function handleFileChange(event) {
   const file = event.target.files[0];
+
+  // Jika user cancel pilih file, stop
   if (!file) return;
 
   try {
@@ -39,14 +42,23 @@ async function handleFileChange(event) {
     const responseBody = await response.json();
 
     if (response.ok) {
-      // UPDATE GLOBAL STATE -> Navbar otomatis berubah!
+      // 1. Update State
       userState.value = responseBody.data;
       await alertSuccess("Foto profil berhasil diubah!");
     } else {
       throw new Error(responseBody.message);
     }
   } catch (error) {
-    await alertError("Gagal upload foto");
+    await alertError(error.message || "Gagal upload foto");
+  } finally {
+    // [PENTING] Reset input file agar bisa mendeteksi perubahan selanjutnya
+    // Meskipun user memilih file yang sama atau file baru, ini memastikan event @change selalu jalan
+    event.target.value = null;
+
+    // Atau jika menggunakan ref:
+    if (fileInput.value) {
+      fileInput.value.value = null;
+    }
   }
 }
 
@@ -104,7 +116,7 @@ onBeforeMount(async () => {
           @click="triggerFileInput"
           alt="profile"
           class="w-[102px] h-[102px] rounded-full object-cover block cursor-pointer" />
-        <p class="py-2">Ganti Foto</p>
+        <p class="py-2 cursor-pointer hover:text-[#8c8a8a]" @click="triggerFileInput">Ganti Foto</p>
         <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFileChange" />
       </div>
 
@@ -134,14 +146,17 @@ onBeforeMount(async () => {
         <h2 class="mb-[8px] font-bold text-xl">Keamanan</h2>
 
         <div class="input">
-          <label for="email">Email</label>
+          <label for="email">
+            Email
+            <span class="text-[12px] text-[#6b6b6b] ml-1">(Locked)</span>
+          </label>
           <br />
           <input
             id="email"
             type="email"
             v-model="email"
             disabled
-            class="w-full bg-[#2b2122] text-[#e5e5e5] rounded-[15px] p-[1em] my-[8px] mb-[20px] border-none" />
+            class="w-full bg-[#151010] text-[#6b6b6b] border border-[#2b2122] cursor-not-allowed rounded-[15px] p-[1em] my-[8px] mb-[20px] focus:outline-none" />
         </div>
 
         <div class="input">

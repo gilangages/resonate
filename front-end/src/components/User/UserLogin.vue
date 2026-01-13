@@ -47,6 +47,7 @@ async function handleSubmit() {
             v-model="user.email"
             id="email"
             type="email"
+            required
             placeholder="Masukkan alamat email"
             class="mt-1 w-full rounded-[10px] bg-[#2b2122] px-4 py-[1em] text-[#e5e5e5] focus:outline-none focus:ring-2 focus:ring-[#9a203e] caret-[#e5e5e5]" />
         </div>
@@ -57,6 +58,7 @@ async function handleSubmit() {
           <input
             v-model="user.password"
             id="password"
+            required
             type="password"
             placeholder="Masukkan kata sandi"
             class="mt-1 w-full rounded-[10px] bg-[#2b2122] px-4 py-[1em] text-[#e5e5e5] focus:outline-none focus:ring-2 focus:ring-[#9a203e] caret-[#e5e5e5]" />

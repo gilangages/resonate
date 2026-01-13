@@ -1,94 +1,73 @@
-<script setup>
-// belum ada logic, fokus ke layout dulu
+<script setup lang="ts">
+// belum ada logic, masih UI murni (sesuai HTML asli)
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0f0505] font-poppins flex flex-col">
-    <!-- NAVBAR -->
-    <div class="bg-[#180808] p-[12px] flex items-center justify-between">
-      <h1 class="text-[#9a203e] text-[16px] ml-[1em] sm:ml-[3em] sm:text-[24px]">Resonate</h1>
-      <img src="../assets/img/me.jpg" alt="me" class="w-[40px] h-[40px] rounded-full object-cover block sm:mr-[1em]" />
-    </div>
-
+  <div class="flex flex-col justify-center items-center bg-[#0f0505] text-[#e5e5e5] font-poppins">
     <!-- FORM CONTAINER -->
-    <div class="flex justify-center items-center min-h-screen text-[#e5e5e5]">
-      <div
-        class="bg-[#1c1516] rounded-[20px] w-full max-w-[420px] mx-[24px] p-[12px] flex flex-col sm:max-w-[600px] sm:m-[2em] sm:p-[2em]">
-        <h1 class="text-center mt-[4px]">Edit Profile</h1>
+    <div class="flex min-h-screen w-full flex-col items-center justify-start px-[24px] py-[40px]">
+      <!-- FORM CARD -->
+      <div class="w-full max-w-[420px] rounded-[20px] bg-[#1c1516] p-4 sm:max-w-[560px]">
+        <!-- TITLE -->
+        <h1 class="text-center text-[#9a203e] text-[24px] font-semibold m-0">Buat Pesan Baru</h1>
+        <p class="mt-0 mb-[3em] text-center text-[12px] text-[#8c8a8a]">Pilih lagu dan tulis pesan untuk seseorang.</p>
 
-        <!-- IMAGE -->
-        <div class="flex flex-col items-center justify-center text-[#e5e5e5] mt-[-8px]">
-          <img src="../assets/img/me.jpg" alt="me" class="w-[102px] h-[102px] rounded-full object-cover block" />
-          <p>Ganti Foto</p>
+        <!-- PILIH LAGU -->
+        <div class="text-[14px]">
+          <label>Pilih Lagu</label>
+          <input
+            type="text"
+            placeholder="Ketik judul lagu atau nama penyani..."
+            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
         </div>
 
-        <!-- INFO DASAR -->
-        <div class="info-dasar">
-          <h2 class="mb-[8px]">Informasi Dasar</h2>
+        <!-- KEPADA -->
+        <div class="text-[14px]">
+          <label>Kepada</label>
+          <input
+            type="text"
+            placeholder="Kepada siapa pesanmu"
+            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+        </div>
 
-          <div class="input">
-            <label for="nama">Nama</label>
-            <br />
-            <input
-              id="nama"
-              type="text"
-              value="Hani"
-              class="w-full bg-[#2b2122] text-[#e5e5e5] caret-[#e5e5e5] rounded-[15px] p-[1em] my-[8px] mb-[20px] border-none focus:outline-[2px] focus:outline-[#9a203e]" />
+        <!-- PESAN -->
+        <div class="text-[14px]">
+          <label>Pesan</label>
+          <textarea
+            placeholder="Tulis pesanmu"
+            class="mt-[6px] mb-[20px] h-[120px] w-full resize-y rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]"></textarea>
+        </div>
+
+        <!-- KIRIM SEBAGAI -->
+        <div class="text-[14px]">
+          <label class="kirim">Kirim Sebagai</label>
+          <div class="mt-[6px] mb-[20px] flex items-center gap-2">
+            <input type="radio" name="kirim" class="cursor-pointer" />
+            <span class="mr-[2em]">Hani (Asli)</span>
+
+            <input type="radio" name="kirim" class="cursor-pointer" />
+            <span>Nama Samaran</span>
           </div>
 
-          <button class="bg-[#9a203e] text-[#e5e5e5] font-bold rounded-[8px] p-[8px] hover:bg-[#7d1a33] cursor-pointer">
-            Simpan Profile
+          <label class="text-[#9a203e]">Nama Samaran</label>
+          <input
+            type="text"
+            placeholder="Contoh: Secret Admirer, Inisial A, atau kosongkan..."
+            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="mt-[26px] flex gap-[10px]">
+          <button
+            class="w-full rounded-[10px] border border-[#8c8a8a] bg-[#1c1516] px-3 py-3 font-semibold text-[#8c8a8a] hover:border-[#666565] hover:bg-[#120e0e]">
+            Kembali
           </button>
-        </div>
 
-        <!-- KEAMANAN -->
-        <div class="keamanan mt-[2em]">
-          <h2 class="mb-[8px]">Keamanan</h2>
-
-          <div class="input">
-            <label for="email">Email</label>
-            <br />
-            <input
-              id="email"
-              type="email"
-              value="hani@gmail.com"
-              disabled
-              class="w-full bg-[#2b2122] text-[#e5e5e5] rounded-[15px] p-[1em] my-[8px] mb-[20px] border-none" />
-          </div>
-
-          <div class="input">
-            <label>Password baru</label>
-            <br />
-            <input
-              type="password"
-              placeholder="Kosongkan jika tidak ingin mengganti"
-              class="w-full bg-[#2b2122] text-[#e5e5e5] caret-[#e5e5e5] rounded-[15px] p-[1em] my-[8px] mb-[20px] border-none focus:outline-[2px] focus:outline-[#9a203e]" />
-          </div>
-
-          <div class="input">
-            <label>Konfirmasi Password</label>
-            <br />
-            <input
-              type="password"
-              placeholder="Masukkan ulang kata sandi"
-              class="w-full bg-[#2b2122] text-[#e5e5e5] caret-[#e5e5e5] rounded-[15px] p-[1em] my-[8px] mb-[20px] border-none focus:outline-[2px] focus:outline-[#9a203e]" />
-          </div>
-
-          <button class="bg-[#9a203e] text-[#e5e5e5] font-bold rounded-[8px] p-[8px] hover:bg-[#7d1a33] cursor-pointer">
-            Ganti Password
+          <button class="w-full rounded-[10px] bg-[#9a203e] px-3 py-3 font-semibold text-[#e5e5e5] hover:bg-[#7d1a33]">
+            Buat Pesan
           </button>
         </div>
       </div>
     </div>
-
-    <!-- FOOTER -->
-    <div id="footer">
-      <p class="text-center text-[#e5e5e5] text-[10px] my-[1em] mb-[2em] sm:mb-[1em]">
-        © 2026
-        <span class="text-[#9a203e] sm:text-[12px]">Resonate</span>
-      </p>
-    </div>
   </div>
 </template>
-
-<style scoped></style>

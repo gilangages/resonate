@@ -84,3 +84,13 @@ export const userUpdatePhoto = async (token, file) => {
     body: formData,
   });
 };
+
+export const userLogout = async (token) => {
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/logout`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

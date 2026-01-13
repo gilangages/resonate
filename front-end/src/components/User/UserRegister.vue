@@ -70,6 +70,7 @@ async function handleSubmit() {
             <input
               v-model="user.email"
               type="email"
+              required
               placeholder="nama@gmail.com"
               class="w-full mt-1 px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
           </div>
@@ -81,6 +82,7 @@ async function handleSubmit() {
             <input
               v-model="user.password"
               type="password"
+              required
               placeholder="Minimal 8 karakter"
               class="w-full mt-1 px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
           </div>
@@ -92,6 +94,7 @@ async function handleSubmit() {
             <input
               v-model="user.password_confirmation"
               type="password"
+              required
               placeholder="Masukkan ulang kata sandi"
               class="w-full mt-1 px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
           </div>

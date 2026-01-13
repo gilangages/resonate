@@ -7,8 +7,11 @@ import UserRegister from "./components/User/UserRegister.vue";
 import Test from "./components/Test.vue";
 import UserLogin from "./components/User/UserLogin.vue";
 import LandingPage from "./components/LandingPage/LandingPage.vue";
-import LayoutDashboard from "./components/Layout/DashboardLayout.vue";
+import DashboardLayout from "./components/Layout/DashboardLayout.vue";
 import UserProfile from "./components/User/UserProfile.vue";
+import UserLogout from "./components/User/UserLogout.vue";
+import DashboardUser from "./components/Dashboard/DashboardUser.vue";
+import NoteCreate from "./components/Note/NoteCreate.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -37,11 +40,23 @@ const router = createRouter({
     },
     {
       path: "/dashboard",
-      component: LayoutDashboard,
+      component: DashboardLayout,
       children: [
+        {
+          path: "",
+          component: DashboardUser,
+        },
+        {
+          path: "create",
+          component: NoteCreate,
+        },
         {
           path: "users/profile",
           component: UserProfile,
+        },
+        {
+          path: "users/logout",
+          component: UserLogout,
         },
       ],
     },
