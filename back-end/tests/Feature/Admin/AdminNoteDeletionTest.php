@@ -37,7 +37,7 @@ class AdminNoteDeletionTest extends TestCase
 
         $this->assertNotNull($notification, 'User seharusnya menerima notifikasi.');
         $this->assertEquals(NoteDeletedNotification::class, $notification->type);
-        $this->assertEquals('Catatan Dihapus Admin', $notification->data['title']);
+        $this->assertEquals('Pesan Dihapus Admin', $notification->data['title']);
         $this->assertEquals('alert', $notification->data['type']);
         $this->assertEquals($reason, $notification->data['reason']);
 
