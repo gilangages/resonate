@@ -15,54 +15,48 @@ class SocialAuthController extends Controller
     }
 
     // 2. Menerima balasan dari Google
+    // ... namespace dan use imports tetap sama ...
+
     public function handleGoogleCallback()
     {
         try {
-            // Ambil data user dari Google
             $googleUser = Socialite::driver('google')->stateless()->user();
 
-            // Cari user berdasarkan google_id ATAU email
             $user = User::where('google_id', $googleUser->getId())
                 ->orWhere('email', $googleUser->getEmail())
                 ->first();
 
-            // 1. CEK STATUS BANNED SEBELUM LOGIN/REGISTER
-            // 1. Cek apakah user ada DAN statusnya banned
+            // 1. CEK STATUS BANNED
             if ($user && $user->is_banned) {
                 $message = "Akun Anda telah dibekukan oleh Admin.";
-                // Kita kirim status=banned dan email user agar frontend bisa memunculkan form banding
                 return redirect(env('FRONTEND_URL') . "/login?status=banned&email={$user->email}&message=" . urlencode($message));
             }
-            // ---------------------------
 
-            // Jika user belum ada (dan jelas belum banned karena baru), buat baru
             if (!$user) {
+                // CREATE USER BARU
                 $user = User::create([
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
+                    'avatar' => $googleUser->getAvatar(), // Ambil foto dari Google
                     'password' => null,
-                    // 'is_banned' => false, // Default false
                 ]);
             } else {
-                // Update google_id jika belum ada
-                if (!$user->google_id) {
-                    $user->update([
-                        'google_id' => $googleUser->getId(),
-                        'avatar' => $user->avatar ?: $googleUser->getAvatar(),
-                    ]);
-                }
+                // UPDATE USER LAMA (Sinkronisasi Data)
+                // Kita update avatar setiap kali login agar selalu fresh dari Google
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                ]);
             }
 
-            // Buat Token
             $token = $user->createToken('auth_token')->plainTextToken;
-
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
 
             return redirect("{$frontendUrl}/auth/callback?token={$token}&name={$user->name}");
 
         } catch (\Exception $e) {
+            // Log error jika perlu: \Log::error($e->getMessage());
             return redirect(env('FRONTEND_URL') . '/login?error=Gagal login dengan Google');
         }
     }

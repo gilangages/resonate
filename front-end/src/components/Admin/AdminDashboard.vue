@@ -100,17 +100,17 @@ onMounted(fetchData);
 </script>
 
 <template>
-  <div class="p-8 text-white relative min-h-screen font-jakarta bg-[#0f0505]">
-    <h1 class="text-3xl font-bold mb-6">Panel Admin</h1>
+  <div class="p-4 md:p-8 text-white relative min-h-screen font-jakarta bg-[#0f0505]">
+    <h1 class="text-2xl md:text-3xl font-bold mb-6">Panel Admin</h1>
 
-    <div class="flex gap-4 mb-6 border-b border-white/10">
+    <div class="flex gap-4 mb-6 border-b border-white/10 overflow-x-auto">
       <button
         @click="
           activeTab = 'users';
           fetchData();
         "
         :class="activeTab === 'users' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-400'"
-        class="pb-2 px-4 transition">
+        class="pb-2 px-4 transition whitespace-nowrap">
         Manage Users
       </button>
       <button
@@ -119,7 +119,7 @@ onMounted(fetchData);
           fetchData();
         "
         :class="activeTab === 'notes' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-400'"
-        class="pb-2 px-4 transition">
+        class="pb-2 px-4 transition whitespace-nowrap">
         Moderation Notes
       </button>
     </div>
@@ -127,39 +127,50 @@ onMounted(fetchData);
     <div v-if="loading" class="text-center py-10">Loading data...</div>
 
     <div v-else>
-      <div v-if="activeTab === 'users'" class="overflow-x-auto">
-        <table class="w-full bg-white/5 rounded-lg overflow-hidden">
-          <thead class="bg-white/10">
+      <div v-if="activeTab === 'users'" class="overflow-hidden bg-white/5 rounded-lg">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-white/10 text-xs md:text-sm uppercase text-gray-400">
             <tr>
-              <th class="p-4 text-left">User</th>
-              <th class="p-4 text-left">Email</th>
-              <th class="p-4 text-left">Role</th>
-              <th class="p-4 text-center">Action</th>
+              <th class="p-3 md:p-4">User Info</th>
+              <th class="hidden md:table-cell p-4">Email</th>
+              <th class="hidden md:table-cell p-4">Role</th>
+              <th class="p-3 md:p-4 text-center">Action</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="user in users" :key="user.id" class="border-b border-white/5 hover:bg-white/5">
-              <td class="p-4 flex items-center gap-3">
-                <img
-                  :src="user.avatar ? getAvatarUrl(user.avatar) : user.photo_url || '/default-avatar.png'"
-                  class="w-8 h-8 rounded-full border border-white/20 object-cover"
-                  alt="Avatar" />
-                {{ user.name }}
+          <tbody class="divide-y divide-white/10 text-sm md:text-base">
+            <tr v-for="user in users" :key="user.id" class="hover:bg-white/5 transition">
+              <td class="p-3 md:p-4">
+                <div class="flex items-center gap-3">
+                  <img
+                    :src="user.avatar ? getAvatarUrl(user.avatar) : user.photo_url || '/default-avatar.png'"
+                    class="w-10 h-10 rounded-full border border-white/20 object-cover flex-shrink-0"
+                    alt="Avatar" />
+                  <div class="flex flex-col">
+                    <span class="font-semibold text-white">{{ user.name }}</span>
+                    <span class="text-xs text-gray-400 md:hidden">{{ user.email }}</span>
+                    <span class="text-[10px] bg-white/10 px-1 rounded w-fit md:hidden mt-1">{{ user.role }}</span>
+                  </div>
+                </div>
               </td>
-              <td class="p-4">{{ user.email }}</td>
-              <td class="p-4 text-sm">{{ user.role }}</td>
-              <td class="p-4 text-center">
-                <span v-if="user.role === 'admin'" class="text-gray-500">N/A</span>
 
-                <button v-else-if="!user.is_banned" @click="deleteUser(user.id)" class="text-red-500 hover:underline">
-                  Ban User
+              <td class="hidden md:table-cell p-4 text-gray-300">{{ user.email }}</td>
+              <td class="hidden md:table-cell p-4 text-gray-300">{{ user.role }}</td>
+
+              <td class="p-3 md:p-4 text-center align-middle">
+                <span v-if="user.role === 'admin'" class="text-gray-500 text-xs md:text-sm">Admin</span>
+
+                <button
+                  v-else-if="!user.is_banned"
+                  @click="deleteUser(user.id)"
+                  class="text-red-400 hover:text-red-300 text-xs md:text-sm border border-red-500/30 px-2 py-1 rounded hover:bg-red-500/10 transition">
+                  Ban
                 </button>
 
                 <div v-else class="flex flex-col items-center gap-1">
-                  <span class="text-red-400 font-bold italic text-xs">Banned</span>
+                  <span class="text-red-500 font-bold italic text-[10px]">Banned</span>
                   <button
                     @click="restoreUser(user.id)"
-                    class="bg-green-600/20 text-green-500 text-xs px-2 py-1 rounded hover:bg-green-600 hover:text-white transition">
+                    class="bg-green-600/20 text-green-400 text-[10px] md:text-xs px-2 py-1 rounded hover:bg-green-600 hover:text-white transition">
                     Pulihkan
                   </button>
                 </div>
@@ -169,23 +180,33 @@ onMounted(fetchData);
         </table>
       </div>
 
-      <div v-if="activeTab === 'notes'" class="overflow-x-auto">
-        <table class="w-full bg-white/5 rounded-lg overflow-hidden">
-          <thead class="bg-white/10">
+      <div v-if="activeTab === 'notes'" class="overflow-x-auto bg-white/5 rounded-lg">
+        <table class="w-full text-left border-collapse">
+          <thead class="bg-white/10 text-xs md:text-sm uppercase text-gray-400">
             <tr>
-              <th class="p-4 text-left">Author</th>
-              <th class="p-4 text-left">Note Content</th>
-              <th class="p-4 text-center">Action</th>
+              <th class="p-3 md:p-4 w-1/4">Author</th>
+              <th class="p-3 md:p-4 w-1/2">Note Content</th>
+              <th class="p-3 md:p-4 text-center w-1/4">Action</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="note in notes" :key="note.id" class="border-b border-white/5 hover:bg-white/5">
-              <td class="p-4 font-bold">{{ note.user?.name }}</td>
-              <td class="p-4 italic text-gray-300">"{{ note.content }}"</td>
-              <td class="p-4 text-center">
+          <tbody class="divide-y divide-white/10 text-sm md:text-base">
+            <tr v-for="note in notes" :key="note.id" class="hover:bg-white/5 transition">
+              <td class="p-3 md:p-4 align-top">
+                <div class="font-bold text-white">{{ note.user?.name }}</div>
+                <div class="text-xs text-gray-500 md:hidden mt-1">ID: {{ note.id }}</div>
+              </td>
+
+              <td class="p-3 md:p-4 align-top">
+                <div
+                  class="whitespace-pre-wrap break-words text-gray-300 italic min-w-[200px] max-w-[200px] md:max-w-[400px] lg:max-w-[600px]">
+                  "{{ note.content }}"
+                </div>
+              </td>
+
+              <td class="p-3 md:p-4 text-center align-top">
                 <button
                   @click="deleteNote(note.id)"
-                  class="bg-red-500/20 text-red-500 px-3 py-1 rounded hover:bg-red-500 hover:text-white transition">
+                  class="bg-red-500/20 text-red-500 px-3 py-1 rounded text-xs md:text-sm hover:bg-red-500 hover:text-white transition">
                   Hapus
                 </button>
               </td>

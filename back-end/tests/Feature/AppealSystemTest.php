@@ -35,7 +35,7 @@ class AppealSystemTest extends TestCase
 
         // 4. Assert Response Sukses
         $response->assertStatus(200)
-            ->assertJson(['message' => 'Permintaan banding telah dikirim ke admin.']);
+            ->assertJson(['message' => 'Permintaan banding telah dikirim ke Admin.']);
 
         // 5. Assert Notifikasi Terkirim ke Admin dengan PESAN YANG BENAR
         Notification::assertSentTo(

@@ -1,7 +1,13 @@
-// src/lib/useCardTheme.js
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
-// Definisi tema dipindah ke sini (state global/const)
+// Base Key
+const BASE_STORAGE_KEY = "music_note_theme_preference";
+
+// 1. STATE GLOBAL
+// Default awal selalu 'red' sampai kita tahu siapa usernya
+const globalThemePreference = ref("red");
+// Kita simpan userId yang sedang aktif di sini
+const currentUserId = ref(null);
 const cardThemes = [
   {
     // 1. RED (Original)
@@ -214,30 +220,63 @@ const cardThemes = [
     shadow: "shadow-[0_0_50px_-12px_rgba(226,232,240,0.6)]",
   },
 ];
-
-// Composable function
 export function useCardTheme() {
-  // Fungsi utama untuk mendapatkan tema berdasarkan ID
+  // --- FUNGSI BARU: Inisialisasi Tema Berdasarkan User ID ---
+  const initTheme = (userId) => {
+    currentUserId.value = userId;
+
+    // Jika Logout (userId null) -> Reset ke Red (Default)
+    if (!userId) {
+      globalThemePreference.value = "red";
+      return;
+    }
+
+    // Jika Login -> Cek LocalStorage dengan Key Unik User
+    const userKey = `${BASE_STORAGE_KEY}_${userId}`;
+    const savedTheme = localStorage.getItem(userKey);
+
+    // Jika user ini pernah set tema, pakai itu. Jika tidak, pakai Red.
+    globalThemePreference.value = savedTheme ? savedTheme : "red";
+  };
+  // -----------------------------------------------------------
+
   const getTheme = (id) => {
-    if (!id) return cardThemes[0];
-    const index = id % cardThemes.length;
-    return cardThemes[index];
+    if (globalThemePreference.value === "random") {
+      if (!id) return cardThemes[0];
+      const index = id % cardThemes.length;
+      return cardThemes[index];
+    }
+    const selectedTheme = cardThemes.find((t) => t.id === globalThemePreference.value);
+    return selectedTheme || cardThemes[0];
   };
 
-  // Helper untuk mendapatkan tema note yang sedang dipilih (untuk Modal)
-  // Perlu passing 'selectedNote' yang berupa Ref atau reactive object
   const getSelectedTheme = (selectedNote) => {
     return computed(() => {
-      // Handle jika selectedNote null atau selectedNote.value null
       const note = selectedNote?.value || selectedNote;
       if (!note) return cardThemes[0];
       return getTheme(note.id);
     });
   };
 
+  const setTheme = (themeId) => {
+    // 1. Update State Global UI
+    globalThemePreference.value = themeId;
+
+    // 2. Simpan ke Local Storage DENGAN USER ID (Jika ada yang login)
+    if (currentUserId.value) {
+      const userKey = `${BASE_STORAGE_KEY}_${currentUserId.value}`;
+      localStorage.setItem(userKey, themeId);
+    }
+    // Jika tidak ada user login (Guest), kita tidak simpan permanen
+    // atau kamu bisa simpan ke key default jika mau fitur guest.
+  };
+
   return {
-    cardThemes, // Opsional jika ingin akses raw array
+    cardThemes,
     getTheme,
     getSelectedTheme,
+    globalThemePreference,
+    setTheme,
+    initTheme, // <--- Jangan lupa export ini
   };
 }

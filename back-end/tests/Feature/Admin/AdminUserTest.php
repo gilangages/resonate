@@ -39,6 +39,9 @@ class AdminUserTest extends TestCase
         $response = $this->actingAs($admin)->deleteJson("/api/admin/users/{$targetUser->id}");
 
         $response->assertStatus(200);
-        $this->assertDatabaseMissing('users', ['id' => $targetUser->id]); // Cek DB user hilang
+        $this->assertDatabaseHas('users', [
+            'id' => $targetUser->id,
+            'is_banned' => true,
+        ]);
     }
 }

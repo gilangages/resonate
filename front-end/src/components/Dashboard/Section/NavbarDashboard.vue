@@ -225,3 +225,18 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
+
+<style>
+/* FIX: Menggunakan @media (hover: none) untuk mendeteksi perangkat layar sentuh.
+  Jika perangkat tidak punya kursor (seperti HP/Tablet), maka tooltip disembunyikan.
+*/
+@media (hover: none) {
+  .tooltip-container::before,
+  .tooltip-container::after,
+  .tooltip-container-mid::before,
+  .tooltip-container-mid::after {
+    display: none !important;
+    content: none !important;
+  }
+}
+</style>
