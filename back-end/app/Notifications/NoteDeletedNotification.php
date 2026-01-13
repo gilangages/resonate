@@ -27,7 +27,7 @@ class NoteDeletedNotification extends Notification
     {
         return [
             // Title singkat untuk header notif
-            'title' => 'Catatan Dihapus Admin',
+            'title' => 'Pesan Dihapus Admin',
 
             // Message fokus ke "Apa yang terjadi"
             'message' => "Pesanmu: \"{$this->noteContentSnippet}\" telah dihapus.",

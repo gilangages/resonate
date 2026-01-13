@@ -151,6 +151,13 @@ onMounted(() => {
             </p>
 
             <div
+              v-if="notif.data.reason"
+              class="mt-3 text-xs text-red-300 bg-red-900/20 border border-red-500/20 p-2 rounded-md inline-block">
+              <span class="font-bold mr-1">⚠️ Alasan Admin:</span>
+              {{ notif.data.reason }}
+            </div>
+
+            <div
               v-if="notif.data.appeal_message"
               class="mt-3 p-3 rounded bg-[#2c1a1a] border border-[#4b1a1a] relative w-full sm:w-auto inline-block">
               <p class="text-xs text-gray-300 italic">
