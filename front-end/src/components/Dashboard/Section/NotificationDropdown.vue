@@ -116,7 +116,7 @@ onMounted(() => {
               <p
                 v-if="notif.data.reason"
                 class="text-[10px] text-red-400 mt-1 font-medium bg-red-900/10 px-1.5 py-0.5 rounded border border-red-900/30 inline-block">
-                ⚠️ Alasan Admin: {{ notif.data.reason }}
+                ⚠️ Alasan: {{ notif.data.reason }}
               </p>
 
               <div

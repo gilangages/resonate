@@ -5,6 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { alertError, alertSuccess } from "../../lib/alert";
 import { useLocalStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
+import { useCardTheme } from "../../lib/useCardTheme";
 
 const route = useRoute();
 const router = useRouter();
@@ -15,6 +16,7 @@ const user = reactive({
 });
 
 const showPassword = ref(false);
+const { initTheme } = useCardTheme();
 
 // --- 1. FUNGSI REUSABLE UNTUK MENANGANI USER BANNED ---
 // Fungsi ini akan dipanggil oleh Login Biasa & Login Google
@@ -65,6 +67,10 @@ async function handleSubmit() {
       token.value = responseBody.token;
       sessionStorage.setItem("user", JSON.stringify(responseBody.user));
       sessionStorage.removeItem("last_anim_name");
+
+      // ❌ SALAH: initTheme(user.id); -> ini refer ke form input
+      // ✅ BENAR: Ambil dari responseBody
+      initTheme(responseBody.user.id);
 
       if (responseBody.user.role === "admin") {
         await router.push("/dashboard/admin");
