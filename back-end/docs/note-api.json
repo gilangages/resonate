@@ -218,39 +218,38 @@
                                 "properties": {
                                     "content": {
                                         "type": "string",
-                                        "example": "This song describes my mood today"
+                                        "example": "Lagu ini mengingatkanku padamu"
                                     },
                                     "recipient": {
                                         "type": "string",
-                                        "nullable": true,
-                                        "example": "Untuk Mantan Terindah"
+                                        "example": "Untuk Si Dia"
                                     },
                                     "initial_name": {
                                         "type": "string",
                                         "nullable": true,
-                                        "description": "Kirim string untuk nama samaran, kirim null untuk nama asli.",
-                                        "example": "Si Galau"
+                                        "description": "Isi string untuk nama samaran. Kosongkan/null untuk nama asli.",
+                                        "example": "Secret Admirer"
                                     },
                                     "spotify_track_id": {
                                         "type": "string",
-                                        "nullable": true,
                                         "example": "3n3Ppam7vgaVa1iaRUc9Lp"
                                     },
                                     "spotify_track_name": {
                                         "type": "string",
-                                        "nullable": true
+                                        "example": "Mr. Brightside"
                                     },
                                     "spotify_artist": {
                                         "type": "string",
-                                        "nullable": true
+                                        "example": "The Killers"
                                     },
                                     "spotify_album_image": {
                                         "type": "string",
-                                        "nullable": true
+                                        "example": "https://i.scdn.co/image/ab67616d0000b273..."
                                     },
                                     "spotify_preview_url": {
                                         "type": "string",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "example": "https://p.scdn.co/mp3-preview/..."
                                     }
                                 }
                             }
