@@ -15,6 +15,7 @@ const fetchNotifs = async () => {
   try {
     const res = await getNotifications(token.value);
     const json = await res.json();
+    console.log(json);
     if (res.ok) {
       // json.data akan berisi array 10 item dari backend
       notifications.value = json.data;
@@ -57,11 +58,11 @@ const markAllRead = async () => {
   }
 };
 
-const getBgClass = (notif) => {
-  if (notif.read_at) return "bg-transparent opacity-60";
-  if (notif.data.type === "alert") return "bg-red-900/40 border-l-4 border-red-500 hover:bg-red-900/50";
-  return "bg-[#9a203e]/20 hover:bg-[#9a203e]/30";
-};
+// const getBgClass = (notif) => {
+//   if (notif.read_at) return "bg-transparent opacity-60";
+//   if (notif.data.type === "alert") return "bg-red-900/40 border-l-4 border-red-500 hover:bg-red-900/50";
+//   return "bg-[#9a203e]/20 hover:bg-[#9a203e]/30";
+// };
 
 onMounted(() => {
   fetchNotifs();
@@ -94,49 +95,37 @@ onMounted(() => {
           v-for="notif in notifications"
           :key="notif.id"
           @click="handleMarkRead(notif.id)"
-          :class="['p-4 border-b border-white/5 transition flex gap-4 cursor-pointer', getBgClass(notif)]">
-          <div class="mt-1 shrink-0">
-            <div
-              v-if="notif.data.type === 'alert'"
-              class="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/20 text-red-500 border border-red-500/50">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
+          :class="[
+            'p-3 hover:bg-[#2c2122] cursor-pointer border-b border-[#2c2122] transition-colors',
+            notif.read_at ? 'opacity-60' : 'bg-[#1e0f0f]',
+          ]">
+          <div class="flex gap-3">
+            <div class="mt-1 flex-shrink-0">
+              <div
+                class="w-2 h-2 rounded-full mt-1.5"
+                :class="notif.read_at ? 'bg-gray-600' : 'bg-red-500 animate-pulse'"></div>
             </div>
-            <div
-              v-else
-              :class="!notif.read_at ? 'bg-[#9a203e] text-white' : 'bg-gray-700 text-gray-400'"
-              class="flex items-center justify-center w-8 h-8 rounded-full transition-colors text-xs">
-              {{ !notif.read_at ? "📢" : "✓" }}
-            </div>
-          </div>
 
-          <div class="flex-1">
-            <h4 :class="!notif.read_at ? 'text-white' : 'text-gray-400'" class="font-bold text-[13px] mb-0.5">
-              {{ notif.data.title || "Info" }}
-            </h4>
-            <p :class="!notif.read_at ? 'text-gray-200' : 'text-gray-500'" class="text-[12px] leading-relaxed">
-              {{ notif.data.message }}
-            </p>
-            <div v-if="notif.data.reason" class="mt-2 p-2 bg-red-500/10 rounded border border-red-500/20">
-              <p class="text-[11px] text-red-300">
-                <span class="font-bold">Alasan:</span>
-                {{ notif.data.reason }}
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-[#e5e5e5] mb-0.5">
+                {{ notif.data.title || "Notifikasi Baru" }}
+              </p>
+              <p class="text-xs text-[#cdcccc] leading-relaxed">
+                {{ notif.data.message }}
+              </p>
+
+              <div
+                v-if="notif.data.appeal_message"
+                class="mt-2 p-2 rounded bg-[#2c1a1a] border border-[#4b1a1a] relative">
+                <p class="text-[11px] text-gray-300 italic">
+                  <span class="font-bold text-[#9a203e] not-italic">Pesan User:</span>
+                  "{{ notif.data.appeal_message }}"
+                </p>
+              </div>
+              <p class="text-[10px] text-gray-500 mt-2">
+                {{ formatTime(notif.created_at) }}
               </p>
             </div>
-            <span class="text-[10px] text-gray-600 block mt-2">
-              {{ formatTime(notif.created_at) }}
-            </span>
           </div>
         </li>
       </ul>

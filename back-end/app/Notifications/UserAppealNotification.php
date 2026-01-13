@@ -3,34 +3,46 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class UserAppealNotification extends Notification
+class UserAppealNotification extends Notification implements ShouldQueue// Tambah ShouldQueue biar ringan
+
 {
     use Queueable;
 
-    protected $userEmail;
-    protected $reason;
+    public $email;
+    public $message; // <--- 1. Tambahkan properti ini
 
-    public function __construct($userEmail, $reason)
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct($email, $message) // <--- 2. Terima message di constructor
     {
-        $this->userEmail = $userEmail;
-        $this->reason = $reason;
+        $this->email = $email;
+        $this->message = $message;
     }
 
+    /**
+     * Get the notification's delivery channels.
+     */
     public function via(object $notifiable): array
     {
-        // Simpan ke database agar muncul di lonceng notifikasi aplikasi
-        return ['database'];
+        return ['database']; // Bisa tambah 'mail' jika perlu
     }
 
+    /**
+     * Get the array representation of the notification.
+     */
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => "Banding Akun: {$this->userEmail}",
-            'description' => "Alasan: {$this->reason}",
-            'type' => 'appeal', // Tanda bahwa ini notifikasi banding
-            'email' => $this->userEmail, // Admin bisa cari user by email nanti
+            'title' => 'Permintaan Banding Akun',
+            'message' => "User {$this->email} mengajukan banding atas pemblokiran akun.",
+            'email' => $this->email,
+            'appeal_message' => $this->message, // <--- 3. Masukkan ke data JSON
+            'type' => 'appeal', // Identitas notifikasi
+            'created_at' => now(),
         ];
     }
 }

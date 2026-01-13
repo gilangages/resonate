@@ -15,23 +15,27 @@ class AppealController extends Controller
      */
     public function sendAppeal(Request $request)
     {
+        // 1. Validasi Input
         $request->validate([
             'email' => 'required|email|exists:users,email',
-            'reason' => 'required|string|min:10',
+            'message' => 'required|string|min:10|max:500', // Wajib ada pesan
         ]);
 
         $user = User::where('email', $request->email)->first();
 
+        // Cek apakah user benar-benar dibanned
         if (!$user->is_banned) {
-            return response()->json(['message' => 'Akun ini tidak sedang dibanned.'], 400);
+            return response()->json(['message' => 'Akun ini tidak sedang dibekukan.'], 400);
         }
 
-        // Cari semua admin
+        // 2. Ambil semua Admin
         $admins = User::where('role', 'admin')->get();
 
-        // Kirim notifikasi ke semua admin
-        Notification::send($admins, new UserAppealNotification($user->email, $request->reason));
+        // 3. Kirim Notifikasi ke Admin (Sertakan Pesan)
+        Notification::send($admins, new UserAppealNotification($user->email, $request->message));
 
-        return response()->json(['message' => 'Permintaan banding telah dikirim ke Admin.']);
+        return response()->json([
+            'message' => 'Permintaan banding telah dikirim ke Admin.',
+        ]);
     }
 }

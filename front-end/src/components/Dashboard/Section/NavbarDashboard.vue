@@ -156,7 +156,7 @@ onUnmounted(() => {
           :data-title="userState.name"
           @click="toggleDropdown">
           <img
-            :src="getAvatarUrl(userState.avatar) || getAvatarUrl(userState.photo_url)"
+            :src="userState.avatar ? getAvatarUrl(userState.avatar) : userState.photo_url"
             alt="me"
             class="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] rounded-full object-cover block border border-[#2c2021] shadow-sm" />
         </div>

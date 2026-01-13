@@ -51,11 +51,8 @@ const handleMarkRead = async (notifId) => {
 };
 
 const handleMarkAllRead = async () => {
-  // PERBAIKAN 1: Tambahkan 'await'.
-  // Kita tampung dulu hasilnya ke variabel.
   const confirmed = await alertConfirm("Tandai semua notifikasi (termasuk di halaman lain) sebagai sudah dibaca?");
 
-  // Jika user klik No/Cancel, hentikan proses di sini
   if (!confirmed) return;
 
   // Update UI lokal (Optimistic Update)
@@ -63,16 +60,13 @@ const handleMarkAllRead = async () => {
 
   try {
     await markAllNotificationsRead(token.value);
-
-    // PERBAIKAN 2: Beritahu Navbar untuk refresh jumlah notif
     window.dispatchEvent(new Event("notification-updated"));
   } catch (err) {
     console.error(err);
-    // Opsional: Jika gagal, kembalikan status read_at ke null (rollback)
   }
 };
 
-// Style Helper (sama dengan dropdown tapi disesuaikan)
+// Style Helper
 const getBgClass = (notif) => {
   if (notif.read_at) return "bg-[#1e1e1e]/50 opacity-70 border-l-4 border-transparent";
   if (notif.data.type === "alert") return "bg-red-900/20 border-l-4 border-red-500";
@@ -156,10 +150,12 @@ onMounted(() => {
               {{ notif.data.message }}
             </p>
 
-            <div v-if="notif.data.reason" class="mt-3 p-3 bg-black/20 rounded border border-red-500/10 inline-block">
-              <p class="text-xs text-red-300">
-                <span class="font-bold uppercase text-[10px] tracking-wide opacity-70 mr-1">Alasan:</span>
-                {{ notif.data.reason }}
+            <div
+              v-if="notif.data.appeal_message"
+              class="mt-3 p-3 rounded bg-[#2c1a1a] border border-[#4b1a1a] relative w-full sm:w-auto inline-block">
+              <p class="text-xs text-gray-300 italic">
+                <span class="font-bold text-[#9a203e] not-italic">Pesan User:</span>
+                "{{ notif.data.appeal_message }}"
               </p>
             </div>
           </div>

@@ -20,6 +20,7 @@ class SuperAdminSeeder extends Seeder
                 'name' => 'Super Admin Abdian',
                 'password' => Hash::make('abdian123'), // Ganti dengan password yang aman
                 'role' => 'admin',
+                'avatar' => null,
                 'email_verified_at' => now(),
             ]
         );

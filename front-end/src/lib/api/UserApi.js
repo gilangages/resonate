@@ -152,6 +152,9 @@ export const sendAppeal = (email, reason) => {
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    body: JSON.stringify({ email, reason }),
+    body: JSON.stringify({
+      email,
+      message: reason,
+    }),
   });
 };
