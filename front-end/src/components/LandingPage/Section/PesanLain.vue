@@ -199,7 +199,9 @@ onMounted(async () => {
 
             <div :class="getTheme(note.id).border" class="flex flex-col gap-3 pt-4 border-t relative z-10 mt-auto">
               <div class="flex items-center gap-2">
-                <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
+                <img
+                  :src="note.author_avatar || note.author_photo_url"
+                  class="w-6 h-6 rounded-full border border-[#333] object-cover" />
                 <div class="flex flex-col">
                   <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
                   <span class="text-xs text-[#999] font-medium leading-none truncate max-w-[150px]">
