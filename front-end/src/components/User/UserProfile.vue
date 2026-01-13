@@ -3,10 +3,12 @@ import { useLocalStorage } from "@vueuse/core";
 import { onBeforeMount, ref } from "vue";
 import { userDetail, userUpdatePassword, userUpdateProfile } from "../../lib/api/UserApi";
 import { alertError, alertSuccess } from "../../lib/alert";
+import { getAvatarUrl, userState } from "../../lib/store";
 
 const token = useLocalStorage("token", "");
 const name = ref("");
 const email = ref("");
+const fileInput = ref(null);
 const password = ref("");
 const password_confirmation = ref("");
 
@@ -16,11 +18,35 @@ async function fetchUser() {
   console.log(responseBody);
 
   if (response.ok) {
+    userState.value = responseBody.data;
     name.value = responseBody.data.name;
     email.value = responseBody.data.email;
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
     await alertError(pesanError);
+  }
+}
+function triggerFileInput() {
+  fileInput.value.click();
+}
+
+async function handleFileChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const response = await userUpdatePhoto(token.value, file);
+    const responseBody = await response.json();
+
+    if (response.ok) {
+      // UPDATE GLOBAL STATE -> Navbar otomatis berubah!
+      userState.value = responseBody.data;
+      await alertSuccess("Foto profil berhasil diubah!");
+    } else {
+      throw new Error(responseBody.message);
+    }
+  } catch (error) {
+    await alertError("Gagal upload foto");
   }
 }
 
@@ -38,12 +64,15 @@ async function handleChangeName() {
 }
 
 async function handleChangePassword() {
-  if (password.value !== password_confirmation) {
+  if (password.value !== password_confirmation.value) {
     await alertError("Password do not match");
     return;
   }
 
-  const response = await userUpdatePassword(token.value, { password: password.value });
+  const response = await userUpdatePassword(token.value, {
+    password: password.value,
+    password_confirmation: password_confirmation.value,
+  });
   const responseBody = await response.json();
   console.log(responseBody);
 
@@ -70,8 +99,13 @@ onBeforeMount(async () => {
 
       <!-- IMAGE -->
       <div class="flex flex-col items-center justify-center text-[#e5e5e5] py-6">
-        <img src="../../assets/img/me.jpg" alt="me" class="w-[102px] h-[102px] rounded-full object-cover block" />
+        <img
+          :src="getAvatarUrl(userState.avatar)"
+          @click="triggerFileInput"
+          alt="profile"
+          class="w-[102px] h-[102px] rounded-full object-cover block cursor-pointer" />
         <p class="py-2">Ganti Foto</p>
+        <input type="file" ref="fileInput" class="hidden" accept="image/*" @change="handleFileChange" />
       </div>
 
       <!-- INFO DASAR -->
@@ -115,6 +149,7 @@ onBeforeMount(async () => {
           <br />
           <input
             type="password"
+            required
             v-model="password"
             placeholder="Kosongkan jika tidak ingin mengganti"
             class="w-full bg-[#2b2122] text-[#e5e5e5] caret-[#e5e5e5] rounded-[15px] p-[1em] my-[8px] mb-[20px] border-none focus:outline-[2px] focus:outline-[#9a203e]" />
@@ -125,6 +160,7 @@ onBeforeMount(async () => {
           <br />
           <input
             type="password"
+            required
             v-model="password_confirmation"
             placeholder="Masukkan ulang kata sandi"
             class="w-full bg-[#2b2122] text-[#e5e5e5] caret-[#e5e5e5] rounded-[15px] p-[1em] my-[8px] mb-[20px] border-none focus:outline-[2px] focus:outline-[#9a203e]" />

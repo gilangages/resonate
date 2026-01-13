@@ -66,3 +66,21 @@ export const userUpdatePassword = async (token, { password, password_confirmatio
     }),
   });
 };
+
+export const userUpdatePhoto = async (token, file) => {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  // Method PATCH kadang bermasalah dengan FormData di beberapa server setting,
+  // tapi di Laravel modern biasanya aman. Jika error, gunakan POST dengan _method: PATCH
+  formData.append("_method", "PATCH");
+
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
+    method: "POST", // Gunakan POST tapi dengan spoofing method PATCH di formData
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      // JANGAN SET Content-Type! Browser akan otomatis set boundary multipart/form-data
+    },
+    body: formData,
+  });
+};

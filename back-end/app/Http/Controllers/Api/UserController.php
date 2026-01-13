@@ -28,12 +28,26 @@ class UserController extends Controller
         $user = $request->user();
         $validated = $request->validated();
 
-        // Update nama
-        $user->name = $validated['name'];
+        // 1. Update Nama
+        if ($request->has('name')) {
+            $user->name = $validated['name'];
+        }
 
-        // Update password HANYA jika user mengisi input password
+        // 2. Update Password (logika lama..)
         if ($request->filled('password')) {
             $user->password = Hash::make($validated['password']);
+        }
+
+        // 3. LOGIKA BARU: Update Avatar
+        if ($request->hasFile('avatar')) {
+            // Hapus foto lama jika ada (optional, biar server gak penuh)
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+
+            // Simpan foto baru ke folder 'avatars' di storage public
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
         }
 
         $user->save();

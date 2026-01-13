@@ -14,9 +14,10 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
             // Password nullable (boleh kosong), jika diisi minimal 6 karakter & harus confirmed
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'password' => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
+            'avatar' => ['nullable', 'image', 'max:2048'],
         ];
     }
 }
