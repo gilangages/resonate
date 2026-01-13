@@ -1,0 +1,30 @@
+name: Frontend Vue Build Check
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    # PENTING: Semua perintah dijalankan di dalam folder 'front-end'
+    defaults:
+      run:
+        working-directory: ./front-end
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.12.0"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Try to Build
+        run: npm run build
