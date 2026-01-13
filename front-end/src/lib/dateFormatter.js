@@ -25,6 +25,8 @@ export const formatTime = (dateString) => {
 // Fungsi cek apakah sudah diedit
 export const isEdited = (createdAt, updatedAt) => {
   if (!createdAt || !updatedAt) return false;
-  // Jika waktu update beda dengan created (lebih dari 1 menit bedanya untuk toleransi), anggap diedit
-  return dayjs(updatedAt).diff(dayjs(createdAt), "minute") > 1;
+
+  // Ubah logic: Cek apakah updated_at lebih baru dari created_at (beda > 0 detik)
+  // Kita pakai diff dalam satuan 'second' agar edit cepat pun terdeteksi
+  return dayjs(updatedAt).diff(dayjs(createdAt), "second") > 0;
 };

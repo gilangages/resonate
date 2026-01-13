@@ -22,6 +22,11 @@ input:-webkit-autofill:active {
 .tooltip-container {
   position: relative;
 }
+
+.tooltip-container-right {
+  position: relative;
+}
+
 .tooltip-container-mid {
   position: relative;
 }
@@ -75,6 +80,32 @@ input:-webkit-autofill:active {
   /* Animasi */
   animation: fadeIn 0.2s ease-in-out;
 }
+
+.tooltip-container-right:hover::after {
+  content: attr(data-title);
+  position: absolute;
+  top: 120%;
+  right: 0;
+  left: auto;
+  transform: none;
+  /* transform: translateX(-50%); */
+
+  /* Desain */
+  background-color: #1c1516;
+  color: #e5e5e5;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid #2c2021;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 60; /* Dinaikkan sedikit biar di atas elemen lain */
+
+  /* Animasi */
+  animation: fadeInVertical 0.2s ease-in-out;
+}
+
 .tooltip-container-mid:hover::after {
   content: attr(data-title);
   position: absolute;
@@ -102,6 +133,17 @@ input:-webkit-autofill:active {
 .tooltip-container[data-title=""]:hover::after,
 .tooltip-container:not([data-title]):hover::after {
   display: none;
+}
+
+@keyframes fadeInVertical {
+  from {
+    opacity: 0;
+    transform: translateY(10px); /* Cuma geser Y (bawah ke atas) */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); /* Posisi normal */
+  }
 }
 
 @keyframes fadeIn {
@@ -193,4 +235,16 @@ input:-webkit-autofill:active {
 .slide-up-leave-to {
   transform: translate(-50%, 100%);
   opacity: 0;
+}
+
+@media (hover: none) {
+  .tooltip-container::before,
+  .tooltip-container::after,
+  .tooltip-container-mid::before,
+  .tooltip-container-mid::after,
+  .tooltip-container-right::after,
+  .tooltip-container-right::after {
+    display: none !important;
+    content: none !important;
+  }
 }

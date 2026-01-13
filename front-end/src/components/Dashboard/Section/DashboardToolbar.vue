@@ -73,8 +73,8 @@ const getThemeLabel = (themeId) => {
             showThemeDropdown = !showThemeDropdown;
             showSortDropdown = false;
           "
-          class="w-full bg-[#1c1516] text-[#e5e5e5] border border-[#2c2021] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#9a203e] cursor-pointer flex items-center justify-center gap-2 hover:bg-[#251a1c] transition-colors"
-          title="Ganti Tema Kartu">
+          class="tooltip-container-mid w-full bg-[#1c1516] text-[#e5e5e5] border border-[#2c2021] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#9a203e] cursor-pointer flex items-center justify-center gap-2 hover:bg-[#251a1c] transition-colors"
+          data-title="Ganti Tema Kartu">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="18"

@@ -121,7 +121,8 @@ onUnmounted(() => {
       <div class="relative">
         <button
           @click="toggleNotif"
-          class="relative p-2 rounded-full hover:bg-[#2c2021] transition-all duration-200 text-[#cdcccc] hover:text-white active:scale-95 group">
+          data-title="Notifikasi"
+          class="tooltip-container-right relative p-2 rounded-full hover:bg-[#2c2021] transition-all duration-200 text-[#cdcccc] hover:text-white active:scale-95 group">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="22"
@@ -152,7 +153,7 @@ onUnmounted(() => {
 
       <div class="relative">
         <div
-          class="tooltip-container cursor-pointer rounded-full ring-2 ring-transparent hover:ring-[#4b1a1a] transition-all"
+          class="tooltip-container-right cursor-pointer rounded-full ring-2 ring-transparent hover:ring-[#4b1a1a] transition-all"
           :data-title="userState.name"
           @click="toggleDropdown">
           <img
@@ -226,17 +227,4 @@ onUnmounted(() => {
   </div>
 </template>
 
-<style>
-/* FIX: Menggunakan @media (hover: none) untuk mendeteksi perangkat layar sentuh.
-  Jika perangkat tidak punya kursor (seperti HP/Tablet), maka tooltip disembunyikan.
-*/
-@media (hover: none) {
-  .tooltip-container::before,
-  .tooltip-container::after,
-  .tooltip-container-mid::before,
-  .tooltip-container-mid::after {
-    display: none !important;
-    content: none !important;
-  }
-}
-</style>
+<style scoped></style>
