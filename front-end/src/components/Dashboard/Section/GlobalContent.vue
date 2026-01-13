@@ -1,5 +1,5 @@
 <script setup>
-import { useLocalStorage } from "@vueuse/core";
+import { useLocalStorage, useWindowSize } from "@vueuse/core";
 import { noteList } from "../../../lib/api/NoteApi";
 import { onMounted, ref, nextTick, Teleport, computed } from "vue";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
@@ -7,12 +7,15 @@ import { useDebounceFn } from "@vueuse/core";
 import DashboardToolbar from "./DashboardToolbar.vue";
 import { useCardTheme } from "../../../lib/useCardTheme";
 import { useShareImage } from "../../../lib/useShareImage";
+import { useNow } from "@vueuse/core";
 
 const { getTheme, getSelectedTheme } = useCardTheme();
 const { captureRef, downloadImage, isDownloading } = useShareImage();
 const token = useLocalStorage("token", "");
 const notes = ref([]);
 const cacheBuster = ref(Date.now());
+const now = useNow({ interval: 60000 });
+const { width } = useWindowSize();
 
 // --- AUDIO PLAYER STATE ---
 const currentAudio = ref(new Audio());
@@ -153,6 +156,14 @@ const closePreview = () => {
 const handleSearch = useDebounceFn(() => fetchNoteList(true), 500);
 
 const columns = computed(() => {
+  // JIKA MOBILE (< 768px alias 'md' di Tailwind):
+  // Kembalikan 1 kolom berisi semua notes.
+  // Ini akan membuat urutan render: Note 1, Note 2, Note 3... (Urut ke bawah)
+  if (width.value < 768) {
+    return [notes.value];
+  }
+
+  //desktop
   const cols = [[], [], []];
   notes.value.forEach((note, index) => {
     cols[index % 3].push(note);
@@ -296,7 +307,7 @@ onMounted(async () => {
                     </div>
                   </div>
                   <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
-                    {{ formatTime(note.created_at) }}
+                    {{ formatTime(note.created_at, now) }}
                     <span
                       v-if="isEdited(note.created_at, note.updated_at)"
                       :class="getTheme(note.id).text"
@@ -356,7 +367,7 @@ onMounted(async () => {
             @click.self="closeModalDetail">
             <div
               ref="captureRef"
-              class="w-full max-w-[420px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+              class="w-full max-w-[420px] md:max-w-[600px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
               :class="[showModal ? 'scale-100' : 'scale-95', selectedTheme.bg, selectedTheme.border]">
               <button
                 @click="closeModalDetail"

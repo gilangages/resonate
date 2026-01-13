@@ -246,8 +246,10 @@ input:-webkit-autofill:active {
   .tooltip-container::after,
   .tooltip-container-mid::before,
   .tooltip-container-mid::after,
+  .tooltip-container-right::before,
   .tooltip-container-right::after,
-  .tooltip-container-right::after {
+  .tooltip-container-top::before,
+  .tooltip-container-top::after {
     display: none !important;
     content: none !important;
   }

@@ -5,7 +5,6 @@ import NoteCreate from "../Note/NoteCreate.vue";
 import NoteEdit from "../Note/NoteEdit.vue";
 import { getNotifications, markNotificationsRead } from "../../lib/api/NotificationApi";
 import { alertError } from "../../lib/alert"; // Cek file ini, apakah ada logika redirect?
-import { userDetail } from "../../lib/api/UserApi";
 import { useLocalStorage } from "@vueuse/core";
 import { useRouter } from "vue-router"; // Import router jika mau kontrol manual
 

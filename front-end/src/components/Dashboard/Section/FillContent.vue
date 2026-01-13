@@ -8,6 +8,7 @@ import { useDebounceFn } from "@vueuse/core";
 import { noteBulkDelete } from "../../../lib/api/NoteApi";
 import DashboardToolbar from "./DashboardToolbar.vue";
 import { useCardTheme } from "../../../lib/useCardTheme";
+import { useNow, useWindowSize } from "@vueuse/core";
 
 // Emit ke Parent
 const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
@@ -16,6 +17,8 @@ const token = useLocalStorage("token", "");
 const notes = ref([]);
 const currentAudio = ref(new Audio());
 const currentTime = ref(0);
+const now = useNow({ interval: 60000 });
+const { width } = useWindowSize();
 
 // --- STATE LOADING (BARU) ---
 const isLoading = ref(true);
@@ -231,6 +234,15 @@ const closePreview = () => {
 
 // Fungsi untuk membagi notes menjadi 3 kolom agar urutannya menyamping
 const columns = computed(() => {
+  // JIKA MOBILE (< 768px alias 'md' di Tailwind):
+  // Kembalikan 1 kolom berisi semua notes.
+  // Ini akan membuat urutan render: Note 1, Note 2, Note 3... (Urut ke bawah)
+  if (width.value < 768) {
+    return [notes.value];
+  }
+
+  // JIKA DESKTOP:
+  // Bagi menjadi 3 kolom (Masonry style)
   const cols = [[], [], []]; // Untuk 3 kolom (lg)
   notes.value.forEach((note, index) => {
     cols[index % 3].push(note); // Note 1 ke Kolom 1, Note 2 ke Kolom 2, dst
@@ -391,7 +403,7 @@ defineExpose({
                     </div>
                   </div>
                   <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
-                    {{ formatTime(note.created_at) }}
+                    {{ formatTime(note.created_at, now) }}
                     <span
                       v-if="isEdited(note.created_at, note.updated_at)"
                       :class="getTheme(note.id).text"
@@ -535,7 +547,7 @@ defineExpose({
             class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
             @click.self="closeModalDetail">
             <div
-              class="w-full max-w-[480px] rounded-[32px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+              class="w-full max-w-[480px] md:max-w-[600px] rounded-[32px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
               :class="[showModal ? 'scale-100' : 'scale-95', selectedTheme.bg, selectedTheme.border]">
               <button
                 @click="closeModalDetail"

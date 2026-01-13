@@ -6,11 +6,12 @@ import "dayjs/locale/id"; // Import bahasa Indonesia
 dayjs.extend(relativeTime);
 dayjs.locale("id"); // Set default bahasa ke Indonesia
 
-export const formatTime = (dateString) => {
+export const formatTime = (dateString, relativeTo = null) => {
   if (!dateString) return "";
 
   const date = dayjs(dateString);
-  const now = dayjs();
+  // Gunakan waktu yang dipassing (reactive) atau waktu sekarang
+  const now = relativeTo ? dayjs(relativeTo) : dayjs();
 
   // Logic ala WhatsApp Status:
   // Jika bedanya lebih dari 24 jam, tampilkan tanggal lengkap

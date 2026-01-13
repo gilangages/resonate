@@ -4,6 +4,7 @@ import { noteListGlobal } from "../../../lib/api/NoteApi";
 import { alertError } from "../../../lib/alert";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
 import { useCardTheme } from "../../../lib/useCardTheme";
+import { useNow } from "@vueuse/core";
 
 //useTheme
 const { getTheme, getSelectedTheme } = useCardTheme();
@@ -19,6 +20,7 @@ const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 const selectedTheme = getSelectedTheme(selectedNote);
+const now = useNow({ interval: 60000 });
 
 // --- FETCH DATA ---
 async function fetchNoteGlobal() {
@@ -211,7 +213,7 @@ onMounted(async () => {
 
                 <div class="ml-auto flex items-center gap-3">
                   <span class="text-[10px] text-[#555] font-mono">
-                    {{ formatTime(note.created_at) }}
+                    {{ formatTime(note.created_at, now) }}
                     <span
                       v-if="isEdited(note.created_at, note.updated_at)"
                       :class="getTheme(note.id).text"
@@ -272,7 +274,7 @@ onMounted(async () => {
           class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
           @click.self="closeModalDetail">
           <div
-            class="w-full max-w-[420px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+            class="w-full max-w-[420px] md:max-w-[600px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
             :class="[showModal ? 'scale-100' : 'scale-95', selectedTheme.bg, selectedTheme.border]">
             <button
               @click="closeModalDetail"

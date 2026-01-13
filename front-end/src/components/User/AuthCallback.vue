@@ -3,66 +3,77 @@ import { onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useLocalStorage } from "@vueuse/core";
 import { useCardTheme } from "../../lib/useCardTheme";
-import { userDetail } from "../../lib/api/UserApi"; // 👈 Pastikan path ini benar
+import { userDetail } from "../../lib/api/UserApi";
+
+// 👇 1. IMPORT 'store' (yang reactive), BUKAN 'userState'
+import { store } from "../../lib/store";
+import { alertError } from "../../lib/alert";
 
 const router = useRouter();
 const route = useRoute();
-const tokenStorage = useLocalStorage("token", ""); // VueUse LocalStorage
+const tokenStorage = useLocalStorage("token", "");
 const { initTheme } = useCardTheme();
+
+// ❌ HAPUS BARIS INI (Ini penyebab error "not a function")
+// const userStore = userState();
 
 onMounted(async () => {
   const token = route.query.token;
+  const userQuery = route.query.user;
   const error = route.query.error;
 
-  // Jika ada token di URL, berarti login Google sukses
   if (token) {
     try {
-      // 1. Simpan Token ke LocalStorage
       tokenStorage.value = token;
+      let userData = null;
 
-      // 2. Fetch Data User Terbaru menggunakan endpoint 'userDetail'
-      const response = await userDetail(token);
-      const responseBody = await response.json();
-
-      if (response.ok) {
-        // Cek struktur response API kamu.
-        // Biasanya user ada di responseBody.data atau responseBody.user
-        // Kita coba ambil yang valid:
-        const userData = responseBody.data || responseBody.user || responseBody;
-
-        if (!userData || !userData.id) {
-          throw new Error("Data user tidak valid.");
+      // A. Cek Data dari URL (Prioritas Utama & Cepat)
+      if (userQuery) {
+        try {
+          userData = JSON.parse(decodeURIComponent(userQuery));
+          console.log("⚡ Fast Login: Menggunakan data dari URL");
+        } catch (e) {
+          console.error("Gagal parse URL user, fallback ke API...");
         }
-
-        // 3. Simpan User ke Session Storage (PENTING untuk app state)
-        sessionStorage.setItem("user", JSON.stringify(userData));
-
-        // 4. ✅ LOAD TEMA SPESIFIK USER
-        // Karena sekarang kita sudah punya ID-nya
-        initTheme(userData.id);
-
-        console.log("Login Google Sukses, Theme:", userData.id);
-
-        // 5. Redirect ke Dashboard
-        // Pakai window.location agar halaman refresh total & state benar-benar bersih
-        window.location.href = "/dashboard/global";
-      } else {
-        throw new Error(responseBody.message || "Gagal verifikasi user.");
       }
+
+      // B. Fallback ke API jika URL kosong/gagal
+      if (!userData) {
+        console.log("🌐 Slow Login: Fetching data via API...");
+        const response = await userDetail(token);
+        const responseBody = await response.json();
+
+        if (!response.ok) throw new Error(responseBody.message);
+        userData = responseBody.data || responseBody.user || responseBody;
+      }
+
+      // Validasi Data
+      if (!userData || !userData.id) {
+        throw new Error("Data user korup/tidak valid.");
+      }
+
+      // 👇 2. GUNAKAN 'setUser' DARI STORE.JS
+      // Ini otomatis update state reactive DAN simpan ke localStorage ('user')
+      store.setUser(userData);
+
+      // Opsional: Jika aplikasi kamu di tempat lain memakai 'userState' (ref),
+      // kamu bisa update manual di sini (tapi sebaiknya konsisten pakai 'store.user' saja)
+      // userState.value = userData;
+
+      // Load Tema
+      initTheme(userData.id);
+
+      // Redirect Clean
+      window.location.href = "/dashboard/global";
     } catch (err) {
       console.error("Callback Error:", err);
-      alert("Gagal memproses login Google: " + err.message);
-      // Jika gagal, kembalikan ke login
+      await alertError("Gagal login: " + err.message);
       router.push("/login");
     }
-  }
-  // Jika URL mengandung error (misal user cancel google login)
-  else if (error) {
-    alert("Login Gagal: " + error);
+  } else if (error) {
+    await alertError("Login Gagal: " + error);
     router.push("/login");
-  }
-  // Jika tidak ada apa-apa, tendang ke login
-  else {
+  } else {
     router.push("/login");
   }
 });
