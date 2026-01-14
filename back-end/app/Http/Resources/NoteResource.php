@@ -17,7 +17,9 @@ class NoteResource extends JsonResource
             'recipient' => $this->recipient,
             'initial_name' => $this->initial_name,
             'author' => $displayName,
-            'author_avatar' => 'https://ui-avatars.com/api/?name=' . urlencode($displayName) . '&background=random',
+            'author_avatar' => $this->user->avatar
+            ? url('storage/' . $this->user->avatar)
+            : $this->user->photo_url,
 
             // [FIX] Tambahkan field ini agar sesuai docs & kebutuhan frontend
             'spotify_track_id' => $this->spotify_track_id,
