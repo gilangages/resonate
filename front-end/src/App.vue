@@ -3,17 +3,13 @@ import { onMounted } from "vue";
 import { useCardTheme } from "./lib/useCardTheme";
 
 const { initTheme } = useCardTheme();
-
 onMounted(() => {
-  // Cek apakah ada user yang sedang login di session storage
-  const storedUser = sessionStorage.getItem("user");
-
+  // Gunakan localStorage agar sinkron dengan store.js
+  const storedUser = localStorage.getItem("user");
   if (storedUser) {
     const user = JSON.parse(storedUser);
-    // Restore tema milik user tersebut
     initTheme(user.id);
   } else {
-    // Jika tidak ada user, pastikan tema default
     initTheme(null);
   }
 });

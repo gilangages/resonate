@@ -70,6 +70,7 @@ async function handleSubmit() {
 
       // ❌ SALAH: initTheme(user.id); -> ini refer ke form input
       // ✅ BENAR: Ambil dari responseBody
+      localStorage.setItem("user", JSON.stringify(responseBody.user));
       initTheme(responseBody.user.id);
 
       if (responseBody.user.role === "admin") {
