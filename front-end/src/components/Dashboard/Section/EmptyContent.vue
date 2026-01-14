@@ -1,7 +1,9 @@
 <script setup>
 import { ref } from "vue";
-// Import komponen CreateNote (pastikan pathnya sesuai struktur folder kamu)
 import NoteCreate from "../../Note/NoteCreate.vue";
+
+// Definisikan emit agar bisa lapor ke DashboardUser.vue
+const emit = defineEmits(["note-created"]);
 
 const showCreateModal = ref(false);
 
@@ -11,6 +13,13 @@ const openModal = () => {
 
 const closeModal = () => {
   showCreateModal.value = false;
+};
+
+// Saat NoteCreate berhasil submit:
+const handleNoteSuccess = () => {
+  closeModal();
+  // LAPOR KE PARENT: "Woi, pesan udah jadi nih!"
+  emit("note-created");
 };
 </script>
 
@@ -36,6 +45,6 @@ const closeModal = () => {
     v-if="showCreateModal"
     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4"
     @click="closeModal">
-    <NoteCreate @close="closeModal" />
+    <NoteCreate @close="closeModal" @submit="handleNoteSuccess" />
   </div>
 </template>

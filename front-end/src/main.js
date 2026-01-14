@@ -11,7 +11,6 @@ import DashboardLayout from "./components/Layout/DashboardLayout.vue";
 import UserProfile from "./components/User/UserProfile.vue";
 import UserLogout from "./components/User/UserLogout.vue";
 import DashboardUser from "./components/Dashboard/DashboardUser.vue";
-import DashboardUserFill from "./components/Dashboard/DashboardUserFill.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -45,10 +44,6 @@ const router = createRouter({
         {
           path: "",
           component: DashboardUser, //ini nanti ke global
-        },
-        {
-          path: "fill",
-          component: DashboardUserFill, //ini nanti ke global
         },
         {
           path: "users/profile",
