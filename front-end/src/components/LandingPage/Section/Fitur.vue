@@ -1,9 +1,18 @@
 <script setup>
-// Kita pakai SVG langsung untuk icon musik biar gak perlu cari file gambar lagi
-// Ini icon "Music Note" universal (Generic)
-const musicIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>`;
+import { ref } from "vue";
 
-const features = [
+// --- ICON ASSETS (SVG Strings) ---
+// Icon Deezer (Simbol Equalizer/Sound Wave sederhana)
+const deezerIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>`;
+
+const shareIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`;
+
+const themeIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>`;
+
+const infoIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+
+// --- DATA FEATURES ---
+const features = ref([
   {
     title: "Mode Anonim",
     desc: "Ingin curhat atau mengungkapkan perasaan dengan rahasia? Gunakan nama inisial agar identitasmu tetap terjaga.",
@@ -11,9 +20,9 @@ const features = [
     isGeneric: false,
   },
   {
-    title: "Pustaka Musik",
-    desc: "Cari dan sematkan jutaan lagu favoritmu. Preview 30 detik otomatis tersedia untuk menghidupkan pesanmu.",
-    img: musicIconSvg,
+    title: "Pustaka Deezer",
+    desc: "Temukan jutaan lagu dari Deezer. Sematkan lagu yang pas dan biarkan orang lain mendengarkan preview-nya.",
+    img: deezerIconSvg,
     isGeneric: true,
   },
   {
@@ -22,34 +31,53 @@ const features = [
     img: "../../src/assets/img/personal.svg",
     isGeneric: false,
   },
-];
+  {
+    title: "Share sebagai Gambar",
+    desc: "Ingin membagikan pesanmu ke Instagram Story? Unduh pesan sebagai gambar estetik dalam satu klik.",
+    img: shareIconSvg,
+    isGeneric: true,
+  },
+  {
+    title: "Tema & Kustomisasi",
+    desc: "Bosan dengan tampilan standar? Ubah tema kartu pesanmu agar sesuai dengan suasana hati atau warna favoritmu.",
+    img: themeIconSvg,
+    isGeneric: true,
+  },
+  {
+    title: "Info Moderasi",
+    desc: "Sistem notifikasi transparan. Kamu akan diberitahu langsung jika ada pesanmu yang dihapus oleh admin.",
+    img: infoIconSvg,
+    isGeneric: true,
+  },
+]);
 </script>
 
 <template>
   <div class="p-[2em]">
-    <h2 class="text-[#e5e5e5] text-[20px] font-semibold sm:text-left mb-6">Fitur Utama</h2>
+    <h2 class="text-[#e5e5e5] text-[20px] font-semibold sm:text-left mb-8">Fitur Unggulan</h2>
 
-    <div class="flex flex-col sm:flex-row gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
         v-for="(item, index) in features"
         :key="index"
-        class="group flex-1 flex flex-col items-center justify-start p-6 rounded-2xl transition-all duration-300 hover:bg-white/5 hover:-translate-y-2 border border-transparent hover:border-white/10 text-center text-[#e5e5e5] cursor-default">
+        class="group flex flex-col items-center justify-start p-6 rounded-2xl transition-all duration-300 hover:bg-white/5 hover:-translate-y-2 border border-transparent hover:border-white/10 text-center text-[#e5e5e5] cursor-default bg-white/[0.02]">
         <div
-          class="w-[100px] h-[100px] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+          class="w-[80px] h-[80px] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 mb-4 bg-white/5 rounded-full p-4">
           <img
             :src="item.img"
             class="w-full h-full object-contain"
             :class="{
               'filter brightness-0 invert opacity-80': !item.isGeneric,
               'opacity-90 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]': item.isGeneric,
-            }" />
+            }"
+            alt="Fitur Icon" />
         </div>
 
-        <h3 class="mt-4 mb-3 font-bold text-lg transition-colors group-hover:text-[#9a203e]">
+        <h3 class="mt-2 mb-3 font-bold text-lg transition-colors group-hover:text-[#9a203e]">
           {{ item.title }}
         </h3>
 
-        <p class="text-[#8c8a8a] text-[15px] px-[1em] leading-relaxed transition-colors group-hover:text-gray-300">
+        <p class="text-[#8c8a8a] text-[14px] leading-relaxed transition-colors group-hover:text-gray-300">
           {{ item.desc }}
         </p>
       </div>
