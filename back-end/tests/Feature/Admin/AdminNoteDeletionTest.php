@@ -61,4 +61,42 @@ class AdminNoteDeletionTest extends TestCase
 
         $this->assertEquals('Melanggar Pedoman Komunitas', $notification->data['reason']);
     }
+
+    public function test_admin_can_fetch_notes_with_user_avatar()
+    {
+        // 1. Setup Admin & User Biasa
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create(['avatar' => 'https://example.com/avatar.jpg']);
+
+        // 2. Buat Note oleh User tersebut
+        Note::factory()->create([
+            'user_id' => $user->id,
+            'content' => 'Test Content',
+        ]);
+
+        // 3. Admin melakukan request ke endpoint notes
+        $response = $this->actingAs($admin)
+            ->getJson('/api/admin/notes');
+
+        // 4. Assert struktur JSON harus mengandung avatar di dalam object user
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'id',
+                        'content',
+                        'user' => [
+                            'id',
+                            'name',
+                            'email',
+                            'avatar', // Pastikan field ini ada
+                        ],
+                    ],
+                ],
+            ]);
+
+        // Verifikasi isi avatar
+        $data = $response->json('data.0');
+        $this->assertEquals($user->avatar, $data['user']['avatar']);
+    }
 }

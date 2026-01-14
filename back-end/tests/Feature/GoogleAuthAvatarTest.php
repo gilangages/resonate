@@ -94,4 +94,74 @@ class GoogleAuthAvatarTest extends TestCase
             'avatar' => 'https://lh3.googleusercontent.com/a-/AOh14Bg=s96-c',
         ]);
     }
+
+    public function test_user_avatar_is_updated_if_current_avatar_is_url()
+    {
+        // Setup user dengan avatar berupa URL (menandakan ini dari Google/Eksternal)
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'google_id' => '12345',
+            'avatar' => 'https://old-google-avatar.com/me.jpg', // Ini URL
+        ]);
+
+        $this->mockSocialite('test@example.com', '12345', 'https://new-google-avatar.com/me.jpg');
+
+        $this->get('/api/auth/google/callback');
+
+        // Harusnya BERUBAH karena yang lama cuma URL
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'avatar' => 'https://new-google-avatar.com/me.jpg',
+        ]);
+    }
+
+    /**
+     * Skenario 2 (YANG DIMINTA): User sudah upload foto sendiri (Lokal).
+     * Saat login Google, avatar TIDAK BOLEH berubah.
+     */
+    public function test_user_avatar_is_NOT_updated_if_current_avatar_is_local_file()
+    {
+        // Setup user dengan avatar path lokal (hasil upload)
+        // Biasanya path lokal tidak punya http:// dan ada di folder avatars/
+        $localPath = 'avatars/my-custom-photo.jpg';
+
+        $user = User::factory()->create([
+            'email' => 'custom@example.com',
+            'google_id' => '67890',
+            'avatar' => $localPath, // BUKAN URL
+        ]);
+
+        // Google mencoba menawarkan avatar baru
+        $this->mockSocialite('custom@example.com', '67890', 'https://google.com/new-photo.jpg');
+
+        $this->get('/api/auth/google/callback');
+
+        // Cek Database: Avatar HARUS TETAP file lokal
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'avatar' => $localPath,
+        ]);
+
+        // Pastikan avatar Google TIDAK masuk
+        $this->assertDatabaseMissing('users', [
+            'id' => $user->id,
+            'avatar' => 'https://google.com/new-photo.jpg',
+        ]);
+    }
+
+    // Helper untuk mock
+    private function mockSocialite($email, $id, $avatar)
+    {
+        $abstractUser = Mockery::mock('Laravel\Socialite\Two\User');
+        $abstractUser->shouldReceive('getId')->andReturn($id);
+        $abstractUser->shouldReceive('getEmail')->andReturn($email);
+        $abstractUser->shouldReceive('getName')->andReturn('Test User');
+        $abstractUser->shouldReceive('getAvatar')->andReturn($avatar);
+
+        $provider = Mockery::mock('Laravel\Socialite\Contracts\Provider');
+        $provider->shouldReceive('stateless')->andReturn($provider);
+        $provider->shouldReceive('user')->andReturn($abstractUser);
+
+        Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+    }
 }

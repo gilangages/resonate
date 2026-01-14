@@ -111,8 +111,9 @@ export const resetPassword = (data) => {
   });
 };
 
-export const getAdminUsers = async (token) => {
-  return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/users`, {
+export const getAdminUsers = async (token, page = 1, search = "") => {
+  const params = new URLSearchParams({ page, search });
+  return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/users?${params.toString()}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
