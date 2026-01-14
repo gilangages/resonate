@@ -12,6 +12,7 @@ import UserProfile from "./components/User/UserProfile.vue";
 import UserLogout from "./components/User/UserLogout.vue";
 import DashboardUser from "./components/Dashboard/DashboardUser.vue";
 import NoteEdit from "./components/Note/NoteEdit.vue";
+import DashboardGlobal from "./components/Dashboard/DashboardGlobal.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -19,6 +20,10 @@ const router = createRouter({
     {
       path: "/",
       component: LandingPage,
+    },
+    {
+      path: "/global",
+      component: DashboardGlobal,
     },
     {
       path: "/",
@@ -38,6 +43,10 @@ const router = createRouter({
       path: "/dashboard",
       component: DashboardLayout,
       children: [
+        {
+          path: "global",
+          component: DashboardGlobal,
+        },
         {
           path: "",
           component: DashboardUser, //ini nanti ke global

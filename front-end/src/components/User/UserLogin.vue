@@ -20,7 +20,7 @@ async function handleSubmit() {
   if (response.ok) {
     token.value = responseBody.token;
     await router.push({
-      path: "/dashboard",
+      path: "/dashboard/global",
     });
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;

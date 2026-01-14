@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api; // <--- Namespace yang BENAR (tanpa Auth)
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreNoteRequest;
+use App\Http\Requests\UpdateNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note; // <--- WAJIB: Import Request
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests; // <--- Import Resource
@@ -20,7 +21,7 @@ class NoteController extends Controller
     public function index()
     {
         // Ambil notes terbaru beserta data user-nya
-        $notes = Note::with('user')->latest()->get();
+        $notes = Note::with('user')->latest()->paginate(15);
 
         // WRAPPING: Gunakan collection() karena datanya banyak (list)
         return NoteResource::collection($notes);
@@ -56,23 +57,18 @@ class NoteController extends Controller
      * PUT /api/notes/{id}
      * Auth + owner only
      */
-    public function update(Request $request, $id)
+    public function update(UpdateNoteRequest $request, $id)
     {
-        // 1. Cari manual note-nya berdasarkan ID
         $note = Note::findOrFail($id);
 
-        // 2. Cek otorisasi (Policy)
+        // Cek otorisasi
         $this->authorize('update', $note);
 
-        // Validasi input update
-        $validated = $request->validate([
-            'content' => 'sometimes|string',
-            'recipient' => 'nullable|string',
-            'initial_name' => 'nullable|string',
-            'spotify_track_id' => 'nullable|string',
-        ]);
+        // 3. GUNAKAN 'validated()' DARI REQUEST, BUKAN VALIDASI MANUAL
+        // Ini akan mengambil rules lengkap dari file UpdateNoteRequest.php yang sudah kamu buat
+        $validated = $request->validated();
 
-        // 3. Update data
+        // Update data ke database
         $note->update($validated);
 
         return new NoteResource($note);

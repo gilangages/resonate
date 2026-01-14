@@ -104,3 +104,13 @@ export const noteUpdate = async (
     }),
   });
 };
+
+export const noteList = async (token, page = 1) => {
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes?page=${page}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

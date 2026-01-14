@@ -4,7 +4,7 @@ import { useLocalStorage } from "@vueuse/core";
 import { myNoteList } from "../../lib/api/NoteApi";
 import EmptyContent from "./Section/EmptyContent.vue";
 import FillContent from "./Section/FillContent.vue";
-import Menu from "./Section/Menu.vue";
+import MenuUser from "./Section/MenuUser.vue";
 import NoteCreate from "../Note/NoteCreate.vue"; // Import Modal disini
 import NoteEdit from "../Note/NoteEdit.vue";
 
@@ -62,7 +62,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Menu />
+  <MenuUser />
 
   <div v-if="isLoading" class="flex h-[80vh] w-full items-center justify-center">
     <p class="text-[#8c8a8a] text-lg animate-pulse">Memuat cerita kamu...</p>

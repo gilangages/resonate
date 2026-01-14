@@ -28,6 +28,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Karena route {id} belum didefinisikan di atasnya
     Route::get('/notes/my', [NoteController::class, 'myNotes']);
 
+    //get notes global
+
+    Route::get('/notes', [NoteController::class, 'index']);
+    Route::get('/notes/{id}', [NoteController::class, 'show']);
     // CRUD Notes
     Route::post('/notes', [NoteController::class, 'store']);
     Route::put('/notes/{id}', [NoteController::class, 'update']);
@@ -43,5 +47,3 @@ Route::middleware('auth:sanctum')->group(function () {
 // 🌍 PUBLIC ROUTES (List & Detail)
 // ⚠️ WAJIB TARUH DI PALING BAWAH
 // Agar '/notes/my' tidak tertangkap oleh '/notes/{id}'
-Route::get('/notes', [NoteController::class, 'index']);
-Route::get('/notes/{id}', [NoteController::class, 'show']);
