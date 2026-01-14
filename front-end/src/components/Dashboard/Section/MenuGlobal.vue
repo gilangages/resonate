@@ -7,92 +7,89 @@ const token = useLocalStorage("token", "");
 const name = ref("");
 
 // State Tampilan
-const showIntro = ref(true); // Tampilkan Intro di awal
-const showMenu = ref(false); // Sembunyikan Menu di awal
+const showIntro = ref(false);
+const showMenu = ref(false);
 
-// State Teks (untuk efek ketik)
+// State Teks
 const text1 = ref("");
 const textName = ref("");
 const text2 = ref("");
 const text3 = ref("");
 
-// State Animasi CSS (Agar saat refresh tidak lompat)
 const menuTransition = ref("slide-up");
 
 // Helper: Efek Mengetik
 const typeWriter = async (targetRef, text, speed = 40) => {
+  targetRef.value = "";
   for (let i = 0; i < text.length; i++) {
     targetRef.value += text.charAt(i);
     await new Promise((resolve) => setTimeout(resolve, speed));
   }
 };
 
-// Helper: Delay/Jeda
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchUser() {
-  const response = await userDetail(token.value);
-  const responseBody = await response.json();
+  try {
+    const response = await userDetail(token.value);
+    const responseBody = await response.json();
 
-  if (response.ok) {
-    const userData = responseBody.data;
-    name.value = userData.name;
+    if (response.ok) {
+      const userData = responseBody.data;
+      const newName = userData.name;
 
-    // Jalankan logika animasi dengan mengoper nama user
-    handleAnimation(userData.name);
-  } else {
-    // Jika error (misal token expired), langsung tampilkan menu tanpa animasi
-    showIntro.value = false;
-    menuTransition.value = "";
+      // LOGIC CEK APAKAH PERLU ANIMASI
+      // Kita cek apakah nama di session storage sama dengan nama dari API
+      const lastAnimName = sessionStorage.getItem("last_anim_name");
+
+      if (lastAnimName === newName) {
+        // --- KONDISI REFRESH (Nama masih sama) ---
+        name.value = newName;
+        showIntro.value = false;
+        menuTransition.value = ""; // Matikan animasi slide biar instan
+        showMenu.value = true;
+      } else {
+        // --- KONDISI LOGIN BARU ATAU GANTI NAMA ---
+        name.value = newName;
+        await handleAnimation(newName);
+      }
+    } else {
+      showMenu.value = true;
+    }
+  } catch (e) {
     showMenu.value = true;
   }
 }
 
 async function handleAnimation(userName) {
-  // KUNCI UTAMA: Gunakan nama user sebagai key storage
-  // Contoh key: "played_anim_Budi"
-  const storageKey = `played_anim_${userName}`;
-  const hasPlayed = sessionStorage.getItem(storageKey);
+  // Reset state teks
+  text1.value = "";
+  textName.value = "";
+  text2.value = "";
+  text3.value = "";
 
-  if (hasPlayed) {
-    // --- KASUS REFRESH (Sudah pernah main) ---
+  // Siapkan tampilan animasi
+  showMenu.value = false;
+  showIntro.value = true;
+  menuTransition.value = "slide-up";
 
-    // 1. Matikan efek slide (biar menu langsung diam di tempat)
-    menuTransition.value = "";
+  await wait(500);
+  await typeWriter(text1, "Selamat Datang ");
+  await typeWriter(textName, userName);
+  await wait(300);
+  await typeWriter(text2, "Apa kabarmu hari ini?", 30);
+  await wait(300);
+  await typeWriter(text3, "Mulailah menulis pesan dan jangan lupa sisipkan lagu ya ^_^", 20);
+  await wait(1200);
 
-    // 2. Isi teks penuh (opsional, biar kalau intro sekilas muncul, teksnya ada)
-    text1.value = "Selamat Datang ";
-    textName.value = userName;
+  // Selesai animasi, simpan nama ini ke session sebagai tanda sudah nonton animasi untuk nama ini
+  sessionStorage.setItem("last_anim_name", userName);
 
-    // 3. Sembunyikan Intro, Munculkan Menu Instan
-    showIntro.value = false;
+  // Hilangkan intro, munculkan menu
+  showIntro.value = false;
+  setTimeout(() => {
     showMenu.value = true;
-  } else {
-    // --- KASUS LOGIN BARU / USER BARU ---
-
-    // 1. Nyalakan efek slide
-    menuTransition.value = "slide-up";
-
-    // 2. Mulai Mengetik
-    await typeWriter(text1, "Selamat Datang ");
-    await typeWriter(textName, userName);
-    await wait(300); // Jeda
-    await typeWriter(text2, "Apa kabarmu hari ini?", 30);
-    await wait(300);
-    await typeWriter(text3, "Mulailah menulis pesan dan jangan lupa sisipkan lagu ya ^_^", 20);
-    await wait(1200); // Baca sebentar
-
-    // 3. Intro Hilang (Fade Out)
-    showIntro.value = false;
-
-    // 4. Tunggu intro hilang dikit, baru Menu Masuk (Slide Up)
-    setTimeout(() => {
-      showMenu.value = true;
-    }, 500);
-
-    // 5. Simpan status bahwa user INI sudah lihat animasi
-    sessionStorage.setItem(storageKey, "true");
-  }
+  }, 500);
 }
 
 onBeforeMount(async () => {
@@ -127,32 +124,3 @@ onBeforeMount(async () => {
     </div>
   </Transition>
 </template>
-
-<style scoped>
-/* Transisi Fade Out untuk Intro */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* Transisi Slide Up untuk Menu (Hanya jalan jika login pertama) */
-.slide-up-enter-active {
-  transition: all 0.8s ease-out;
-}
-.slide-up-leave-active {
-  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
-}
-
-.slide-up-enter-from {
-  transform: translateY(30px); /* Muncul dari bawah */
-  opacity: 0;
-}
-.slide-up-leave-to {
-  transform: translateY(-30px);
-  opacity: 0;
-}
-</style>

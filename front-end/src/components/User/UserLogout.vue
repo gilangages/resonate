@@ -15,6 +15,7 @@ async function handleLogout() {
 
   if (response.ok) {
     token.value = "";
+    sessionStorage.clear(); // Ini akan menghapus semua status animasi
     await router.push({
       path: "/login",
     });

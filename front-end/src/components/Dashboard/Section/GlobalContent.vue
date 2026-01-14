@@ -104,7 +104,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-6 md:p-8 relative min-h-screen font-jakarta bg-[#0a0808]">
+  <div class="p-6 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
     <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
       Belum ada pesan yang dibuat.
     </div>
@@ -160,7 +160,7 @@ onMounted(async () => {
             <span class="text-[11px] text-[#555]">{{ formatDate(note.created_at) }}</span>
             <span
               class="text-[11px] font-bold text-[#e5e5e5] group-hover/card:text-[#9a203e] transition-colors flex items-center gap-1">
-              Lihat Detail
+              BUKA
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="12"

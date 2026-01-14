@@ -198,12 +198,12 @@ onBeforeMount(async () => {
               class="flex gap-2 w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
               <button
                 @click.stop="$emit('edit-note', note)"
-                class="flex-1 py-2 rounded-lg border border-[#3f3233] text-[#8c8a8a] text-xs font-bold uppercase tracking-wider hover:bg-[#2c2021] hover:text-white transition-colors">
+                class="flex-1 py-2 rounded-lg border border-[#3f3233] text-[#8c8a8a] text-xs font-bold uppercase tracking-wider hover:bg-[#2c2021] hover:text-white hover:cursor-pointer transition-colors">
                 Edit
               </button>
               <button
                 @click.stop="handleDelete(note.id)"
-                class="flex-1 py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-wider hover:bg-[#9a203e] hover:text-white transition-colors">
+                class="flex-1 py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-wider hover:bg-[#9a203e] hover:text-white hover:cursor-pointer transition-colors">
                 Hapus
               </button>
             </div>

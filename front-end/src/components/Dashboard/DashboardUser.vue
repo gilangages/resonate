@@ -65,7 +65,7 @@ onMounted(() => {
   <MenuUser />
 
   <div v-if="isLoading" class="flex h-[80vh] w-full items-center justify-center">
-    <p class="text-[#8c8a8a] text-lg animate-pulse">Memuat cerita kamu...</p>
+    <p class="text-[#8c8a8a] text-lg animate-pulse">Memuat pesan kamu...</p>
   </div>
 
   <div v-else>
