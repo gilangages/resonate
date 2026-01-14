@@ -11,6 +11,7 @@ import Footer from "./Section/Footer.vue";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Swal from "sweetalert2";
+import FAQ from "./Section/FAQ.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -82,6 +83,7 @@ onMounted(() => {
     <Hero />
     <Fitur />
     <PesanLain />
+    <FAQ />
     <Ajakan />
     <Footer />
 
