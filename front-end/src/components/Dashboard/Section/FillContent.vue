@@ -77,7 +77,7 @@ onBeforeMount(async () => {
 
       <div class="flex items-center justify-between mt-4">
         <div class="flex items-center gap-[10px]">
-          <img src="../../../assets/img/me.jpg" class="h-[45px] w-[45px] rounded-full object-cover block" />
+          <img :src="note.author_avatar" class="h-[45px] w-[45px] rounded-full object-cover block" />
           <p class="font-semibold text-[#9a203e]">{{ note.author ? note.author : note.initial_name }}</p>
         </div>
         <p class="text-[#8c8a8a] text-sm">{{ formatDate(note.created_at) }}</p>
