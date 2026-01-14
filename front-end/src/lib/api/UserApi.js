@@ -157,3 +157,13 @@ export const sendAppeal = (email, reason) => {
     }),
   });
 };
+
+export const userDeleteAccount = async (token) => {
+  return fetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
