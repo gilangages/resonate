@@ -1,19 +1,6 @@
 <script setup>
-import { ref } from "vue";
-import NoteCreate from "../../Note/NoteCreate.vue";
-
 // Definisikan emit agar bisa lapor ke DashboardUser.vue
 const emit = defineEmits(["note-created"]);
-
-const showCreateModal = ref(false);
-
-const openModal = () => {
-  showCreateModal.value = true;
-};
-
-const closeModal = () => {
-  showCreateModal.value = false;
-};
 
 const triggerModal = () => {
   emit("note-created"); // Lapor ke DashboardUser: "Buka modal dong!"
@@ -36,12 +23,5 @@ const triggerModal = () => {
         Buat Pesan
       </button>
     </div>
-  </div>
-
-  <div
-    v-if="showCreateModal"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-    @click="closeModal">
-    <NoteCreate @close="closeModal" @submit="handleNoteSuccess" />
   </div>
 </template>

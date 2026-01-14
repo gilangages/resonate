@@ -1,14 +1,19 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
-import { myNoteList } from "../../../lib/api/NoteApi";
+import { myNoteList, noteDelete } from "../../../lib/api/NoteApi";
 import { onBeforeMount, ref } from "vue";
-// HAPUS import NoteCreate
+import { alertConfirm, alertSuccess } from "../../../lib/alert";
 
 // Definisi Emit ke Parent (DashboardUser)
 const emit = defineEmits(["open-modal"]);
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
+
+// --- STATE PAGINATION ---
+const currentPage = ref(1);
+const lastPage = ref(1);
+const isLoadingMore = ref(false);
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -29,18 +34,72 @@ const getCardHeight = (index) => {
   return heights[index % heights.length];
 };
 
-async function fetchNoteList() {
+// --- PERBAIKAN DI SINI: Tambahkan parameter reset = true ---
+async function fetchNoteList(reset = true) {
+  if (reset) {
+    currentPage.value = 1;
+    // Jangan kosongkan notes dulu biar ga kedip kalo cuma refresh
+    // notes.value = [];
+  }
+
   try {
-    const response = await myNoteList(token.value);
+    const response = await myNoteList(token.value, currentPage.value);
     const responseBody = await response.json();
-    if (response.ok) notes.value = responseBody.data;
+    console.log("API Response:", responseBody); // Debugging
+
+    if (response.ok) {
+      // Update Info Pagination (PENTING!)
+      if (responseBody.meta) {
+        lastPage.value = responseBody.meta.last_page;
+        currentPage.value = responseBody.meta.current_page;
+      }
+
+      if (reset) {
+        notes.value = responseBody.data;
+      } else {
+        // Append data baru ke array lama
+        notes.value.push(...responseBody.data);
+      }
+    } else {
+      // Handle error jika token expired dll
+      console.error("Gagal load data:", responseBody.message);
+    }
   } catch (error) {
     console.error("Gagal fetch:", error);
   }
 }
 
+async function handleDelete(id) {
+  if (!(await alertConfirm("Are you sure you want to delete this note?"))) {
+    return;
+  }
+
+  const response = await noteDelete(token.value, id);
+  const responseBody = await response.json();
+  console.log(responseBody);
+
+  if (response.ok) {
+    alertSuccess("Note deleted successfully");
+    await fetchNoteList();
+  } else {
+    const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
+    await alertError(pesanError);
+  }
+}
+
+// --- FUNGSI TOMBOL LOAD MORE ---
+const loadMore = async () => {
+  // Cek apakah masih ada halaman selanjutnya
+  if (currentPage.value < lastPage.value) {
+    isLoadingMore.value = true;
+    currentPage.value++; // Naikkan counter halaman
+    await fetchNoteList(false); // false = append mode
+    isLoadingMore.value = false;
+  }
+};
+
 onBeforeMount(async () => {
-  await fetchNoteList();
+  await fetchNoteList(true); // Load awal (reset)
 });
 </script>
 
@@ -48,7 +107,7 @@ onBeforeMount(async () => {
   <div class="p-[2em] relative min-h-screen">
     <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-10">Belum ada cerita yang dibuat.</div>
 
-    <div v-else class="columns-1 min-[600px]:columns-3 gap-[2em] space-y-[2em] mb-20">
+    <div v-else class="columns-1 min-[600px]:columns-3 gap-[2em] space-y-[2em] mb-10">
       <div
         v-for="(note, index) in notes"
         :key="note.id || index"
@@ -78,6 +137,7 @@ onBeforeMount(async () => {
             <span class="text-[#e5e5e5] block mt-1 break-words">{{ note.content }}</span>
           </div>
         </div>
+
         <div class="mt-4">
           <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-[10px]">
@@ -94,6 +154,7 @@ onBeforeMount(async () => {
               Edit
             </button>
             <button
+              v-on:click="() => handleDelete(note.id)"
               class="cursor-pointer hover:bg-[#821c35] bg-[#9a203e] text-[#e5e5e5] rounded-[8px] px-[12px] py-[8px]">
               Hapus
             </button>
@@ -102,11 +163,16 @@ onBeforeMount(async () => {
       </div>
     </div>
 
-    <div class="mb-[5em] flex justify-end pr-[2em] text-[#e5e5e5] gap-1.5 cursor-pointer hover:opacity-80">
-      <button class="bg-transparent font-semibold uppercase hover:underline cursor-pointer">
-        Lihat lebih banyak cerita
+    <div
+      v-if="currentPage < lastPage"
+      class="mb-[5em] flex justify-end pr-[2em] text-[#e5e5e5] gap-1.5 cursor-pointer hover:opacity-80">
+      <button
+        @click="loadMore"
+        :disabled="isLoadingMore"
+        class="bg-transparent font-semibold uppercase hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ isLoadingMore ? "Memuat..." : "Lihat lebih banyak cerita" }}
       </button>
-      <img src="../../../assets/img/arrow-down.svg" class="w-[14px]" />
+      <img v-if="!isLoadingMore" src="../../../assets/img/arrow-down.svg" class="w-[14px]" />
     </div>
   </div>
 

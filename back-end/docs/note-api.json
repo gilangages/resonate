@@ -115,6 +115,28 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/Note"
                                             }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "description": "Pagination links (first, last, prev, next)"
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "from": { "type": "integer" },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "path": { "type": "string" },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "to": { "type": "integer" },
+                                                "total": { "type": "integer" }
+                                            }
                                         }
                                     }
                                 }

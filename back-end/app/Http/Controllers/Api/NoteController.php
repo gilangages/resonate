@@ -102,7 +102,7 @@ class NoteController extends Controller
     public function myNotes(Request $request)
     {
         // Ambil user dari token, lalu ambil notes-nya
-        $notes = $request->user()->notes()->with('user')->latest()->get();
+        $notes = $request->user()->notes()->with('user')->latest()->paginate(15);
 
         return NoteResource::collection($notes);
     }

@@ -41,9 +41,19 @@ export const searchMusic = async (token, { query }) => {
   });
 };
 // Function khusus untuk ambil note milik sendiri (panggil endpoint /notes/my)
-export const myNoteList = async (token) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/my`, {
+export const myNoteList = async (token, page = 1) => {
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/my?page=${page}`, {
     method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+export const noteDelete = async (token, id) => {
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
+    method: "DELETE",
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
