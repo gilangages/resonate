@@ -14,18 +14,44 @@ class UserController extends Controller
     /**
      * 1. Lihat semua user
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        // Tambahkan 'is_banned' ke dalam select
-        $users = User::select('id', 'name', 'email', 'avatar', 'role', 'created_at', 'is_banned')
-            ->latest()
-            ->get();
+        $query = User::select('id', 'name', 'email', 'avatar', 'role', 'created_at', 'is_banned');
 
-        return response()->json(['data' => $users]);
+        // Fitur Pencarian
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        // Paginate 10 item per halaman
+        $users = $query->latest()->paginate(10);
+
+        return response()->json($users);
     }
 
     /**
-     * 2. Hapus user yang nakal
+     * 2. Lihat semua Note (Dengan Search & Paginate)
+     */
+    public function indexNotes(Request $request): JsonResponse
+    {
+        $query = Note::with('user:id,name,email');
+
+        if ($search = $request->input('search')) {
+            $query->where('content', 'like', "%{$search}%")
+                ->orWhereHas('user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
+        }
+
+        $notes = $query->latest()->paginate(10);
+
+        return response()->json($notes);
+    }
+
+    /**
+     * 3. Hapus user yang nakal
      */
     // File: app/Http/Controllers/Api/Admin/UserController.php
 
@@ -47,20 +73,6 @@ class UserController extends Controller
         $user->tokens()->delete();
 
         return response()->json(['message' => 'User berhasil diblokir.']);
-    }
-
-    /**
-     * 3. Lihat semua Note dari semua user (BARU)
-     * Admin butuh ini untuk melihat mana yang perlu dihapus
-     */
-    public function indexNotes(): JsonResponse
-    {
-        // Kita gunakan 'with' agar tahu siapa pemilik note tersebut (Eager Loading)
-        $notes = Note::with('user:id,name,email')
-            ->latest()
-            ->get();
-
-        return response()->json(['data' => $notes]);
     }
 
     /**

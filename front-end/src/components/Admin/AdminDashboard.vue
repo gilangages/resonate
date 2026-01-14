@@ -1,97 +1,127 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { useLocalStorage } from "@vueuse/core";
+import { ref, onMounted, watch } from "vue";
+import { useLocalStorage, useDebounceFn } from "@vueuse/core";
 import { getAdminUsers, deleteUserByAdmin, restoreUserByAdmin } from "../../lib/api/UserApi";
-import { getAdminNotes, deleteNoteByAdmin } from "../../lib/api/NoteApi"; // Pastikan sudah dibuat di NoteApi.js
+import { getAdminNotes, deleteNoteByAdmin } from "../../lib/api/NoteApi";
 import { alertConfirm, alertSuccess } from "../../lib/alert";
 import { getAvatarUrl } from "../../lib/store";
 import Swal from "sweetalert2";
 
 const token = useLocalStorage("token", "");
 const activeTab = ref("users"); // 'users' atau 'notes'
-const users = ref([]);
-const notes = ref([]);
+
+// Data & Meta Pagination
+const items = ref([]); // Bisa user, bisa note
+const currentPage = ref(1);
+const lastPage = ref(1);
+const totalData = ref(0);
 const loading = ref(false);
 
+// Search State
+const searchQuery = ref("");
+
+// Fetch Data Dinamis
 const fetchData = async () => {
   loading.value = true;
-  if (activeTab.value === "users") {
-    const res = await getAdminUsers(token.value);
+  try {
+    let res;
+    if (activeTab.value === "users") {
+      res = await getAdminUsers(token.value, currentPage.value, searchQuery.value);
+    } else {
+      res = await getAdminNotes(token.value, currentPage.value, searchQuery.value);
+    }
+
     const json = await res.json();
-    users.value = json.data;
-  } else {
-    const res = await getAdminNotes(token.value);
-    const json = await res.json();
-    notes.value = json.data;
+    if (res.ok) {
+      items.value = json.data; // Data array
+      currentPage.value = json.current_page;
+      lastPage.value = json.last_page;
+      totalData.value = json.total;
+    }
+  } catch (error) {
+    console.error("Error fetching admin data:", error);
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
 };
 
-const restoreUser = async (id) => {
-  if (!(await alertConfirm("Pulihkan akses akun user ini?"))) {
-    return;
-  }
+// Debounce Search (Tunggu 500ms setelah ketik baru search) agar server tidak berat
+const debouncedSearch = useDebounceFn(() => {
+  currentPage.value = 1; // Reset ke halaman 1 saat search
+  fetchData();
+}, 500);
 
+// Watcher untuk Search Input
+watch(searchQuery, () => {
+  debouncedSearch();
+});
+
+// Ganti Halaman
+const changePage = (page) => {
+  if (page >= 1 && page <= lastPage.value) {
+    currentPage.value = page;
+    fetchData();
+  }
+};
+
+// Ganti Tab
+const switchTab = (tab) => {
+  activeTab.value = tab;
+  searchQuery.value = ""; // Reset search saat ganti tab
+  currentPage.value = 1;
+  items.value = [];
+  fetchData();
+};
+
+// --- ACTION HANDLERS ---
+
+const restoreUser = async (id) => {
+  if (!(await alertConfirm("Pulihkan akses akun user ini?"))) return;
   try {
     const res = await restoreUserByAdmin(token.value, id);
     if (res.ok) {
-      // Update state lokal biar UI langsung berubah tanpa refresh
-      const userIndex = users.value.findIndex((u) => u.id === id);
-      if (userIndex !== -1) {
-        users.value[userIndex].is_banned = 0; // atau false
-      }
-      alertSuccess("Akun user berhasil dipulihkan.");
+      // Update lokal
+      const user = items.value.find((u) => u.id === id);
+      if (user) user.is_banned = 0;
+      alertSuccess("Akun dipulihkan.");
     }
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
   }
 };
 
 const deleteUser = async (id) => {
-  if (!(await alertConfirm("Apakah kamu yakin ingin membatasi user ini?"))) {
-    return;
-  }
-
+  if (!(await alertConfirm("Yakin ingin memblokir user ini?"))) return;
   try {
     await deleteUserByAdmin(token.value, id);
-
-    // --- PERBAIKAN DI SINI ---
-    // Jangan dihapus (filter), tapi update statusnya di local state
-    const userIndex = users.value.findIndex((u) => u.id === id);
-    if (userIndex !== -1) {
-      users.value[userIndex].is_banned = 1; // Atau true, sesuaikan return DB
-    }
-
-    alertSuccess("User berhasil diblokir.");
-  } catch (error) {
-    console.error(error);
+    const user = items.value.find((u) => u.id === id);
+    if (user) user.is_banned = 1;
+    alertSuccess("User diblokir.");
+  } catch (err) {
+    console.error(err);
   }
 };
 
 const deleteNote = async (id) => {
   const { value: reason, isConfirmed } = await Swal.fire({
     title: "Hapus Note?",
-    text: "Masukkan alasan penghapusan:",
-    input: "text", // Input text muncul
-    inputPlaceholder: "Contoh: Kasar, SARA, Spam...",
+    text: "Masukkan alasan (wajib):",
+    input: "text",
+    inputPlaceholder: "Contoh: Spam / Kata kasar",
     showCancelButton: true,
-    confirmButtonText: "Hapus",
     confirmButtonColor: "#d33",
+    confirmButtonText: "Hapus",
   });
+
   if (!isConfirmed) return;
-  // if (!(await alertConfirm("Apakah kamu yakin ingin menghapus pesan ini?"))) {
-  //   return;
 
   try {
-    // 1. Panggil API Hapus Note
-    await deleteNoteByAdmin(token.value, id, reason);
-
-    // 2. Hapus manual dari list lokal agar instan hilang
-    notes.value = notes.value.filter((note) => note.id !== id);
-
-    alertSuccess("Pesan berhasil dihapus.");
-  } catch (error) {
-    console.error(error);
+    await deleteNoteByAdmin(token.value, id, reason || "Konten tidak pantas");
+    // Hapus dari list
+    items.value = items.value.filter((n) => n.id !== id);
+    alertSuccess("Note dihapus.");
+  } catch (err) {
+    console.error(err);
   }
 };
 
@@ -99,119 +129,161 @@ onMounted(fetchData);
 </script>
 
 <template>
-  <div class="p-4 md:p-8 text-white relative min-h-screen font-jakarta bg-[#0f0505]">
-    <h1 class="text-2xl md:text-3xl font-bold mb-6">Panel Admin</h1>
+  <div class="min-h-screen bg-[#0f0505] text-white font-jakarta p-4 md:p-8 relative">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div>
+        <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          Admin Dashboard
+        </h1>
+        <p class="text-gray-400 text-sm mt-1">Manage users & content moderation</p>
+      </div>
 
-    <div class="flex gap-4 mb-6 border-b border-white/10 overflow-x-auto">
+      <div class="relative w-full md:w-64">
+        <input
+          v-model="searchQuery"
+          type="text"
+          :placeholder="activeTab === 'users' ? 'Cari nama/email...' : 'Cari isi konten...'"
+          class="w-full bg-[#1c1516] border border-[#2c2021] rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-red-500 transition-colors text-white placeholder-gray-600" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="absolute left-3 top-2.5 w-4 h-4 text-gray-500"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="flex gap-6 mb-6 border-b border-white/10">
       <button
-        @click="
-          activeTab = 'users';
-          fetchData();
-        "
-        :class="activeTab === 'users' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-400'"
-        class="pb-2 px-4 transition whitespace-nowrap">
-        Manage Users
+        @click="switchTab('users')"
+        :class="activeTab === 'users' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-500 hover:text-gray-300'"
+        class="pb-3 px-2 font-medium transition-all">
+        Users Management
       </button>
       <button
-        @click="
-          activeTab = 'notes';
-          fetchData();
-        "
-        :class="activeTab === 'notes' ? 'border-b-2 border-red-500 text-red-500' : 'text-gray-400'"
-        class="pb-2 px-4 transition whitespace-nowrap">
-        Moderation Notes
+        @click="switchTab('notes')"
+        :class="activeTab === 'notes' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-500 hover:text-gray-300'"
+        class="pb-3 px-2 font-medium transition-all">
+        Notes Moderation
       </button>
     </div>
 
-    <div v-if="loading" class="text-center py-10">Loading data...</div>
+    <div v-if="loading" class="py-12 text-center">
+      <div class="animate-spin w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+      <p class="text-gray-500 text-sm">Memuat data...</p>
+    </div>
 
-    <div v-else>
-      <div v-if="activeTab === 'users'" class="overflow-hidden bg-white/5 rounded-lg">
+    <div v-else-if="items.length === 0" class="py-12 text-center bg-white/5 rounded-lg border border-white/5">
+      <p class="text-gray-400">Tidak ada data ditemukan.</p>
+    </div>
+
+    <div v-else class="bg-[#160f10] border border-[#2c2021] rounded-xl overflow-hidden shadow-xl">
+      <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
-          <thead class="bg-white/10 text-xs md:text-sm uppercase text-gray-400">
+          <thead class="bg-white/5 text-gray-400 text-xs uppercase tracking-wider">
             <tr>
-              <th class="p-3 md:p-4">User Info</th>
-              <th class="hidden md:table-cell p-4">Email</th>
-              <th class="hidden md:table-cell p-4">Role</th>
-              <th class="p-3 md:p-4 text-center">Action</th>
+              <th v-if="activeTab === 'users'" class="p-4">User</th>
+              <th v-if="activeTab === 'users'" class="p-4">Status</th>
+              <th v-if="activeTab === 'notes'" class="p-4">Author</th>
+              <th v-if="activeTab === 'notes'" class="p-4">Content</th>
+              <th class="p-4 text-center">Action</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-white/10 text-sm md:text-base">
-            <tr v-for="user in users" :key="user.id" class="hover:bg-white/5 transition">
-              <td class="p-3 md:p-4">
-                <div class="flex items-center gap-3">
-                  <img
-                    :src="user.avatar ? getAvatarUrl(user.avatar) : user.photo_url || '/default-avatar.png'"
-                    class="w-10 h-10 rounded-full border border-white/20 object-cover flex-shrink-0"
-                    alt="Avatar" />
-                  <div class="flex flex-col">
-                    <span class="font-semibold text-white">{{ user.name }}</span>
-                    <span class="text-xs text-gray-400 md:hidden">{{ user.email }}</span>
-                    <span class="text-[10px] bg-white/10 px-1 rounded w-fit md:hidden mt-1">{{ user.role }}</span>
+          <tbody class="divide-y divide-white/5 text-sm">
+            <tr v-for="item in items" :key="item.id" class="hover:bg-white/5 transition-colors">
+              <template v-if="activeTab === 'users'">
+                <td class="p-4">
+                  <div class="flex items-center gap-3">
+                    <img :src="getAvatarUrl(item.avatar)" class="w-9 h-9 rounded-full object-cover bg-gray-800" />
+                    <div>
+                      <div class="font-medium text-white">{{ item.name }}</div>
+                      <div class="text-xs text-gray-500">{{ item.email }}</div>
+                    </div>
                   </div>
-                </div>
-              </td>
-
-              <td class="hidden md:table-cell p-4 text-gray-300">{{ user.email }}</td>
-              <td class="hidden md:table-cell p-4 text-gray-300">{{ user.role }}</td>
-
-              <td class="p-3 md:p-4 text-center align-middle">
-                <span v-if="user.role === 'admin'" class="text-gray-500 text-xs md:text-sm">Admin</span>
-
-                <button
-                  v-else-if="!user.is_banned"
-                  @click="deleteUser(user.id)"
-                  class="text-red-400 hover:text-red-300 text-xs md:text-sm border border-red-500/30 px-2 py-1 rounded hover:bg-red-500/10 transition">
-                  Ban
-                </button>
-
-                <div v-else class="flex flex-col items-center gap-1">
-                  <span class="text-red-500 font-bold italic text-[10px]">Banned</span>
+                </td>
+                <td class="p-4">
+                  <span
+                    v-if="item.role === 'admin'"
+                    class="px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-xs border border-blue-500/20">
+                    Admin
+                  </span>
+                  <span
+                    v-else-if="item.is_banned"
+                    class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-xs border border-red-500/20">
+                    Banned
+                  </span>
+                  <span
+                    v-else
+                    class="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs border border-green-500/20">
+                    Active
+                  </span>
+                </td>
+                <td class="p-4 text-center">
                   <button
-                    @click="restoreUser(user.id)"
-                    class="bg-green-600/20 text-green-400 text-[10px] md:text-xs px-2 py-1 rounded hover:bg-green-600 hover:text-white transition">
-                    Pulihkan
+                    v-if="item.role !== 'admin' && !item.is_banned"
+                    @click="deleteUser(item.id)"
+                    class="text-gray-400 hover:text-red-500 transition px-3 py-1 text-xs border border-gray-700 rounded hover:border-red-500">
+                    Ban
                   </button>
-                </div>
-              </td>
+                  <button
+                    v-if="item.is_banned"
+                    @click="restoreUser(item.id)"
+                    class="text-green-500 hover:text-green-400 transition px-3 py-1 text-xs border border-green-500/30 rounded">
+                    Restore
+                  </button>
+                </td>
+              </template>
+
+              <template v-if="activeTab === 'notes'">
+                <td class="p-4 align-top w-48">
+                  <div class="font-bold text-white mb-1">{{ item.user?.name || "Unknown" }}</div>
+                  <div class="text-[10px] text-gray-500">{{ new Date(item.created_at).toLocaleDateString() }}</div>
+                </td>
+                <td class="p-4 align-top">
+                  <p class="text-gray-300 italic text-sm leading-relaxed line-clamp-3">"{{ item.content }}"</p>
+                </td>
+                <td class="p-4 text-center align-top w-32">
+                  <button
+                    @click="deleteNote(item.id)"
+                    class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 border border-red-500/20 px-3 py-1.5 rounded text-xs transition">
+                    Hapus
+                  </button>
+                </td>
+              </template>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div v-if="activeTab === 'notes'" class="overflow-x-auto bg-white/5 rounded-lg">
-        <table class="w-full text-left border-collapse">
-          <thead class="bg-white/10 text-xs md:text-sm uppercase text-gray-400">
-            <tr>
-              <th class="p-3 md:p-4 w-1/4">Author</th>
-              <th class="p-3 md:p-4 w-1/2">Note Content</th>
-              <th class="p-3 md:p-4 text-center w-1/4">Action</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-white/10 text-sm md:text-base">
-            <tr v-for="note in notes" :key="note.id" class="hover:bg-white/5 transition">
-              <td class="p-3 md:p-4 align-top">
-                <div class="font-bold text-white">{{ note.user?.name }}</div>
-                <div class="text-xs text-gray-500 md:hidden mt-1">ID: {{ note.id }}</div>
-              </td>
+      <div class="p-4 border-t border-white/5 flex items-center justify-between bg-[#130b0c]">
+        <div class="text-xs text-gray-500">
+          Total:
+          <span class="text-white font-bold">{{ totalData }}</span>
+          data
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            @click="changePage(currentPage - 1)"
+            :disabled="currentPage === 1"
+            class="px-3 py-1 text-xs rounded border border-gray-700 text-gray-400 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed">
+            Prev
+          </button>
 
-              <td class="p-3 md:p-4 align-top">
-                <div
-                  class="whitespace-pre-wrap break-words text-gray-300 italic min-w-[200px] max-w-[200px] md:max-w-[400px] lg:max-w-[600px]">
-                  "{{ note.content }}"
-                </div>
-              </td>
+          <span class="text-xs text-gray-300 px-2">Page {{ currentPage }} of {{ lastPage }}</span>
 
-              <td class="p-3 md:p-4 text-center align-top">
-                <button
-                  @click="deleteNote(note.id)"
-                  class="bg-red-500/20 text-red-500 px-3 py-1 rounded text-xs md:text-sm hover:bg-red-500 hover:text-white transition">
-                  Hapus
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+          <button
+            @click="changePage(currentPage + 1)"
+            :disabled="currentPage === lastPage"
+            class="px-3 py-1 text-xs rounded border border-gray-700 text-gray-400 hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed">
+            Next
+          </button>
+        </div>
       </div>
     </div>
   </div>

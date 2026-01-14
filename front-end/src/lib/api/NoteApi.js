@@ -163,8 +163,9 @@ export const deleteNoteByAdmin = async (token, id, reason) => {
 };
 
 // Ambil semua notes (lintas user) untuk admin
-export const getAdminNotes = async (token) => {
-  return await customFetch(`${import.meta.env.VITE_APP_PATH}/admin/notes`, {
+export const getAdminNotes = async (token, page = 1, search) => {
+  const params = new URLSearchParams({ page, search });
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/admin/notes?${params.toString()}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
