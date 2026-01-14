@@ -1,5 +1,7 @@
+import { customFetch } from "./BaseApi";
+
 export const userRegister = async ({ name, email, password, password_confirmation }) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/users`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/users`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -15,7 +17,7 @@ export const userRegister = async ({ name, email, password, password_confirmatio
 };
 
 export const userLogin = async ({ email, password }) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/login`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/users/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -29,7 +31,7 @@ export const userLogin = async ({ email, password }) => {
 };
 
 export const userDetail = async (token) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -39,7 +41,7 @@ export const userDetail = async (token) => {
 };
 
 export const userUpdateProfile = async (token, { name }) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -53,7 +55,7 @@ export const userUpdateProfile = async (token, { name }) => {
 };
 
 export const userUpdatePassword = async (token, { password, password_confirmation }) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -74,7 +76,7 @@ export const userUpdatePhoto = async (token, file) => {
   // tapi di Laravel modern biasanya aman. Jika error, gunakan POST dengan _method: PATCH
   formData.append("_method", "PATCH");
 
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
     method: "POST", // Gunakan POST tapi dengan spoofing method PATCH di formData
     headers: {
       Accept: "application/json",
@@ -86,7 +88,7 @@ export const userUpdatePhoto = async (token, file) => {
 };
 
 export const userLogout = async (token) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/users/logout`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/users/logout`, {
     method: "DELETE",
     headers: {
       Accept: "application/json",

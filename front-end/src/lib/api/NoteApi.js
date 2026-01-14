@@ -1,3 +1,5 @@
+import { customFetch } from "./BaseApi";
+
 export const noteCreate = async (
   token,
   {
@@ -11,7 +13,7 @@ export const noteCreate = async (
     spotify_preview_url,
   }
 ) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -32,7 +34,7 @@ export const noteCreate = async (
 };
 
 export const searchMusic = async (token, { query }) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/music/search?q=${encodeURIComponent(query)}`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/music/search?q=${encodeURIComponent(query)}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -42,7 +44,7 @@ export const searchMusic = async (token, { query }) => {
 };
 // Function khusus untuk ambil note milik sendiri (panggil endpoint /notes/my)
 export const myNoteList = async (token, page = 1) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/my?page=${page}`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/my?page=${page}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -52,7 +54,7 @@ export const myNoteList = async (token, page = 1) => {
 };
 
 export const noteDelete = async (token, id) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
     method: "DELETE",
     headers: {
       Accept: "application/json",
@@ -62,7 +64,7 @@ export const noteDelete = async (token, id) => {
 };
 
 export const noteDetail = async (token, id) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -85,7 +87,7 @@ export const noteUpdate = async (
     spotify_preview_url,
   }
 ) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -106,7 +108,7 @@ export const noteUpdate = async (
 };
 
 export const noteList = async (token, page = 1) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes?page=${page}`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes?page=${page}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -116,7 +118,7 @@ export const noteList = async (token, page = 1) => {
 };
 
 export const noteListGlobal = async () => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/global`, {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/global`, {
     method: "GET",
     headers: {
       Accept: "application/json",

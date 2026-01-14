@@ -82,3 +82,4 @@ router.beforeEach((to, from, next) => {
 });
 
 createApp(App).use(router).mount("#app");
+export default router;

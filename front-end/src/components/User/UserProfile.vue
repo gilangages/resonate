@@ -24,11 +24,6 @@ async function fetchUser() {
     name.value = responseBody.data.name;
     email.value = responseBody.data.email;
   } else {
-    if (response.status === 401) {
-      localStorage.removeItem("token"); // Hapus token palsu/expired
-      router.push("/login"); // Tendang ke login
-      return; // Stop eksekusi agar tidak muncul alert error di bawah
-    }
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
     await alertError(pesanError);
   }
