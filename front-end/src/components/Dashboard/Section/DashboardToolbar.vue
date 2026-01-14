@@ -63,7 +63,7 @@ const getThemeLabel = (themeId) => {
         @input="onSearchInput"
         type="text"
         :placeholder="placeholder"
-        class="w-full bg-[#1c1516] border border-[#2c2021] rounded-full py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-[#9a203e] transition-all placeholder-[#555]" />
+        class="w-full bg-[#1c1516] hover:bg-[#251a1c] border border-[#2c2021] rounded-full py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-[#9a203e] transition-all placeholder-[#555]" />
     </div>
 
     <div class="flex gap-3 w-full md:w-auto items-center relative z-40">

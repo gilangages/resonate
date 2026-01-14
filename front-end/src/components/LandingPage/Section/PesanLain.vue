@@ -12,6 +12,7 @@ const { getTheme, getSelectedTheme } = useCardTheme();
 const notes = ref([]);
 const scrollContainer = ref(null);
 const currentAudio = ref(new Audio()); // State Audio Player
+const currentTime = ref(0); // <--- 1. TAMBAHKAN INI
 
 // Modal & Preview
 const showModal = ref(false);
@@ -19,8 +20,14 @@ const selectedNote = ref(null);
 const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
-const selectedTheme = getSelectedTheme(selectedNote);
+// const selectedTheme = getSelectedTheme(selectedNote); // Hapus baris ini karena selectedNote masih null saat init, logic theme di handle di template via getTheme(note.id) atau computed
 const now = useNow({ interval: 60000 });
+
+// Helper computed untuk theme modal (opsional, tapi biar konsisten dengan FillContent)
+import { computed } from "vue";
+const selectedTheme = computed(() => {
+  return getSelectedTheme(selectedNote.value);
+});
 
 // --- FETCH DATA ---
 async function fetchNoteGlobal() {
@@ -56,6 +63,7 @@ const scroll = (direction) => {
 const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
+  currentTime.value = 0; // <--- 2. RESET WAKTU SAAT BUKA
 
   // LOGIKA BARU: Gunakan Proxy URL dari Backend kita sendiri
   // Pastikan note punya ID lagu
@@ -70,12 +78,24 @@ const openModalDetail = (note) => {
     currentAudio.value.volume = 0.5;
     currentAudio.value.loop = true;
 
+    // <--- 3. TAMBAHKAN EVENT LISTENER INI (PENTING AGAR ANIMASI JALAN)
+    currentAudio.value.ontimeupdate = () => {
+      currentTime.value = currentAudio.value.currentTime;
+    };
+    // ------------------------------------------------------------------
+
     currentAudio.value.play().catch((e) => {
       console.error("Gagal play audio:", e);
     });
   } else if (note.music_preview_url) {
     // Fallback: Kalau data lama banget yg gapunya ID tapi punya URL (meski mungkin basi)
     currentAudio.value.src = note.music_preview_url;
+
+    // <--- TAMBAHKAN JUGA DI SINI UTK FALLBACK
+    currentAudio.value.ontimeupdate = () => {
+      currentTime.value = currentAudio.value.currentTime;
+    };
+
     currentAudio.value.play().catch((e) => console.log(e));
   }
 
@@ -91,8 +111,12 @@ const closeModalDetail = () => {
 
   // 4. STOP AUDIO & RESET
   currentAudio.value.pause();
-  currentAudio.value.currentTime = 0;
+  currentAudio.value.currentTime = 0; // Reset player audio
+  currentTime.value = 0; // <--- 4. RESET VARIABLE STATE
   currentAudio.value.loop = false; // Matikan loop saat tutup
+
+  // Hapus listener biar ga memory leak (opsional tapi good practice)
+  currentAudio.value.ontimeupdate = null;
 
   setTimeout(() => {
     showModal.value = false;
@@ -122,6 +146,13 @@ const formatDateDetail = (dateString) => {
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
+};
+
+const formatTimeMusic = (time) => {
+  if (!time || isNaN(time)) return "0:00";
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 };
 
 onMounted(async () => {
@@ -318,6 +349,19 @@ onMounted(async () => {
                   {{ selectedNote?.music_artist_name }}
                 </p>
 
+                <div class="w-full max-w-[200px] mb-5 mt-2">
+                  <div class="h-1 bg-black/40 rounded-full overflow-hidden w-full">
+                    <div
+                      :class="selectedTheme.bg_color"
+                      class="h-full transition-all duration-100 ease-linear"
+                      :style="{ width: `${(currentTime / 30) * 100}%` }"></div>
+                  </div>
+                  <div class="flex justify-between text-[10px] text-white/50 mt-1 font-mono">
+                    <span>Preview: {{ formatTimeMusic(currentTime) }}</span>
+                    <span>0:30</span>
+                  </div>
+                </div>
+
                 <a
                   v-if="selectedNote?.music_track_id"
                   :href="`https://www.deezer.com/track/${selectedNote?.music_track_id}`"
@@ -341,10 +385,10 @@ onMounted(async () => {
               <div class="flex justify-between items-center mb-6 pb-4 border-b" :class="selectedTheme.border">
                 <div class="flex items-center gap-3">
                   <div
-                    @click.stop="openPreview(selectedNote?.author_avatar)"
+                    @click.stop="openPreview(selectedNote?.author_avatar || selectedNote?.author_photo_url)"
                     class="relative group/avatar cursor-zoom-in">
                     <img
-                      :src="selectedNote?.author_avatar"
+                      :src="selectedNote?.author_avatar || selectedNote?.author_photo_url"
                       class="w-10 h-10 rounded-full border border-white/10 object-cover transition-transform group-hover/avatar:scale-110" />
                   </div>
                   <div>

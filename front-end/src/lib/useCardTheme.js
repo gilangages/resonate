@@ -242,8 +242,6 @@ export function useCardTheme() {
       const token = localStorage.getItem("token");
       try {
         await userUpdateProfile(token, { card_theme: themeId });
-
-        // Update store & localstorage agar tetap sinkron
         store.user.card_theme = themeId;
         localStorage.setItem("user", JSON.stringify(store.user));
       } catch (err) {
@@ -252,22 +250,36 @@ export function useCardTheme() {
     }
   };
 
+  // === PERBAIKAN LOGIC DI SINI ===
   const getTheme = (id) => {
+    // 1. Cek apakah user memilih tema 'acak'
+    if (globalThemePreference.value === "random") {
+      // Jika parameter 'id' (note.id) ada, gunakan modulo untuk warna-warni
+      if (id) {
+        const noteId = Number(id) || 0;
+        return cardThemes[noteId % cardThemes.length];
+      }
+      // Jika tidak ada ID (misal untuk preview default), ambil acak dari index 0
+      return cardThemes[0];
+    }
+
+    // 2. Jika bukan 'acak', cari tema sesuai preference user (misal: 'red', 'blue')
     const selectedTheme = cardThemes.find((t) => t.id === globalThemePreference.value);
+
+    // 3. Fallback ke index 0 (merah) jika tema tidak ditemukan
     return selectedTheme || cardThemes[0];
   };
 
-  // 4. TAMBAHKAN KEMBALI FUNGSI INI (Agar FillContent tidak error)
   const getSelectedTheme = (note) => {
     if (!note) return cardThemes[0];
-    // Sesuai permintaan, gunakan tema global yang dipilih user
+    // Panggil getTheme dengan melempar note.id agar logika modulo berjalan
     return getTheme(note.id);
   };
 
   return {
     cardThemes,
     getTheme,
-    getSelectedTheme, // Export agar bisa dipakai di FillContent
+    getSelectedTheme,
     globalThemePreference,
     setTheme,
     setThemeLocally,
