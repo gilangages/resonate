@@ -22,6 +22,12 @@ class SocialAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
+            $avatar = $googleUser->getAvatar();
+            if ($avatar) {
+                // Regex: Cari "=s" diikuti angka, opsional "-c", di akhir string
+                $avatar = preg_replace('/=s\d+(-c)?$/', '=s1024', $avatar);
+            }
+
             $user = User::where('google_id', $googleUser->getId())
                 ->orWhere('email', $googleUser->getEmail())
                 ->first();
@@ -38,7 +44,7 @@ class SocialAuthController extends Controller
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(), // Ambil foto dari Google
+                    'avatar' => $avatar, // Ambil foto dari Google
                     'password' => null,
                 ]);
             } else {
@@ -46,7 +52,7 @@ class SocialAuthController extends Controller
                 // Kita update avatar setiap kali login agar selalu fresh dari Google
                 $user->update([
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $googleUser->getAvatar(),
+                    'avatar' => $avatar,
                 ]);
             }
 

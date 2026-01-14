@@ -46,13 +46,13 @@ async function handleBannedUser(emailTarget, message) {
       const jsonAppeal = await resAppeal.json();
 
       if (resAppeal.ok) {
-        alertSuccess("Permintaan banding terkirim ke Admin.");
+        await alertSuccess("Permintaan banding terkirim ke Admin.");
       } else {
-        alertError(jsonAppeal.message || "Gagal mengirim banding.");
+        await alertError(jsonAppeal.message || "Gagal mengirim banding.");
       }
     } catch (err) {
       console.error(err);
-      alertError("Gagal terhubung ke server untuk banding.");
+      await alertError("Gagal terhubung ke server untuk banding.");
     }
   }
 }
@@ -91,7 +91,7 @@ async function handleSubmit() {
     }
   } catch (error) {
     console.error("Login Error:", error);
-    alertError("Terjadi kesalahan jaringan atau server.");
+    await alertError("Terjadi kesalahan jaringan atau server.");
   }
 }
 
@@ -100,7 +100,7 @@ const loginWithGoogle = () => {
 };
 
 // --- 3. MODIFIKASI ONMOUNTED ---
-onMounted(() => {
+onMounted(async () => {
   // Ambil query params
   const { error, status, email, message } = route.query;
 
@@ -114,7 +114,7 @@ onMounted(() => {
   }
   // Skenario 2: Error biasa (misal gagal connect google)
   else if (error) {
-    alertError(error);
+    await alertError(error);
     router.replace({ query: {} });
   }
 });

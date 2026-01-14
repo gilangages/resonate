@@ -54,4 +54,44 @@ class GoogleAuthAvatarTest extends TestCase
             'avatar' => 'https://old-avatar.com/image.jpg',
         ]);
     }
+
+    public function test_it_converts_small_google_avatar_to_high_res()
+    {
+        // 1. Mock Socialite User
+        $abstractUser = Mockery::mock('Laravel\Socialite\Two\User');
+
+        // Simulasi data dari Google (Perhatikan URL-nya kecil: s96-c)
+        $abstractUser->shouldReceive('getId')->andReturn('123456789');
+        $abstractUser->shouldReceive('getName')->andReturn('Abdian Test');
+        $abstractUser->shouldReceive('getEmail')->andReturn('abdian@example.com');
+        $abstractUser->shouldReceive('getAvatar')->andReturn('https://lh3.googleusercontent.com/a-/AOh14Bg=s96-c');
+
+        // 2. Mock Socialite Provider
+        $provider = Mockery::mock('Laravel\Socialite\Contracts\Provider');
+        $provider->shouldReceive('stateless')->andReturn($provider);
+        $provider->shouldReceive('user')->andReturn($abstractUser);
+
+        // Inject Mock ke Facade Socialite
+        Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+        // 3. Panggil Route Callback
+        $response = $this->get('/api/auth/google/callback');
+
+        // 4. Assertions
+
+        // Pastikan redirect berhasil (biasanya 302 ke frontend)
+        $response->assertStatus(302);
+
+        // Cek Database: Pastikan URL yang tersimpan BUKAN s96-c, tapi s1024
+        $this->assertDatabaseHas('users', [
+            'email' => 'abdian@example.com',
+            'avatar' => 'https://lh3.googleusercontent.com/a-/AOh14Bg=s1024', // Target kita
+        ]);
+
+        // Pastikan URL lama yang kecil TIDAK ada
+        $this->assertDatabaseMissing('users', [
+            'email' => 'abdian@example.com',
+            'avatar' => 'https://lh3.googleusercontent.com/a-/AOh14Bg=s96-c',
+        ]);
+    }
 }
