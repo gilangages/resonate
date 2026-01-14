@@ -10,20 +10,38 @@ const name = ref("");
 const showIntro = ref(false);
 const showMenu = ref(false);
 
-// State Teks
-const text1 = ref("");
-const textName = ref("");
-const text2 = ref("");
-const text3 = ref("");
-
+// State untuk teks dan pengontrol transisi kalimat
+const displayDetail = ref("");
+const isTextVisible = ref(false);
 const menuTransition = ref("slide-up");
 
-// Helper: Efek Mengetik
-const typeWriter = async (targetRef, text, speed = 40) => {
-  targetRef.value = "";
-  for (let i = 0; i < text.length; i++) {
-    targetRef.value += text.charAt(i);
-    await new Promise((resolve) => setTimeout(resolve, speed));
+/**
+ * Helper: Efek Mengetik yang Pintar (Mendukung HTML)
+ * Fungsi ini akan mendeteksi jika ada tag <...>, maka akan langsung dimasukkan
+ * tanpa diketik karakter demi karakter.
+ */
+const typeWriter = async (text, speed = 50) => {
+  displayDetail.value = "";
+  let i = 0;
+  while (i < text.length) {
+    // Jika menemukan karakter '<', berarti itu awal tag HTML
+    if (text[i] === "<") {
+      const closingBracket = text.indexOf(">", i);
+      if (closingBracket !== -1) {
+        // Masukkan seluruh tag (misal <span>) secara instan
+        displayDetail.value += text.substring(i, closingBracket + 1);
+        i = closingBracket + 1;
+        continue; // Lanjut ke isi setelah tag
+      }
+    }
+
+    displayDetail.value += text[i];
+
+    let currentSpeed = speed;
+    if ([",", ".", "?", "^"].includes(text[i])) currentSpeed = speed * 4;
+
+    await new Promise((resolve) => setTimeout(resolve, currentSpeed));
+    i++;
   }
 };
 
@@ -37,19 +55,14 @@ async function fetchUser() {
     if (response.ok) {
       const userData = responseBody.data;
       const newName = userData.name;
-
-      // LOGIC CEK APAKAH PERLU ANIMASI
-      // Kita cek apakah nama di session storage sama dengan nama dari API
       const lastAnimName = sessionStorage.getItem("last_anim_name");
 
       if (lastAnimName === newName) {
-        // --- KONDISI REFRESH (Nama masih sama) ---
         name.value = newName;
         showIntro.value = false;
-        menuTransition.value = ""; // Matikan animasi slide biar instan
+        menuTransition.value = "";
         showMenu.value = true;
       } else {
-        // --- KONDISI LOGIN BARU ATAU GANTI NAMA ---
         name.value = newName;
         await handleAnimation(newName);
       }
@@ -62,34 +75,40 @@ async function fetchUser() {
 }
 
 async function handleAnimation(userName) {
-  // Reset state teks
-  text1.value = "";
-  textName.value = "";
-  text2.value = "";
-  text3.value = "";
-
-  // Siapkan tampilan animasi
+  displayDetail.value = "";
   showMenu.value = false;
   showIntro.value = true;
   menuTransition.value = "slide-up";
 
-  await wait(500);
-  await typeWriter(text1, "Selamat Datang ");
-  await typeWriter(textName, userName);
-  await wait(300);
-  await typeWriter(text2, "Apa kabarmu hari ini?", 30);
-  await wait(300);
-  await typeWriter(text3, "Mulailah menulis pesan dan jangan lupa sisipkan lagu ya ^_^", 20);
-  await wait(1200);
+  await wait(800);
 
-  // Selesai animasi, simpan nama ini ke session sebagai tanda sudah nonton animasi untuk nama ini
+  // --- TAHAP 1: Selamat Datang ---
+  isTextVisible.value = true;
+  // Kita bungkus userName dengan span yang memiliki warna #9a203e
+  const welcomeText = `Selamat Datang, <span style="color: #9a203e; font-weight: bold; font-style: normal;">${userName}</span>`;
+  await typeWriter(welcomeText, 50);
+  await wait(1500);
+  isTextVisible.value = false;
+  await wait(600);
+
+  // --- TAHAP 2: Apa kabar ---
+  isTextVisible.value = true;
+  await typeWriter("Apa kabarmu hari ini?", 50);
+  await wait(1500);
+  isTextVisible.value = false;
+  await wait(600);
+
+  // --- TAHAP 3: Instruksi ---
+  isTextVisible.value = true;
+  await typeWriter("Mulailah menulis pesan dan jangan lupa sisipkan lagu ya ^_^", 40);
+  await wait(2500);
+
   sessionStorage.setItem("last_anim_name", userName);
-
-  // Hilangkan intro, munculkan menu
   showIntro.value = false;
+
   setTimeout(() => {
     showMenu.value = true;
-  }, 500);
+  }, 600);
 }
 
 onBeforeMount(async () => {
@@ -99,13 +118,15 @@ onBeforeMount(async () => {
 
 <template>
   <Transition name="fade">
-    <div v-if="showIntro" class="pt-[1em] text-center text-[12px] text-[#e5e5e5] min-h-[90px] flex flex-col gap-1">
-      <p>
-        {{ text1 }}
-        <span class="font-bold text-[#9a203e]">{{ textName }}</span>
-      </p>
-      <p class="min-h-[1.5em]">{{ text2 }}</p>
-      <p class="min-h-[1.5em]">{{ text3 }}</p>
+    <div
+      v-if="showIntro"
+      class="pt-[1em] text-center text-[13px] text-white min-h-[100px] flex items-center justify-center px-6">
+      <Transition name="text-fade">
+        <p
+          v-if="isTextVisible"
+          v-html="displayDetail"
+          class="font-medium leading-relaxed max-w-[300px] italic text-white"></p>
+      </Transition>
     </div>
   </Transition>
 
@@ -113,14 +134,50 @@ onBeforeMount(async () => {
     <div v-if="showMenu" class="my-[2em] flex justify-center">
       <RouterLink
         to="/dashboard/global"
-        class="rounded-l-[10px] bg-[#9a203e] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#821c35] hover:text-[#cdcccc] transition-colors">
+        class="rounded-l-[10px] bg-[#9a203e] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#821c35] hover:text-[#cdcccc] transition-colors shadow-lg">
         Jelajahi Pesan
       </RouterLink>
       <RouterLink
         to="/dashboard"
-        class="rounded-r-[10px] bg-[#1c1516] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#130f0f] hover:text-[#cdcccc] transition-colors">
+        class="rounded-r-[10px] bg-[#1c1516] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#130f0f] hover:text-[#cdcccc] transition-colors shadow-lg border-l border-[#2c2021]">
         Pesan Saya
       </RouterLink>
     </div>
   </Transition>
 </template>
+
+<style scoped>
+/* Transisi Utama */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.8s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Transisi Teks */
+.text-fade-enter-active,
+.text-fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+.text-fade-enter-from,
+.text-fade-leave-to {
+  opacity: 0;
+}
+
+/* Slide Up untuk Menu */
+.slide-up-enter-active {
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-enter-from {
+  transform: translateY(30px);
+  opacity: 0;
+}
+
+p {
+  color: #ffffff;
+  text-rendering: optimizeLegibility;
+}
+</style>
