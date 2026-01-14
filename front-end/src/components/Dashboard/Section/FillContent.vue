@@ -39,7 +39,9 @@ const searchQuery = ref("");
 const sortBy = ref("newest"); // 'newest' | 'oldest'
 const isSelectionMode = ref(false); // Mode pilih aktif/tidak
 const selectedIds = ref([]); // ID note yang dipilih
-const selectedTheme = getSelectedTheme(selectedNote);
+const selectedTheme = computed(() => {
+  return getSelectedTheme(selectedNote.value);
+});
 
 // --- FORMATTER ---
 const formatDateDetail = (dateString) => {

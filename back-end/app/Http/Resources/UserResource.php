@@ -24,6 +24,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role,
+            'card_theme' => $this->card_theme,
             'has_password' => !is_null($this->password),
             'avatar' => $avatar, // Sekarang sudah fleksibel
             'photo_url' => $this->photo_url,

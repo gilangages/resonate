@@ -18,7 +18,6 @@ const fetchData = async () => {
   if (activeTab.value === "users") {
     const res = await getAdminUsers(token.value);
     const json = await res.json();
-    console.log(json);
     users.value = json.data;
   } else {
     const res = await getAdminNotes(token.value);

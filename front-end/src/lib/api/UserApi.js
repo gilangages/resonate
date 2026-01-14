@@ -40,7 +40,7 @@ export const userDetail = async (token) => {
   });
 };
 
-export const userUpdateProfile = async (token, { name }) => {
+export const userUpdateProfile = async (token, data) => {
   return await customFetch(`${import.meta.env.VITE_APP_PATH}/users/current`, {
     method: "PATCH",
     headers: {
@@ -48,9 +48,7 @@ export const userUpdateProfile = async (token, { name }) => {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({
-      name,
-    }),
+    body: JSON.stringify(data),
   });
 };
 

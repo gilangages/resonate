@@ -1,22 +1,6 @@
 <script setup>
-import { onMounted } from "vue";
-import { useCardTheme } from "./lib/useCardTheme";
-
-const { initTheme } = useCardTheme();
-
-onMounted(() => {
-  // Cek apakah ada user yang sedang login di session storage
-  const storedUser = sessionStorage.getItem("user");
-
-  if (storedUser) {
-    const user = JSON.parse(storedUser);
-    // Restore tema milik user tersebut
-    initTheme(user.id);
-  } else {
-    // Jika tidak ada user, pastikan tema default
-    initTheme(null);
-  }
-});
+// App.vue sekarang hanya bertugas sebagai wadah utama (RouterView)
+// Logika inisialisasi tema sudah ditangani di level modul (useCardTheme.js)
 </script>
 
 <template>

@@ -26,7 +26,11 @@ const router = createRouter({
       path: "/",
       component: LandingPage,
     },
-
+    {
+      path: "/note/:id",
+      component: LandingPage,
+      // props: true,
+    },
     {
       path: "/",
       component: Layout,
@@ -62,7 +66,7 @@ const router = createRouter({
           path: "admin",
           component: AdminDashboard,
           beforeEnter: (to, from, next) => {
-            const user = JSON.parse(sessionStorage.getItem("user")); // Pastikan simpan data user saat login
+            const user = JSON.parse(localStorage.getItem("user")); // Pastikan simpan data user saat login
             if (user && user.role === "admin") {
               next();
             } else {

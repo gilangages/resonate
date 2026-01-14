@@ -61,7 +61,6 @@ onMounted(async () => {
       // userState.value = userData;
 
       // Load Tema
-      initTheme(userData.id);
 
       // Redirect Clean
       window.location.href = "/dashboard/global";

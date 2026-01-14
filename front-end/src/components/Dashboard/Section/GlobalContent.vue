@@ -8,39 +8,42 @@ import DashboardToolbar from "./DashboardToolbar.vue";
 import { useCardTheme } from "../../../lib/useCardTheme";
 import { useShareImage } from "../../../lib/useShareImage";
 import { useNow } from "@vueuse/core";
+import { alertSuccess } from "../../../lib/alert";
 
-const { getTheme, getSelectedTheme } = useCardTheme();
-const { captureRef, downloadImage, isDownloading } = useShareImage();
-const token = useLocalStorage("token", "");
+// --- DECLARATIONS (Pindahkan ke atas agar aman) ---
+const showShareOptions = ref(false);
+const generatedFileUrl = ref(null);
+const shareTextData = ref({ title: "", text: "" });
+const tempFile = ref(null); // Pindah ke sini
 const notes = ref([]);
-const cacheBuster = ref(Date.now());
-const now = useNow({ interval: 60000 });
-const { width } = useWindowSize();
-
-// --- AUDIO PLAYER STATE ---
-const currentAudio = ref(new Audio());
-const currentTime = ref(0);
-
-// --- STATE LOADING ---
 const isLoading = ref(true);
-
-// --- STATE PAGINATION ---
 const currentPage = ref(1);
 const lastPage = ref(1);
 const isLoadingMore = ref(false);
-
-// --- STATE MODAL DETAIL ---
 const showModal = ref(false);
 const selectedNote = ref(null);
 const isVinylSpinning = ref(false);
-
-// --- STATE IMAGE PREVIEW (AVATAR) ---
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 const searchQuery = ref("");
 const sortBy = ref("newest");
-const selectedTheme = getSelectedTheme(selectedNote);
 
+const { getTheme, getSelectedTheme } = useCardTheme();
+const { captureRef, generateImageFile, triggerNativeShare, isDownloading } = useShareImage();
+const token = useLocalStorage("token", "");
+const cacheBuster = ref(Date.now());
+const now = useNow({ interval: 60000 });
+const { width } = useWindowSize();
+
+const canNativeShare = computed(() => !!navigator.share);
+const currentAudio = ref(new Audio());
+const currentTime = ref(0);
+
+const selectedTheme = computed(() => {
+  return getSelectedTheme(selectedNote.value);
+});
+
+// --- FUNCTIONS ---
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -57,21 +60,17 @@ const formatTimeMusic = (time) => {
   return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
 };
 
-// --- FETCH DATA ---
 async function fetchNoteList(reset = true) {
   if (reset) {
     currentPage.value = 1;
     isLoading.value = true;
   }
-
   try {
     const response = await noteList(token.value, currentPage.value, searchQuery.value, sortBy.value);
     const responseBody = await response.json();
-    console.log(responseBody);
     if (response.ok) {
       if (reset) notes.value = responseBody.data;
       else notes.value.push(...responseBody.data);
-
       if (responseBody.meta) {
         lastPage.value = responseBody.meta.last_page;
         currentPage.value = responseBody.meta.current_page;
@@ -84,7 +83,6 @@ async function fetchNoteList(reset = true) {
   }
 }
 
-// --- LOAD MORE ---
 const loadMore = async () => {
   if (currentPage.value < lastPage.value) {
     isLoadingMore.value = true;
@@ -94,16 +92,12 @@ const loadMore = async () => {
   }
 };
 
-// --- MODAL LOGIC ---
 const openModalDetail = (note) => {
   if (!localStorage.getItem("token")) {
     window.location.href = "/login";
     return;
   }
-
-  // Update Cache Buster agar gambar direfresh saat modal dibuka
   cacheBuster.value = Date.now();
-
   selectedNote.value = note;
   showModal.value = true;
   currentTime.value = 0;
@@ -126,6 +120,10 @@ const openModalDetail = (note) => {
   }
 
   nextTick(() => {
+    // KUNCI: Pastikan saat modal buka, captureRef diarahkan ke Modal
+    const modalElement = document.querySelector(".modal-capture-target");
+    if (modalElement) captureRef.value = modalElement;
+
     setTimeout(() => {
       isVinylSpinning.value = true;
     }, 300);
@@ -152,18 +150,90 @@ const openPreview = (url) => {
 const closePreview = () => {
   showImagePreview.value = false;
 };
-
 const handleSearch = useDebounceFn(() => fetchNoteList(true), 500);
 
-const columns = computed(() => {
-  // JIKA MOBILE (< 768px alias 'md' di Tailwind):
-  // Kembalikan 1 kolom berisi semua notes.
-  // Ini akan membuat urutan render: Note 1, Note 2, Note 3... (Urut ke bawah)
-  if (width.value < 768) {
-    return [notes.value];
-  }
+const handleShare = async () => {
+  if (!selectedNote.value) return;
+  const fileName = `pesan-dari-${selectedNote.value.author_name || "user"}`;
+  const title = "Music Note Card";
+  const text = `Dengerin pesan lagu dari ${selectedNote.value.author_name} buat ${selectedNote.recipient} 🎵`;
 
-  //desktop
+  try {
+    const file = await generateImageFile(fileName);
+
+    if (!file) {
+      console.error("Gagal men-generate file gambar. Pastikan elemen tersedia.");
+      return;
+    }
+
+    tempFile.value = file;
+    generatedFileUrl.value = URL.createObjectURL(file);
+    shareTextData.value = { title, text };
+    showShareOptions.value = true;
+  } catch (error) {
+    console.error("Error saat handleShare:", error);
+  }
+};
+
+const downloadManual = () => {
+  if (!generatedFileUrl.value) return;
+
+  // 1. Jalankan proses download
+  const link = document.createElement("a");
+  link.download = `music-note-${Date.now()}.png`;
+  link.href = generatedFileUrl.value;
+  link.click();
+
+  // 2. Tutup modal pilihan share
+  showShareOptions.value = false;
+
+  // 3. Beri feedback sukses setelah modal tertutup (delay 300ms agar animasi slide-up selesai)
+  setTimeout(() => {
+    alertSuccess("Gambar berhasil disimpan ke galeri!");
+  }, 300);
+};
+
+const onCopyLink = async () => {
+  if (!selectedNote.value) return;
+  const shareUrl = `${window.location.origin}/note/${selectedNote.value.id}`;
+
+  try {
+    await navigator.clipboard.writeText(shareUrl);
+
+    // 1. Tutup modal share terlebih dahulu
+    showShareOptions.value = false;
+
+    // 2. Tampilkan alert sukses setelah modal hilang dari layar
+    setTimeout(() => {
+      alertSuccess("Link berhasil disalin!");
+    }, 300);
+  } catch (err) {
+    console.error("Gagal menyalin link:", err);
+  }
+};
+
+const onNativeShare = async () => {
+  if (tempFile.value) {
+    // Simpan status share
+    const success = await triggerNativeShare(tempFile.value, shareTextData.value.text);
+
+    // Jika berhasil memicu menu share sistem, langsung tutup modal kustom kita
+    if (success) {
+      showShareOptions.value = false;
+    }
+  }
+};
+
+const closeShareOptions = () => {
+  showShareOptions.value = false;
+  if (generatedFileUrl.value) {
+    URL.revokeObjectURL(generatedFileUrl.value);
+    generatedFileUrl.value = null;
+  }
+};
+
+const columns = computed(() => {
+  if (width.value < 768) return [notes.value];
   const cols = [[], [], []];
   notes.value.forEach((note, index) => {
     cols[index % 3].push(note);
@@ -171,27 +241,44 @@ const columns = computed(() => {
   return cols;
 });
 
-// --- HELPER CERDAS URL GAMBAR (VERSI FIX PROXY) ---
 const getImageUrl = (url, uniqueId = "global") => {
   if (!url) return "";
 
-  const isExternalApi =
-    url.includes("dicebear.com") ||
-    url.includes("deezer.com") ||
-    url.includes("dzcdn.net") ||
-    url.includes("googleusercontent.com");
-
-  if (isExternalApi) {
-    // Tambahkan cache buster bahkan untuk external API agar html-to-image tidak bingung
-    const separator = url.includes("?") ? "&" : "?";
-    return `${url}${separator}t=${cacheBuster.value}-${uniqueId}`;
+  // Jika URL adalah SVG dari dicebear atau data:image, jangan lewatkan proxy (sering bikin error 500)
+  if (url.includes("api.dicebear.com") || url.startsWith("data:")) {
+    return url;
   }
+
+  if (!url.startsWith("http")) return url;
+  if (url.includes("/image-proxy?url=")) return url;
 
   const apiUrl = import.meta.env.VITE_APP_PATH || "http://localhost:8000/api";
   const encodedImageUrl = encodeURIComponent(url);
 
-  // Pastikan t= selalu unik per note yang dibuka
-  return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${cacheBuster.value}-${uniqueId}`;
+  // Saya hapus sementara query &t= jika backend kamu belum siap menerima param tambahan
+  // Ini sering menyebabkan error 500 di Laravel jika tidak ditangani di Controller
+  return `${apiUrl}/image-proxy?url=${encodedImageUrl}`;
+};
+
+const handleQuickShare = async (note, event) => {
+  if (isDownloading.value) return;
+
+  event.stopPropagation();
+  event.preventDefault();
+
+  selectedNote.value = note;
+
+  const parentCard = event.currentTarget.closest(".group\\/card");
+  const cardElement = parentCard ? parentCard.querySelector(".rounded-\\[24px\\]") : null;
+
+  if (cardElement) {
+    captureRef.value = cardElement;
+    await nextTick();
+    // Kurangi ke 80ms - 100ms agar terasa lebih responsif
+    await new Promise((resolve) => setTimeout(resolve, 80));
+  }
+
+  await handleShare();
 };
 
 onMounted(async () => {
@@ -252,6 +339,30 @@ onMounted(async () => {
             :key="note.id"
             class="group/card flex flex-col h-auto relative w-full cursor-pointer"
             @click="openModalDetail(note)">
+            <button
+              @click.stop="handleQuickShare(note, $event)"
+              class="absolute top-4 right-4 z-30 p-2.5 bg-black/60 backdrop-blur-md rounded-full border transition-all duration-300 flex items-center justify-center group/btn"
+              :class="[
+                getTheme(note.id).border, // Border default sesuai tema
+                'opacity-100 md:opacity-0 md:group-hover/card:opacity-100', // Visibilitas Laptop vs HP
+                'hover:scale-110 active:scale-95', // Efek klik kecil
+              ]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                :class="getTheme(note.id).text">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+            </button>
             <div
               :class="[getTheme(note.id).bg, getTheme(note.id).border, getTheme(note.id).hover]"
               class="rounded-[24px] p-6 border shadow-lg transition-all duration-300 hover:-translate-y-2 relative overflow-hidden flex flex-col w-full">
@@ -271,7 +382,10 @@ onMounted(async () => {
               <div class="flex gap-4 items-center relative z-10 mb-5">
                 <div
                   class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
-                  <img :src="note.music_album_image" class="w-full h-full object-cover" />
+                  <img
+                    :src="getImageUrl(note.music_album_image, note.id + '-card-album')"
+                    :crossorigin="note.music_album_image?.includes('http') ? 'anonymous' : null"
+                    class="w-full h-full object-cover" />
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
@@ -290,7 +404,8 @@ onMounted(async () => {
               <div :class="getTheme(note.id).border" class="flex flex-col gap-3 pt-4 border-t relative z-10 mt-auto">
                 <div class="flex items-center gap-2">
                   <img
-                    :src="note.author_avatar || note.author_photo_url"
+                    :src="getImageUrl(note.author_avatar || note.author_photo_url, note.id + '-card-avatar')"
+                    :crossorigin="(note.author_avatar || note.author_photo_url)?.includes('http') ? 'anonymous' : null"
                     class="w-6 h-6 rounded-full border border-[#333] object-cover" />
                   <div class="flex flex-col">
                     <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
@@ -363,11 +478,10 @@ onMounted(async () => {
         <Transition name="fade">
           <div
             v-if="showModal"
-            class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+            class="fixed inset-0 z-[50] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
             @click.self="closeModalDetail">
             <div
-              ref="captureRef"
-              class="w-full max-w-[420px] md:max-w-[600px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+              class="modal-capture-target w-full max-w-[420px] md:max-w-[600px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
               :class="[showModal ? 'scale-100' : 'scale-95', selectedTheme.bg, selectedTheme.border]">
               <button
                 @click="closeModalDetail"
@@ -403,7 +517,7 @@ onMounted(async () => {
 
                     <img
                       v-if="selectedNote?.music_album_image"
-                      :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album' + cacheBuster)"
+                      :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album')"
                       crossorigin="anonymous"
                       class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                   </div>
@@ -451,11 +565,20 @@ onMounted(async () => {
               <div class="flex-1 bg-black/20 p-6 overflow-y-auto custom-scrollbar">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b" :class="selectedTheme.border">
                   <div class="flex items-center gap-3">
-                    <img
-                      v-if="selectedNote?.author_avatar || selectedNote?.author_photo_url"
-                      @click="openPreview(selectedNote?.author_avatar || selectedNote?.author_photo_url)"
-                      :src="selectedNote?.author_avatar || selectedNote?.author_photo_url"
-                      class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-zoom-in hover:scale-110 transition-transform" />
+                    <div
+                      @click.stop="openPreview(selectedNote?.author_avatar || selectedNote?.author_photo_url)"
+                      class="relative group/avatar cursor-zoom-in">
+                      <img
+                        v-if="selectedNote?.author_avatar || selectedNote?.author_photo_url"
+                        :src="
+                          getImageUrl(
+                            selectedNote?.author_avatar || selectedNote?.author_photo_url,
+                            'avatar-' + selectedNote?.id
+                          )
+                        "
+                        crossorigin="anonymous"
+                        class="w-10 h-10 rounded-full border border-white/10 object-cover" />
+                    </div>
                     <div>
                       <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
                       <div class="flex items-center gap-2">
@@ -531,14 +654,15 @@ onMounted(async () => {
                   </button>
 
                   <button
-                    @click="downloadImage(`pesan-dari-${selectedNote?.author_name || 'user'}`)"
+                    @click="handleShare"
                     :disabled="isDownloading"
                     :class="[
                       selectedTheme.modal_btn,
                       isDownloading ? 'opacity-70 cursor-wait' : 'hover:brightness-110 cursor-pointer',
                     ]"
                     class="flex-1 py-3 rounded-[12px] text-white font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg">
-                    <span v-if="isDownloading">Proses...</span>
+                    <span v-if="isDownloading">Memproses...</span>
+
                     <span v-else class="flex items-center gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -547,12 +671,16 @@ onMounted(async () => {
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                       </svg>
-                      Simpan
+                      Bagikan
                     </span>
                   </button>
                 </div>
@@ -589,6 +717,63 @@ onMounted(async () => {
                 class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
                 @click.stop />
               <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+      <Teleport to="body">
+        <Transition name="fade">
+          <div
+            v-if="showShareOptions"
+            class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            @click.self="closeShareOptions">
+            <div
+              class="bg-[#1c1516] border border-[#333] rounded-t-[32px] sm:rounded-3xl p-6 w-full max-w-sm shadow-2xl relative animate-slide-up">
+              <div class="w-12 h-1.5 bg-[#333] rounded-full mx-auto mb-6 sm:hidden"></div>
+
+              <h3 class="text-white text-lg font-bold mb-2 text-center">Bagikan Pesan</h3>
+              <p class="text-xs text-white/40 text-center mb-6 px-4">
+                Pilih cara terbaik untuk membagikan kartu musikmu.
+              </p>
+
+              <div class="grid grid-cols-1 gap-3">
+                <button
+                  v-if="canNativeShare"
+                  @click="onNativeShare"
+                  class="flex items-center gap-4 p-4 rounded-2xl bg-[#9a203e]/10 border border-[#9a203e]/20 hover:bg-[#9a203e]/20 transition-all text-left">
+                  <span class="text-2xl">📱</span>
+                  <div>
+                    <p class="text-sm font-bold text-[#f87171]">Bagikan ke Aplikasi</p>
+                    <p class="text-[10px] text-white/40">WhatsApp, Instagram Story, dll.</p>
+                  </div>
+                </button>
+
+                <button
+                  @click="downloadManual"
+                  class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
+                  <span class="text-2xl">📥</span>
+                  <div>
+                    <p class="text-sm font-bold text-white">Simpan ke Galeri</p>
+                    <p class="text-[10px] text-white/40">Download sebagai file gambar PNG.</p>
+                  </div>
+                </button>
+
+                <button
+                  @click="onCopyLink"
+                  class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
+                  <span class="text-2xl">🔗</span>
+                  <div>
+                    <p class="text-sm font-bold text-white">Salin Link Pesan</p>
+                    <p class="text-[10px] text-white/40">Bagikan lewat teks saja.</p>
+                  </div>
+                </button>
+              </div>
+
+              <button
+                @click="closeShareOptions"
+                class="w-full mt-6 py-3 text-xs font-bold text-white/30 hover:text-white transition-colors uppercase tracking-widest">
+                Batal
+              </button>
             </div>
           </div>
         </Transition>

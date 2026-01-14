@@ -1,13 +1,7 @@
-import { computed, ref } from "vue";
+import { ref, watch } from "vue";
+import { store } from "./store";
+import { userUpdateProfile } from "./api/UserApi";
 
-// Base Key
-const BASE_STORAGE_KEY = "music_note_theme_preference";
-
-// 1. STATE GLOBAL
-// Default awal selalu 'red' sampai kita tahu siapa usernya
-const globalThemePreference = ref("red");
-// Kita simpan userId yang sedang aktif di sini
-const currentUserId = ref(null);
 const cardThemes = [
   {
     // 1. RED (Original)
@@ -220,55 +214,66 @@ const cardThemes = [
     shadow: "shadow-[0_0_50px_-12px_rgba(226,232,240,0.6)]",
   },
 ];
+
+// 2. STATE GLOBAL (DI LUAR)
+const savedUser = JSON.parse(localStorage.getItem("user"));
+const globalThemePreference = ref(savedUser?.card_theme || "red");
+
 export function useCardTheme() {
-  // --- FUNGSI BARU: Inisialisasi Tema Berdasarkan User ID ---
-  const initTheme = (userId) => {
-    currentUserId.value = userId;
-
-    // Jika Logout (userId null) -> Reset ke Red (Default)
-    if (!userId) {
-      globalThemePreference.value = "red";
-      return;
+  // 3. SINKRONISASI OTOMATIS (Mencegah Circular Dependency)
+  // Menunggu perubahan di store.user (misal saat login berhasil)
+  watch(
+    () => store.user?.card_theme,
+    (newTheme) => {
+      if (newTheme) {
+        globalThemePreference.value = newTheme;
+      }
     }
+  );
 
-    // Jika Login -> Cek LocalStorage dengan Key Unik User
-    const userKey = `${BASE_STORAGE_KEY}_${userId}`;
-    const savedTheme = localStorage.getItem(userKey);
-
-    // Jika user ini pernah set tema, pakai itu. Jika tidak, pakai Red.
-    globalThemePreference.value = savedTheme ? savedTheme : "red";
+  const setThemeLocally = (themeId) => {
+    globalThemePreference.value = themeId;
   };
-  // -----------------------------------------------------------
 
-  const getTheme = (id) => {
-    if (globalThemePreference.value === "random") {
-      if (!id) return cardThemes[0];
-      const index = id % cardThemes.length;
-      return cardThemes[index];
+  const setTheme = async (themeId) => {
+    setThemeLocally(themeId);
+
+    if (store.user) {
+      const token = localStorage.getItem("token");
+      try {
+        await userUpdateProfile(token, { card_theme: themeId });
+        store.user.card_theme = themeId;
+        localStorage.setItem("user", JSON.stringify(store.user));
+      } catch (err) {
+        console.error("Gagal sinkronisasi tema ke server:", err);
+      }
     }
+  };
+
+  // === PERBAIKAN LOGIC DI SINI ===
+  const getTheme = (id) => {
+    // 1. Cek apakah user memilih tema 'acak'
+    if (globalThemePreference.value === "random") {
+      // Jika parameter 'id' (note.id) ada, gunakan modulo untuk warna-warni
+      if (id) {
+        const noteId = Number(id) || 0;
+        return cardThemes[noteId % cardThemes.length];
+      }
+      // Jika tidak ada ID (misal untuk preview default), ambil acak dari index 0
+      return cardThemes[0];
+    }
+
+    // 2. Jika bukan 'acak', cari tema sesuai preference user (misal: 'red', 'blue')
     const selectedTheme = cardThemes.find((t) => t.id === globalThemePreference.value);
+
+    // 3. Fallback ke index 0 (merah) jika tema tidak ditemukan
     return selectedTheme || cardThemes[0];
   };
 
-  const getSelectedTheme = (selectedNote) => {
-    return computed(() => {
-      const note = selectedNote?.value || selectedNote;
-      if (!note) return cardThemes[0];
-      return getTheme(note.id);
-    });
-  };
-
-  const setTheme = (themeId) => {
-    // 1. Update State Global UI
-    globalThemePreference.value = themeId;
-
-    // 2. Simpan ke Local Storage DENGAN USER ID (Jika ada yang login)
-    if (currentUserId.value) {
-      const userKey = `${BASE_STORAGE_KEY}_${currentUserId.value}`;
-      localStorage.setItem(userKey, themeId);
-    }
-    // Jika tidak ada user login (Guest), kita tidak simpan permanen
-    // atau kamu bisa simpan ke key default jika mau fitur guest.
+  const getSelectedTheme = (note) => {
+    if (!note) return cardThemes[0];
+    // Panggil getTheme dengan melempar note.id agar logika modulo berjalan
+    return getTheme(note.id);
   };
 
   return {
@@ -277,6 +282,6 @@ export function useCardTheme() {
     getSelectedTheme,
     globalThemePreference,
     setTheme,
-    initTheme, // <--- Jangan lupa export ini
+    setThemeLocally,
   };
 }
