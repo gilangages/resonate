@@ -1,20 +1,22 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, nextTick } from "vue";
 import { noteListGlobal } from "../../../lib/api/NoteApi";
 import { alertError } from "../../../lib/alert";
 
+// --- STATE ---
 const notes = ref([]);
 const scrollContainer = ref(null);
 
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
+// Modal
+const showModal = ref(false);
+const selectedNote = ref(null);
+const isVinylSpinning = ref(false);
 
+// Image Preview
+const showImagePreview = ref(false);
+const previewImageUrl = ref("");
+
+// --- FETCH DATA ---
 async function fetchNoteGlobal() {
   try {
     const response = await noteListGlobal();
@@ -31,9 +33,10 @@ async function fetchNoteGlobal() {
   }
 }
 
+// --- SCROLL ---
 const scroll = (direction) => {
   if (scrollContainer.value) {
-    const scrollAmount = 320;
+    const scrollAmount = 450; // Lebar card baru
     if (direction === "left") {
       scrollContainer.value.scrollBy({ left: -scrollAmount, behavior: "smooth" });
     } else {
@@ -42,16 +45,67 @@ const scroll = (direction) => {
   }
 };
 
+// --- MODAL ---
+const openModal = (note) => {
+  selectedNote.value = note;
+  showModal.value = true;
+  nextTick(() => {
+    setTimeout(() => {
+      isVinylSpinning.value = true;
+    }, 300);
+  });
+};
+
+const closeModal = () => {
+  isVinylSpinning.value = false;
+  setTimeout(() => {
+    showModal.value = false;
+    selectedNote.value = null;
+  }, 100);
+};
+
+// --- PREVIEW IMAGE ---
+const openPreview = (url) => {
+  if (!url) return;
+  previewImageUrl.value = url;
+  showImagePreview.value = true;
+};
+
+const closePreview = () => {
+  showImagePreview.value = false;
+  setTimeout(() => {
+    previewImageUrl.value = "";
+  }, 300);
+};
+
+// --- FORMATTER ---
+const formatDateShort = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const formatDateDetail = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const optionsDate = { weekday: "long", day: "numeric", month: "short", year: "numeric" };
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
+};
+
 onMounted(async () => {
   await fetchNoteGlobal();
 });
 </script>
 
 <template>
-  <div class="mt-[4em] relative">
+  <div class="mt-[4em] relative font-jakarta">
     <div class="flex justify-between items-center text-[#e5e5e5] mx-[2em] mb-[1em]">
       <h2 class="text-[18px] sm:text-[20px] font-semibold">Dengarkan Pesan Pengguna Lain</h2>
-
       <RouterLink
         to="/login"
         class="hidden sm:flex gap-1 items-center cursor-pointer hover:opacity-80 decoration-0 no-underline">
@@ -60,10 +114,10 @@ onMounted(async () => {
       </RouterLink>
     </div>
 
-    <div class="relative group px-[1em] sm:px-[2em]">
+    <div class="relative group px-4 sm:px-12">
       <button
         @click="scroll('left')"
-        class="hidden sm:flex absolute -left-2 top-1/2 -translate-y-1/2 z-10 bg-[#1c1516] p-2 rounded-full cursor-pointer hover:bg-[#9a203e] border border-[#3f3233] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        class="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-[#1c1516] p-2 rounded-full cursor-pointer hover:bg-[#9a203e] border border-[#3f3233] shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -77,54 +131,77 @@ onMounted(async () => {
 
       <div
         ref="scrollContainer"
-        class="flex gap-[1em] sm:gap-[2em] overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide px-2">
+        class="flex gap-[1.5em] overflow-x-auto pb-8 pt-4 snap-x snap-mandatory scrollbar-hide px-2">
         <div
           v-for="(note, index) in notes"
           :key="note.id || index"
-          class="min-w-[85vw] sm:min-w-[350px] snap-center bg-[#1c1516] p-[10px] rounded-[10px] cursor-pointer transition-transform duration-200 hover:scale-[1.01] border border-transparent hover:border-[#3f3233]">
-          <div class="flex items-center justify-between bg-[#100c0d] p-[10px] rounded-[10px]">
-            <div class="flex items-center overflow-hidden">
-              <img
-                :src="note.spotify_album_image"
-                class="w-[50px] h-[50px] sm:w-[60px] sm:h-[60px] object-cover rounded-[4px] shrink-0" />
-              <div class="flex flex-col ml-[1em] min-w-0">
-                <p class="text-[16px] sm:text-[18px] font-extrabold text-[#e5e5e5] m-0 -mb-[4px] truncate">
-                  {{ note.spotify_track_name }}
-                </p>
-                <p class="text-[14px] sm:text-[16px] font-semibold text-[#8c8a8a] m-0 -mt-[4px] truncate">
-                  {{ note.spotify_artist }}
-                </p>
+          @click="openModal(note)"
+          class="min-w-[85vw] sm:min-w-[450px] snap-center group/card cursor-pointer">
+          <div
+            class="bg-[#1c1516] rounded-[20px] p-5 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden h-full flex flex-col">
+            <div
+              class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
+
+            <div class="flex justify-between items-start mb-5 relative z-10">
+              <div>
+                <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-0.5">UNTUK</p>
+                <h2
+                  class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors truncate max-w-[200px]">
+                  {{ note.recipient }}
+                </h2>
+              </div>
+              <div class="text-right">
+                <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-0.5">DARI</p>
+                <div class="flex items-center justify-end gap-2">
+                  <span class="text-sm font-bold text-[#ccc] truncate max-w-[140px]">{{ note.author }}</span>
+                  <img :src="note.author_avatar" class="w-8 h-8 rounded-full border border-[#333] object-cover" />
+                </div>
               </div>
             </div>
-            <img src="../../../assets/img/play.svg" class="w-[40px] h-[40px] sm:w-[50px] sm:h-[50px] shrink-0" />
-          </div>
 
-          <p class="text-[16px] sm:text-[18px] text-[#8c8a8a] my-4">
-            kepada:
-            <span class="text-[#e5e5e5] font-medium">{{ note.recipient }}</span>
-          </p>
-
-          <p class="text-[16px] sm:text-[18px] text-[#8c8a8a] my-4 min-h-[4.5em] line-clamp-3 leading-relaxed">
-            pesan:
-            <br />
-            <span class="text-[#e5e5e5] break-words">{{ note.content }}</span>
-          </p>
-
-          <div class="flex justify-between items-center mt-6 mb-2">
-            <div class="flex items-center gap-[10px]">
-              <img
-                :src="note.author_avatar"
-                class="w-[35px] h-[35px] sm:w-[40px] sm:h-[40px] rounded-full object-cover border border-[#2c0f0f]" />
-              <p class="text-[#9a203e] font-bold text-sm">{{ note.author }}</p>
+            <div class="flex gap-5 items-start relative z-10 flex-1">
+              <div
+                class="w-20 h-20 rounded-[14px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform">
+                <img :src="note.spotify_album_image" class="w-full h-full object-cover" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="mb-1.5">
+                  <p class="text-[15px] font-bold text-white truncate">{{ note.spotify_track_name }}</p>
+                  <p class="text-xs text-[#888] truncate">{{ note.spotify_artist }}</p>
+                </div>
+                <div
+                  class="bg-[#121011] rounded-[10px] p-3 border border-[#2c2021] mt-2 group-hover/card:border-[#9a203e]/30 transition-colors">
+                  <p class="text-base text-[#aaa] italic font-hand leading-snug line-clamp-2">"{{ note.content }}"</p>
+                </div>
+              </div>
             </div>
-            <p class="text-[#8c8a8a] text-xs">{{ formatDate(note.created_at) }}</p>
+
+            <div class="mt-5 flex justify-between items-center border-t border-[#2c2021] pt-4 relative z-10">
+              <span class="text-xs text-[#555]">{{ formatDateShort(note.created_at) }}</span>
+              <span
+                class="text-[11px] font-bold text-[#e5e5e5] group-hover/card:text-[#9a203e] transition-colors flex items-center gap-1.5 uppercase tracking-wide">
+                Buka
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       <button
         @click="scroll('right')"
-        class="hidden sm:flex absolute -right-2 top-1/2 -translate-y-1/2 z-10 bg-[#1c1516] p-2 rounded-full cursor-pointer hover:bg-[#9a203e] border border-[#3f3233] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        class="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-[#1c1516] p-2 rounded-full cursor-pointer hover:bg-[#9a203e] border border-[#3f3233] shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -143,15 +220,235 @@ onMounted(async () => {
         <img src="../../../assets/img/arrow-right.svg" class="w-[12px]" />
       </RouterLink>
     </div>
+
+    <Transition name="fade">
+      <div
+        v-if="showModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+        @click.self="closeModal">
+        <div
+          class="bg-[#1c1516] w-full max-w-[420px] rounded-[24px] shadow-2xl border border-[#2c2021] flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+          :class="showModal ? 'scale-100' : 'scale-95'">
+          <button
+            @click="closeModal"
+            class="absolute top-4 right-4 z-50 bg-black/40 hover:bg-[#9a203e] text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <div
+            class="bg-gradient-to-b from-[#251a1c] to-[#1c1516] p-6 pt-10 border-b border-[#2c2021] flex flex-col items-center shrink-0">
+            <div
+              class="w-[160px] h-[160px] rounded-full bg-[#111] shadow-2xl border-4 border-[#1c1516] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
+              :class="{ 'animate-spin-slow': isVinylSpinning }">
+              <div class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
+              <img
+                :src="selectedNote?.spotify_album_image"
+                class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
+            </div>
+
+            <h2 class="text-xl font-bold text-white text-center leading-tight">
+              {{ selectedNote?.spotify_track_name }}
+            </h2>
+            <p class="text-[#9a203e] text-xs font-medium uppercase tracking-wide mb-4 mt-1">
+              {{ selectedNote?.spotify_artist }}
+            </p>
+
+            <a
+              v-if="selectedNote?.spotify_track_link"
+              :href="selectedNote?.spotify_track_link"
+              target="_blank"
+              class="flex items-center gap-2 bg-[#1ed760] hover:bg-[#1db954] text-black px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(30,215,96,0.2)] no-underline decoration-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="text-black">
+                <path
+                  d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.4-1.02 15.96 1.74.539.3.66 1.022.359 1.561-.3.479-1.02.6-1.56.3z" />
+              </svg>
+              <span>Dengar di Spotify</span>
+            </a>
+          </div>
+
+          <div class="flex-1 bg-[#161213] p-6 overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-[#2c2021]">
+              <div class="flex items-center gap-3">
+                <div
+                  @click.stop="openPreview(selectedNote?.author_avatar)"
+                  class="relative group/avatar cursor-zoom-in">
+                  <img
+                    :src="selectedNote?.author_avatar"
+                    class="w-10 h-10 rounded-full border border-[#3f3233] object-cover transition-transform group-hover/avatar:scale-110" />
+                  <div
+                    class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <p class="text-[10px] text-[#666] uppercase tracking-wide">DARI</p>
+                  <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
+                </div>
+              </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#555"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+              <div class="text-right">
+                <p class="text-[10px] text-[#666] uppercase tracking-wide">UNTUK</p>
+                <p class="text-sm font-bold text-[#9a203e]">{{ selectedNote?.recipient }}</p>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide whitespace-pre-wrap">
+                "{{ selectedNote?.content }}"
+              </p>
+            </div>
+
+            <div
+              class="flex items-center gap-2 text-[11px] text-[#555] font-mono bg-[#1c1a1b] p-3 rounded-lg border border-[#2c2021]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>Dikirim: {{ formatDateDetail(selectedNote?.created_at) }}</span>
+            </div>
+
+            <div class="mt-6">
+              <button
+                @click="closeModal"
+                class="w-full py-3 rounded-[12px] border border-[#3f3233] text-[#888] font-bold text-xs uppercase tracking-widest hover:bg-[#2c2021] hover:text-white transition-all cursor-pointer">
+                Tutup Catatan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <Transition name="fade">
+      <div
+        v-if="showImagePreview"
+        class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
+        @click="closePreview">
+        <div class="relative flex flex-col items-center w-full max-w-[90vw] max-h-[90vh]">
+          <button
+            @click.stop="closePreview"
+            class="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors p-2 z-50">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <img
+            :src="previewImageUrl"
+            class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-default"
+            @click.stop />
+          <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4">Foto Profil</p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap");
+
+.font-jakarta {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.font-hand {
+  font-family: "Patrick Hand", cursive;
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3233 #1c1516;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1c1516;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3f3233;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #9a203e;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

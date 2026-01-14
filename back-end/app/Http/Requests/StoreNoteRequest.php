@@ -37,6 +37,7 @@ class StoreNoteRequest extends FormRequest
 
             // Preview url kadang dari Spotify-nya kosong, jadi aman kalau nullable
             'spotify_preview_url' => 'nullable|url',
+            'spotify_track_link' => ['nullable', 'string', 'url'],
         ];
     }
 }

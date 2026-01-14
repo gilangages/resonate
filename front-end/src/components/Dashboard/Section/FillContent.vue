@@ -1,10 +1,10 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
 import { myNoteList, noteDelete } from "../../../lib/api/NoteApi";
-import { onBeforeMount, ref } from "vue";
+import { onBeforeMount, ref, nextTick } from "vue";
 import { alertConfirm, alertError, alertSuccess } from "../../../lib/alert";
 
-// Definisi Emit ke Parent (DashboardUser)
+// Emit ke Parent
 const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
 
 const token = useLocalStorage("token", "");
@@ -15,6 +15,14 @@ const currentPage = ref(1);
 const lastPage = ref(1);
 const isLoadingMore = ref(false);
 
+// --- STATE MODAL & PREVIEW ---
+const showModal = ref(false);
+const selectedNote = ref(null);
+const isVinylSpinning = ref(false);
+const showImagePreview = ref(false);
+const previewImageUrl = ref("");
+
+// --- FORMATTER ---
 const formatDate = (dateString) => {
   if (!dateString) return "";
   return new Date(dateString).toLocaleDateString("id-ID", {
@@ -24,31 +32,26 @@ const formatDate = (dateString) => {
   });
 };
 
-const getCardHeight = (index) => {
-  const heights = [
-    "min-[600px]:min-h-[220px]",
-    "min-[600px]:min-h-[350px]",
-    "min-[600px]:min-h-[280px]",
-    "min-[600px]:min-h-[400px]",
-  ];
-  return heights[index % heights.length];
+const formatDateDetail = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const optionsDate = { weekday: "long", day: "numeric", month: "short", year: "numeric" };
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
 };
 
-// --- PERBAIKAN DI SINI: Tambahkan parameter reset = true ---
+// --- FETCH DATA ---
 async function fetchNoteList(reset = true) {
   if (reset) {
     currentPage.value = 1;
-    // Jangan kosongkan notes dulu biar ga kedip kalo cuma refresh
-    // notes.value = [];
   }
 
   try {
     const response = await myNoteList(token.value, currentPage.value);
     const responseBody = await response.json();
-    console.log("API Response:", responseBody); // Debugging
 
     if (response.ok) {
-      // Update Info Pagination (PENTING!)
       if (responseBody.meta) {
         lastPage.value = responseBody.meta.last_page;
         currentPage.value = responseBody.meta.current_page;
@@ -57,11 +60,9 @@ async function fetchNoteList(reset = true) {
       if (reset) {
         notes.value = responseBody.data;
       } else {
-        // Append data baru ke array lama
         notes.value.push(...responseBody.data);
       }
     } else {
-      // Handle error jika token expired dll
       console.error("Gagal load data:", responseBody.message);
     }
   } catch (error) {
@@ -69,38 +70,20 @@ async function fetchNoteList(reset = true) {
   }
 }
 
+// --- DELETE LOGIC ---
 async function handleDelete(id) {
-  // 1. Konfirmasi Hapus
-  if (!(await alertConfirm("Are you sure you want to delete this note?"))) {
-    return;
-  }
+  if (!(await alertConfirm("Are you sure you want to delete this note?"))) return;
 
   try {
-    // 2. Panggil API Hapus
     const response = await noteDelete(token.value, id);
     const responseBody = await response.json();
 
     if (response.ok) {
       alertSuccess("Note deleted successfully");
-
-      // 3. Hapus item dari Array Lokal (Tanpa fetch ulang biar cepat)
-      // Cari index note yang dihapus
       const index = notes.value.findIndex((n) => n.id === id);
-      if (index !== -1) {
-        notes.value.splice(index, 1);
-      }
-
-      // 4. Cek apakah Array jadi kosong?
-      if (notes.value.length === 0) {
-        // Emit ke parent supaya ganti ke EmptyContent
-        emit("is-empty");
-      } else {
-        // Opsional: Jika masih ada data tapi kurang dari 15,
-        // kita bisa fetch ulang untuk memastikan pagination rapi,
-        // tapi untuk sekarang biarkan saja agar performa cepat.
-      }
+      if (index !== -1) notes.value.splice(index, 1);
+      if (notes.value.length === 0) emit("is-empty");
     } else {
-      // Handle Error dari Backend
       const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
       await alertError(pesanError);
     }
@@ -110,78 +93,120 @@ async function handleDelete(id) {
   }
 }
 
-// --- FUNGSI TOMBOL LOAD MORE ---
+// --- LOAD MORE ---
 const loadMore = async () => {
-  // Cek apakah masih ada halaman selanjutnya
   if (currentPage.value < lastPage.value) {
     isLoadingMore.value = true;
-    currentPage.value++; // Naikkan counter halaman
-    await fetchNoteList(false); // false = append mode
+    currentPage.value++;
+    await fetchNoteList(false);
     isLoadingMore.value = false;
   }
 };
 
+// --- MODAL LOGIC ---
+const openModalDetail = (note) => {
+  selectedNote.value = note;
+  showModal.value = true;
+  nextTick(() => {
+    setTimeout(() => {
+      isVinylSpinning.value = true;
+    }, 300);
+  });
+};
+
+const closeModalDetail = () => {
+  isVinylSpinning.value = false;
+  setTimeout(() => {
+    showModal.value = false;
+    selectedNote.value = null;
+  }, 100);
+};
+
+// --- PREVIEW IMAGE ---
+const openPreview = (url) => {
+  if (!url) return;
+  previewImageUrl.value = url;
+  showImagePreview.value = true;
+};
+
+const closePreview = () => {
+  showImagePreview.value = false;
+  setTimeout(() => {
+    previewImageUrl.value = "";
+  }, 300);
+};
+
 onBeforeMount(async () => {
-  await fetchNoteList(true); // Load awal (reset)
+  await fetchNoteList(true);
 });
 </script>
 
 <template>
-  <div class="p-[2em] relative min-h-screen">
-    <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-10">Belum ada pesan yang dibuat.</div>
+  <div class="p-4 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
+    <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
+      Belum ada pesan yang dibuat.
+    </div>
 
-    <div v-else class="columns-1 min-[600px]:columns-3 gap-[2em] space-y-[2em] mb-10">
+    <div v-else class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
       <div
         v-for="(note, index) in notes"
         :key="note.id || index"
-        :class="[
-          'cursor-pointer break-inside-avoid relative flex flex-col justify-between rounded-[10px] bg-[#1c1516] p-[10px] transition-transform duration-200 hover:scale-[1.02]',
-          getCardHeight(index),
-        ]">
-        <div>
-          <div class="flex items-center justify-between rounded-[10px] bg-[#100c0d] p-[10px] mb-4">
-            <div class="flex items-center overflow-hidden">
-              <img
-                :src="note.spotify_album_image"
-                class="h-[50px] w-[50px] sm:h-[60px] sm:w-[60px] object-cover block rounded-[4px] shrink-0" />
-              <div class="ml-[0.8em] flex flex-col min-w-0">
-                <p class="text-[#e5e5e5] font-extrabold truncate">{{ note.spotify_track_name }}</p>
-                <p class="text-[#8c8a8a] font-semibold truncate">{{ note.spotify_artist }}</p>
-              </div>
-            </div>
-            <img src="../../../assets/img/play.svg" class="h-[40px] w-[40px] sm:h-[55px] sm:w-[55px] shrink-0" />
-          </div>
-          <p class="text-[#8c8a8a] mt-2">
-            kepada:
-            <span class="text-[#e5e5e5] font-medium">{{ note.recipient }}</span>
-          </p>
-          <div class="text-[#8c8a8a] mt-2">
-            pesan:
-            <span class="text-[#e5e5e5] block mt-1 break-words">{{ note.content }}</span>
-          </div>
-        </div>
+        class="break-inside-avoid relative group/card cursor-pointer"
+        @click="openModalDetail(note)">
+        <div
+          class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col h-full">
+          <div
+            class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
-        <div class="mt-4">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-[10px]">
-              <img
-                :src="note.author_avatar"
-                class="h-[35px] w-[35px] rounded-full object-cover border border-[#2c0f0f]" />
-              <p class="text-[#9a203e] font-semibold text-[14px]">{{ note.author }}</p>
-            </div>
-            <p class="text-[#8c8a8a] text-xs">{{ formatDate(note.created_at) }}</p>
+          <div class="mb-5 relative z-10">
+            <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">KEPADA</p>
+            <h2
+              class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors break-words leading-tight">
+              {{ note.recipient }}
+            </h2>
           </div>
-          <div class="flex justify-end gap-[8px]">
-            <button
-              @click="$emit('edit-note', note)"
-              class="cursor-pointer hover:bg-[#130f0f] border border-[#8c8a8a] text-[#8c8a8a] rounded-[8px] px-[12px] py-[8px]">
-              Edit
-            </button>
-            <button
-              v-on:click="() => handleDelete(note.id)"
-              class="cursor-pointer hover:bg-[#821c35] bg-[#9a203e] text-[#e5e5e5] rounded-[8px] px-[12px] py-[8px]">
-              Hapus
-            </button>
+
+          <div class="flex gap-4 items-center relative z-10 mb-5">
+            <div
+              class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
+              <img :src="note.spotify_album_image" class="w-full h-full object-cover" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-bold text-white truncate">{{ note.spotify_track_name }}</p>
+              <p class="text-xs text-[#888] truncate">{{ note.spotify_artist }}</p>
+            </div>
+          </div>
+
+          <div
+            class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
+            <p class="text-base text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words">
+              "{{ note.content }}"
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
+            <div class="flex items-center gap-2">
+              <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
+              <div class="flex flex-col">
+                <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
+                <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
+              </div>
+              <span class="text-[10px] text-[#555] font-mono ml-auto">{{ formatDate(note.created_at) }}</span>
+            </div>
+
+            <div
+              class="flex gap-2 w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
+              <button
+                @click.stop="$emit('edit-note', note)"
+                class="flex-1 py-2 rounded-lg border border-[#3f3233] text-[#8c8a8a] text-xs font-bold uppercase tracking-wider hover:bg-[#2c2021] hover:text-white transition-colors">
+                Edit
+              </button>
+              <button
+                @click.stop="handleDelete(note.id)"
+                class="flex-1 py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-wider hover:bg-[#9a203e] hover:text-white transition-colors">
+                Hapus
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -189,29 +214,229 @@ onBeforeMount(async () => {
 
     <div
       v-if="currentPage < lastPage"
-      class="mb-[5em] flex justify-end pr-[2em] text-[#e5e5e5] gap-1.5 cursor-pointer hover:opacity-80">
+      class="mb-[5em] flex justify-center py-6 text-[#e5e5e5] gap-2 cursor-pointer hover:opacity-80">
       <button
         @click="loadMore"
         :disabled="isLoadingMore"
-        class="bg-transparent font-semibold uppercase hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-        {{ isLoadingMore ? "Memuat..." : "Lihat lebih banyak pesan" }}
+        class="bg-transparent font-semibold uppercase hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed tracking-widest text-sm">
+        {{ isLoadingMore ? "Memuat..." : "Lihat Lebih Banyak" }}
       </button>
-      <img v-if="!isLoadingMore" src="../../../assets/img/arrow-down.svg" class="w-[14px]" />
+      <img v-if="!isLoadingMore" src="../../../assets/img/arrow-down.svg" class="w-[16px]" />
     </div>
-  </div>
 
-  <button
-    @click="$emit('open-modal')"
-    class="cursor-pointer fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#9a203e] text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:bg-[#821c35] active:scale-95 focus:outline-none sm:bottom-12 sm:right-12 sm:h-16 sm:w-16"
-    title="Buat Cerita Baru">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke-width="2.5"
-      stroke="currentColor"
-      class="h-8 w-8 sm:h-9 sm:w-9">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-    </svg>
-  </button>
+    <button
+      @click="$emit('open-modal')"
+      class="cursor-pointer fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#9a203e] text-white shadow-[0_0_30px_rgba(154,32,62,0.4)] transition-all duration-300 hover:scale-110 hover:bg-[#821c35] active:scale-95 focus:outline-none sm:bottom-12 sm:right-12 sm:h-16 sm:w-16 group"
+      title="Buat Cerita Baru">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="2.5"
+        stroke="currentColor"
+        class="h-8 w-8 sm:h-9 sm:w-9 transition-transform group-hover:rotate-90">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    </button>
+
+    <Transition name="fade">
+      <div
+        v-if="showModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+        @click.self="closeModalDetail">
+        <div
+          class="bg-[#1c1516] w-full max-w-[480px] rounded-[32px] shadow-2xl border border-[#2c2021] flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+          :class="showModal ? 'scale-100' : 'scale-95'">
+          <button
+            @click="closeModalDetail"
+            class="absolute top-4 right-4 z-50 bg-black/40 hover:bg-[#9a203e] text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <div
+            class="bg-gradient-to-b from-[#251a1c] to-[#1c1516] p-6 pt-10 border-b border-[#2c2021] flex flex-col items-center shrink-0">
+            <div
+              class="w-[140px] h-[140px] rounded-full bg-[#111] shadow-2xl border-4 border-[#1c1516] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
+              :class="{ 'animate-spin-slow': isVinylSpinning }">
+              <div class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
+              <img
+                :src="selectedNote?.spotify_album_image"
+                class="w-[60px] h-[60px] rounded-full object-cover border-2 border-[#111] relative z-10" />
+            </div>
+
+            <h2 class="text-2xl font-bold text-white text-center leading-tight px-4">
+              {{ selectedNote?.spotify_track_name }}
+            </h2>
+            <p class="text-[#9a203e] text-sm font-medium uppercase tracking-wide mb-5 mt-1">
+              {{ selectedNote?.spotify_artist }}
+            </p>
+
+            <a
+              v-if="selectedNote?.spotify_track_link"
+              :href="selectedNote?.spotify_track_link"
+              target="_blank"
+              class="flex items-center gap-2 bg-[#1ed760] hover:bg-[#1db954] text-black px-6 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(30,215,96,0.2)] no-underline decoration-0">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                class="text-black">
+                <path
+                  d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.4-1.02 15.96 1.74.539.3.66 1.022.359 1.561-.3.479-1.02.6-1.56.3z" />
+              </svg>
+              <span>Putar di Spotify</span>
+            </a>
+          </div>
+
+          <div class="flex-1 bg-[#161213] p-6 overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6 pb-6 border-b border-[#2c2021]">
+              <div class="flex items-center gap-3">
+                <div
+                  @click.stop="openPreview(selectedNote?.author_avatar)"
+                  class="relative group/avatar cursor-zoom-in">
+                  <img
+                    :src="selectedNote?.author_avatar"
+                    class="w-12 h-12 rounded-full border border-[#3f3233] object-cover transition-transform group-hover/avatar:scale-110" />
+                </div>
+                <div>
+                  <p class="text-[10px] text-[#666] uppercase tracking-wide font-bold">DARI</p>
+                  <p class="text-base font-bold text-white">{{ selectedNote?.author }}</p>
+                </div>
+              </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#555"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+              <div class="text-right">
+                <p class="text-[10px] text-[#666] uppercase tracking-wide font-bold">UNTUK</p>
+                <p class="text-base font-bold text-[#9a203e]">{{ selectedNote?.recipient }}</p>
+              </div>
+            </div>
+
+            <div class="mb-8">
+              <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide whitespace-pre-wrap break-words">
+                "{{ selectedNote?.content }}"
+              </p>
+            </div>
+
+            <div
+              class="flex items-center gap-2 text-[11px] text-[#555] font-mono bg-[#1c1a1b] p-3 rounded-lg border border-[#2c2021] mb-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>Dikirim: {{ formatDateDetail(selectedNote?.created_at) }}</span>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                @click="closeModalDetail"
+                class="flex-1 py-3 rounded-[14px] border border-[#3f3233] text-[#888] font-bold text-xs uppercase tracking-widest hover:bg-[#2c2021] hover:text-white transition-all cursor-pointer">
+                Tutup
+              </button>
+              <button
+                @click="
+                  $emit('edit-note', selectedNote);
+                  closeModalDetail();
+                "
+                class="flex-1 py-3 rounded-[14px] bg-[#333] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#444] transition-all cursor-pointer">
+                Edit Note
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <Transition name="fade">
+      <div
+        v-if="showImagePreview"
+        class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
+        @click="closePreview">
+        <div class="relative flex flex-col items-center w-full max-w-[90vw] max-h-[90vh] cursor-default">
+          <img
+            :src="previewImageUrl"
+            class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+            @click.stop />
+
+          <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
+        </div>
+      </div>
+    </Transition>
+  </div>
 </template>
+
+<style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap");
+
+.font-jakarta {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.font-hand {
+  font-family: "Patrick Hand", cursive;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3f3233 #1c1516;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1c1516;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3f3233;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #9a203e;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

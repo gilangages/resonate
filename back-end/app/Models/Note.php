@@ -19,6 +19,7 @@ class Note extends Model
         'spotify_artist',
         'spotify_album_image',
         'spotify_preview_url',
+        'spotify_track_link',
     ];
 
     // Note milik satu user

@@ -27,6 +27,7 @@ class NoteResource extends JsonResource
             'spotify_artist' => $this->spotify_artist, // Pastikan kolom ini ada di DB
             'spotify_album_image' => $this->spotify_album_image, // Pastikan kolom ini ada di DB
             'spotify_preview_url' => $this->spotify_preview_url, // Pastikan kolom ini ada di DB
+            'spotify_track_link' => $this->spotify_track_link,
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

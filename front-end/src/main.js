@@ -4,14 +4,12 @@ import "./style.css";
 import { createRouter, createWebHistory } from "vue-router";
 import Layout from "./components/Layout/Layout.vue";
 import UserRegister from "./components/User/UserRegister.vue";
-import Test from "./components/Test.vue";
 import UserLogin from "./components/User/UserLogin.vue";
 import LandingPage from "./components/LandingPage/LandingPage.vue";
 import DashboardLayout from "./components/Layout/DashboardLayout.vue";
 import UserProfile from "./components/User/UserProfile.vue";
 import UserLogout from "./components/User/UserLogout.vue";
 import DashboardUser from "./components/Dashboard/DashboardUser.vue";
-import NoteEdit from "./components/Note/NoteEdit.vue";
 import DashboardGlobal from "./components/Dashboard/DashboardGlobal.vue";
 
 const router = createRouter({
@@ -20,10 +18,6 @@ const router = createRouter({
     {
       path: "/",
       component: LandingPage,
-    },
-    {
-      path: "/test",
-      component: Test,
     },
     {
       path: "/",

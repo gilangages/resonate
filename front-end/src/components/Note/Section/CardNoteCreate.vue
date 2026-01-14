@@ -102,7 +102,7 @@ async function handleSubmit() {
   const responseBody = await response.json();
 
   if (response.ok) {
-    alertSuccess("Pesan berhasil dibuat!");
+    alertSuccess("Note created successfully!");
     emit("create-success");
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;

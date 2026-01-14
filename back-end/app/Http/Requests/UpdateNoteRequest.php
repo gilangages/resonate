@@ -34,6 +34,7 @@ class UpdateNoteRequest extends FormRequest
             'spotify_artist' => 'required|string',
             'spotify_album_image' => 'nullable|string',
             'spotify_preview_url' => 'nullable|string',
+            'spotify_track_link' => ['sometimes', 'nullable', 'string', 'url'],
         ];
     }
 }
