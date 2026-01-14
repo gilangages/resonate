@@ -91,7 +91,7 @@
         }
     },
     "paths": {
-        "/notes/my": {
+        "api/notes/my": {
             "get": {
                 "tags": ["Notes"],
                 "summary": "Get logged-in user's notes",

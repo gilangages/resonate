@@ -1,12 +1,10 @@
 <script setup>
 import { ref, onMounted, reactive } from "vue";
-// Pastikan import noteUpdate
 import { noteUpdate, searchMusic } from "../../../lib/api/NoteApi";
 import { useLocalStorage } from "@vueuse/core";
 import { alertSuccess, alertError } from "../../../lib/alert";
 import { userDetail } from "../../../lib/api/UserApi";
 
-// 1. TERIMA DATA DARI PARENT (Dashboard)
 const props = defineProps({
   noteData: {
     type: Object,
@@ -16,58 +14,55 @@ const props = defineProps({
 
 const emit = defineEmits(["update-success", "go-back"]);
 
-// --- STATE DATA ---
 const token = useLocalStorage("token", "");
 const kirimSebagai = ref("samaran");
 const namaSamaran = ref("");
 const name = ref("User");
 
+// INI KUNCINYA: Semua data update akan masuk ke sini
 const note = reactive({
   content: "",
   recipient: "",
+  initial_name: null,
+  spotify_track_id: "",
+  spotify_track_name: "",
+  spotify_artist: "",
+  spotify_album_image: "",
+  spotify_preview_url: null,
 });
 
-// --- STATE PENCARIAN LAGU ---
 const queryLagu = ref("");
 const searchResults = ref([]);
 const selectedSong = ref(null);
 const isSearching = ref(false);
 let debounceTimer = null;
 
-// --- 2. FETCH USER DATA ---
-async function fetchUser() {
-  try {
-    const response = await userDetail(token.value);
-    const responseBody = await response.json();
-    if (response.ok) {
-      name.value = responseBody.data.name;
-    }
-  } catch (error) {
-    console.error("Gagal ambil data user", error);
-  }
-}
-
-// --- 3. ISI FORM DENGAN DATA LAMA (Populate) ---
-// Kita tidak perlu fetch API lagi, karena data sudah dikirim dari Dashboard
+// --- POPULATE FORM ---
 const populateForm = () => {
   const d = props.noteData;
   if (!d) return;
 
-  // Isi Text
-  note.content = d.content;
-  note.recipient = d.recipient;
+  // 1. Isi object 'note' langsung
+  Object.assign(note, {
+    content: d.content,
+    recipient: d.recipient,
+    initial_name: d.initial_name,
+    spotify_track_id: d.spotify_track_id,
+    spotify_track_name: d.spotify_track_name,
+    spotify_artist: d.spotify_artist,
+    spotify_album_image: d.spotify_album_image,
+    spotify_preview_url: d.spotify_preview_url,
+  });
 
-  // Isi Lagu
+  // 2. Isi UI Search
   selectedSong.value = {
     id: d.spotify_track_id,
     name: d.spotify_track_name,
     artists: [{ name: d.spotify_artist }],
     album: { images: [{ url: d.spotify_album_image }] },
-    preview_url: d.spotify_preview_url,
   };
   queryLagu.value = `${d.spotify_track_name} - ${d.spotify_artist}`;
 
-  // Isi Pengirim
   if (d.initial_name) {
     kirimSebagai.value = "samaran";
     namaSamaran.value = d.initial_name;
@@ -76,10 +71,19 @@ const populateForm = () => {
   }
 };
 
-// --- 4. LOGIC SEARCH LAGU ---
+async function fetchUser() {
+  try {
+    const response = await userDetail(token.value);
+    const responseBody = await response.json();
+    if (response.ok) name.value = responseBody.data.name;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 const handleSearchInput = () => {
   if (debounceTimer) clearTimeout(debounceTimer);
-  selectedSong.value = null; // Reset saat mengetik ulang
+  selectedSong.value = null;
   if (queryLagu.value.length < 2) {
     searchResults.value = [];
     return;
@@ -104,58 +108,56 @@ const handleSearchInput = () => {
 
 const selectSong = (song) => {
   selectedSong.value = song;
-  queryLagu.value = song.name + " - " + song.artists[0].name;
+  queryLagu.value = `${song.name} - ${song.artists[0].name}`;
   searchResults.value = [];
+
+  // PENTING: Update object 'note' saat lagu diganti
+  note.spotify_track_id = song.id;
+  note.spotify_track_name = song.name;
+  note.spotify_artist = song.artists[0].name;
+  note.spotify_album_image = song.album.images[0]?.url || "";
+  note.spotify_preview_url = song.preview_url;
 };
 
-// --- 5. LOGIC UPDATE (PUT) ---
+// --- BAGIAN YANG DIPERBAIKI ---
 async function handleUpdate() {
+  // Validasi: Pastikan ada lagu yang terpilih
+  // (Entah dari populateForm atau selectSong, selectedSong.value harus ada)
   if (!selectedSong.value) {
     await alertError("Kamu belum memilih lagu!");
     return;
   }
 
-  let finalInitialName = null;
+  // Update logic nama samaran ke dalam 'note'
   if (kirimSebagai.value === "samaran") {
     if (!namaSamaran.value) {
       await alertError("Nama samaran wajib diisi!");
       return;
     }
-    finalInitialName = namaSamaran.value;
+    note.initial_name = namaSamaran.value;
+  } else {
+    note.initial_name = null; // Reset
   }
 
-  const payload = {
-    content: note.content,
-    recipient: note.recipient,
-    initial_name: finalInitialName,
-    spotify_track_id: selectedSong.value.id,
-    spotify_track_name: selectedSong.value.name,
-    spotify_artist: selectedSong.value.artists[0].name,
-    spotify_album_image: selectedSong.value.album.images?.[0]?.url || "",
-    spotify_preview_url: selectedSong.value.preview_url || null,
-  };
+  // HAPUS kode "const payload = {...}" yang lama!
+  // GANTIKAN dengan mengirim object 'note' langsung.
+  // Karena 'note' sudah kita update di 'selectSong' & 'populateForm'.
 
-  // Panggil API Update (Pastikan props.noteData.id ada)
-  const response = await noteUpdate(token.value, props.noteData.id, payload);
+  const response = await noteUpdate(token.value, props.noteData.id, note);
   const responseBody = await response.json();
 
   if (response.ok) {
     alertSuccess("Pesan berhasil diperbarui!");
-    emit("update-success"); // Beritahu parent
+    emit("update-success");
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
     await alertError(pesanError);
   }
 }
 
-const handleKembali = () => {
-  emit("go-back");
-};
-
-// --- LIFECYCLE ---
 onMounted(async () => {
   await fetchUser();
-  populateForm(); // Isi form saat komponen muncul
+  populateForm();
 });
 </script>
 
@@ -255,7 +257,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Style sama seperti sebelumnya */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }

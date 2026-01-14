@@ -5,7 +5,7 @@ import { onBeforeMount, ref } from "vue";
 import { alertConfirm, alertSuccess } from "../../../lib/alert";
 
 // Definisi Emit ke Parent (DashboardUser)
-const emit = defineEmits(["open-modal", "is-empty"]);
+const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
@@ -173,6 +173,7 @@ onBeforeMount(async () => {
           </div>
           <div class="flex justify-end gap-[8px]">
             <button
+              @click="$emit('edit-note', note)"
               class="cursor-pointer hover:bg-[#130f0f] border border-[#8c8a8a] text-[#8c8a8a] rounded-[8px] px-[12px] py-[8px]">
               Edit
             </button>
