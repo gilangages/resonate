@@ -28,6 +28,21 @@ class NoteController extends Controller
     }
 
     /**
+     * GET /api/notes/global
+     * Public: Ambil 6 note acak untuk Landing Page
+     */
+    public function globalIndex()
+    {
+        // Ambil 6 data secara acak (Random)
+        $notes = Note::with('user')
+            ->inRandomOrder()
+            ->take(6)
+            ->get();
+
+        return NoteResource::collection($notes);
+    }
+
+    /**
      * GET /api/notes/{id}
      * Public: detail note
      */

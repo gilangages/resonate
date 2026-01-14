@@ -114,3 +114,12 @@ export const noteList = async (token, page = 1) => {
     },
   });
 };
+
+export const noteListGlobal = async () => {
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/global`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+};

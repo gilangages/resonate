@@ -2,7 +2,7 @@
 import { useLocalStorage } from "@vueuse/core";
 import { myNoteList, noteDelete } from "../../../lib/api/NoteApi";
 import { onBeforeMount, ref } from "vue";
-import { alertConfirm, alertSuccess } from "../../../lib/alert";
+import { alertConfirm, alertError, alertSuccess } from "../../../lib/alert";
 
 // Definisi Emit ke Parent (DashboardUser)
 const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
@@ -194,7 +194,7 @@ onBeforeMount(async () => {
         @click="loadMore"
         :disabled="isLoadingMore"
         class="bg-transparent font-semibold uppercase hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-        {{ isLoadingMore ? "Memuat..." : "Lihat lebih banyak cerita" }}
+        {{ isLoadingMore ? "Memuat..." : "Lihat lebih banyak pesan" }}
       </button>
       <img v-if="!isLoadingMore" src="../../../assets/img/arrow-down.svg" class="w-[14px]" />
     </div>

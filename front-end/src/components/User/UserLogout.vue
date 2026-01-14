@@ -3,6 +3,7 @@ import { useLocalStorage } from "@vueuse/core";
 import { userLogout } from "../../lib/api/UserApi";
 import { useRouter } from "vue-router";
 import { onBeforeMount } from "vue";
+import { alertError } from "../../lib/alert";
 
 const token = useLocalStorage("token", "");
 const router = useRouter();

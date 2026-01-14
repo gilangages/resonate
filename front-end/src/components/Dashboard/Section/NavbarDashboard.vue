@@ -3,6 +3,7 @@ import { onBeforeMount, ref } from "vue";
 import { userState, getAvatarUrl } from "../../../lib/store";
 import { userDetail } from "../../../lib/api/UserApi";
 import { useLocalStorage } from "@vueuse/core";
+import { alertError } from "../../../lib/alert";
 
 const token = useLocalStorage("token", "");
 const showDropdown = ref(false);

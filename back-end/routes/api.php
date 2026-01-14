@@ -20,6 +20,9 @@ Route::get('/test-sanctum', function () {
 Route::post('/users', RegisterController::class);
 Route::post('/users/login', LoginController::class);
 
+//get  Global Notes (Bisa diakses siapa saja)
+Route::get('/notes/global', [NoteController::class, 'globalIndex']);
+
 // 🔐 AUTH ROUTES (Prioritas Tinggi)
 Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/logout', LogoutController::class);
@@ -27,8 +30,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // ✅ POSISI 'my' AMAN DI SINI
     // Karena route {id} belum didefinisikan di atasnya
     Route::get('/notes/my', [NoteController::class, 'myNotes']);
-
-    //get notes global
 
     Route::get('/notes', [NoteController::class, 'index']);
     Route::get('/notes/{id}', [NoteController::class, 'show']);

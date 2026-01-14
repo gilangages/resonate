@@ -2,7 +2,6 @@
 import { useLocalStorage } from "@vueuse/core";
 import { userDetail } from "../../../lib/api/UserApi";
 import { onBeforeMount, ref } from "vue";
-import { alertError } from "../../../lib/alert";
 
 const token = useLocalStorage("token", "");
 const name = ref("");

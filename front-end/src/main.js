@@ -22,8 +22,8 @@ const router = createRouter({
       component: LandingPage,
     },
     {
-      path: "/global",
-      component: DashboardGlobal,
+      path: "/test",
+      component: Test,
     },
     {
       path: "/",
