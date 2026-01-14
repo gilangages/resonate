@@ -29,7 +29,7 @@ const router = createRouter({
     {
       path: "/note/:id",
       component: LandingPage,
-      props: true,
+      // props: true,
     },
     {
       path: "/",

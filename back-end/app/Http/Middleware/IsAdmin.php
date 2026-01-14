@@ -15,12 +15,21 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Cek apakah user login DAN role-nya admin
-        if ($request->user() && $request->user()->role === 'admin') {
+        // 1. Definisikan variabel $user DI SINI agar bisa dipakai di bawah
+        $user = $request->user();
+
+        // 2. Cek apakah user ada DAN role-nya admin (pakai trim untuk keamanan)
+        if ($user && trim($user->role ?? '') === 'admin') {
             return $next($request);
         }
 
-        // Jika bukan, kembalikan error 403 (Forbidden)
-        return response()->json(['message' => 'Anda tidak memiliki akses admin.'], 403);
+        // 3. Siapkan pesan debug
+        // Menggunakan operator null coalescing (??) untuk menangani jika $user null
+        $detectedRole = $user ? ($user->role ?? 'Empty Role') : 'Guest (Not Logged In)';
+
+        // 4. Return response JSON 403 dengan info debug
+        return response()->json([
+            'message' => 'Hanya admin yang boleh masuk. Role Anda terdeteksi sebagai: [' . $detectedRole . ']',
+        ], 403);
     }
 }

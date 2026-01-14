@@ -66,21 +66,30 @@ async function handleSubmit() {
     if (response.ok) {
       // --- LOGIN SUKSES ---
       token.value = responseBody.token;
-
       sessionStorage.removeItem("last_anim_name");
       store.setUser(responseBody.user);
 
-      if (responseBody.user.role === "admin") {
+      // --- DEBUGGING EKSTRIM ---
+      const serverRole = responseBody.user?.role;
+      console.log("=== DEBUG LOGIN ROLE ===");
+      console.log("Raw Role from Server:", serverRole);
+      console.log("Type of Role:", typeof serverRole);
+      console.log("Role Length:", serverRole ? serverRole.length : "N/A");
+      console.log("Is Admin Match?:", serverRole === "admin");
+      console.log("Is Admin Match (Trimmed)?:", String(serverRole).trim() === "admin");
+      console.log("========================");
+
+      // Logic Redirect dengan pembersihan string
+      const finalRole = String(serverRole || "").trim();
+
+      if (finalRole === "admin") {
         await router.push("/dashboard/admin");
       } else {
         await router.push("/dashboard/global");
       }
     } else {
       // --- LOGIN GAGAL ---
-
-      // Cek Banned (Status 403)
       if (response.status === 403 && responseBody.status === "banned") {
-        // Panggil fungsi reusable tadi, pakai email dari input form
         await handleBannedUser(user.email, responseBody.message);
       } else {
         const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;

@@ -31,7 +31,6 @@ Route::post('/users/appeal', [AppealController::class, 'sendAppeal']);
 
 // get Global Notes (Bisa diakses siapa saja)
 Route::get('/notes/global', [NoteController::class, 'globalIndex']);
-Route::get('/notes/{id}', [NoteController::class, 'show']);
 Route::get('/stream/{trackId}', [AudioStreamController::class, 'stream']);
 
 Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirectToGoogle']);
@@ -45,6 +44,7 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 Route::middleware(['auth:sanctum', 'check.banned'])->group(function () {
     Route::delete('/users/logout', LogoutController::class);
 
+    Route::get('/notes/my', [NoteController::class, 'myNotes']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead']);
@@ -52,7 +52,6 @@ Route::middleware(['auth:sanctum', 'check.banned'])->group(function () {
     Route::get('/notifications/all', [NotificationController::class, 'getAll']);
 
     // ✅ POSISI 'my' AMAN DI SINI
-    Route::get('/notes/my', [NoteController::class, 'myNotes']);
 
     Route::get('/notes', [NoteController::class, 'index']);
     Route::post('/notes/bulk-delete', [NoteController::class, 'bulkDestroy']);
@@ -83,3 +82,4 @@ Route::middleware(['auth:sanctum', 'check.banned', 'admin'])->prefix('admin')->g
 
 // ROUTE KHUSUS UNTUK BYPASS CORS IMAGE;
 Route::get('/image-proxy', [ImageProxyController::class, 'proxy']);
+Route::get('/notes/{id}', [NoteController::class, 'show']);
