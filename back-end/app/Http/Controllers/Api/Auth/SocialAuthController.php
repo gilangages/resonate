@@ -22,10 +22,10 @@ class SocialAuthController extends Controller
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
-            $avatar = $googleUser->getAvatar();
-            if ($avatar) {
-                // Regex: Cari "=s" diikuti angka, opsional "-c", di akhir string
-                $avatar = preg_replace('/=s\d+(-c)?$/', '=s1024', $avatar);
+            // Proses Avatar dari Google (High Res)
+            $googleAvatar = $googleUser->getAvatar();
+            if ($googleAvatar) {
+                $googleAvatar = preg_replace('/=s\d+(-c)?$/', '=s1024', $googleAvatar);
             }
 
             $user = User::where('google_id', $googleUser->getId())
@@ -44,16 +44,30 @@ class SocialAuthController extends Controller
                     'name' => $googleUser->getName(),
                     'email' => $googleUser->getEmail(),
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $avatar, // Ambil foto dari Google
+                    'avatar' => $googleAvatar, // User baru pasti pakai foto Google
                     'password' => null,
                 ]);
             } else {
                 // UPDATE USER LAMA (Sinkronisasi Data)
-                // Kita update avatar setiap kali login agar selalu fresh dari Google
-                $user->update([
+
+                $updateData = [
                     'google_id' => $googleUser->getId(),
-                    'avatar' => $avatar,
-                ]);
+                ];
+
+                // LOGIC PENTING:
+                // Cek apakah avatar user saat ini adalah URL (dari Google/eksternal) atau File Lokal?
+                // Jika avatar saat ini adalah URL valid (atau null), kita update dengan avatar Google yang baru.
+                // Jika avatar saat ini TIDAK valid URL (berarti path file lokal 'avatars/...'), JANGAN ditimpa.
+
+                $currentAvatarIsUrl = filter_var($user->avatar, FILTER_VALIDATE_URL);
+                $currentAvatarIsNull = is_null($user->avatar);
+
+                if ($currentAvatarIsUrl || $currentAvatarIsNull) {
+                    $updateData['avatar'] = $googleAvatar;
+                }
+                // Else: User punya foto lokal, jangan masukkan 'avatar' ke $updateData
+
+                $user->update($updateData);
             }
 
             $token = $user->createToken('auth_token')->plainTextToken;
@@ -62,7 +76,7 @@ class SocialAuthController extends Controller
             return redirect("{$frontendUrl}/auth/callback?token={$token}&name={$user->name}");
 
         } catch (\Exception $e) {
-            // Log error jika perlu: \Log::error($e->getMessage());
+            // Log::error($e->getMessage());
             return redirect(env('FRONTEND_URL') . '/login?error=Gagal login dengan Google');
         }
     }

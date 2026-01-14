@@ -93,20 +93,22 @@ onMounted(async () => {
 
 <template>
   <div>
-    <FillContent ref="fillContentRef" @open-modal="openCreateModal" @edit-note="openEditModal" />
-  </div>
+    <div>
+      <FillContent ref="fillContentRef" @open-modal="openCreateModal" @edit-note="openEditModal" />
+    </div>
 
-  <div
-    v-if="showModal"
-    class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity p-4"
-    @click.self="closeModal">
-    <div class="relative w-full max-w-2xl transform transition-all">
-      <NoteCreate v-if="modalType === 'create'" @note-created="handleDataChanged" @close-modal="closeModal" />
-      <NoteEdit
-        v-else-if="modalType === 'edit'"
-        :selected-note="selectedNoteData"
-        @note-updated="handleDataChanged"
-        @close-modal="closeModal" />
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity p-4"
+      @click.self="closeModal">
+      <div class="relative w-full max-w-2xl transform transition-all">
+        <NoteCreate v-if="modalType === 'create'" @note-created="handleDataChanged" @close-modal="closeModal" />
+        <NoteEdit
+          v-else-if="modalType === 'edit'"
+          :selected-note="selectedNoteData"
+          @note-updated="handleDataChanged"
+          @close-modal="closeModal" />
+      </div>
     </div>
   </div>
 </template>
