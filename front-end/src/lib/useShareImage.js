@@ -87,9 +87,30 @@ export function useShareImage() {
     }
   };
 
+  const triggerNativeShare = async (file, title = "Resonate Music Note") => {
+    // Cek dukungan browser
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: title,
+          text: "Cek profil musikku di Resonate!",
+        });
+        return true; // Berhasil share
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Native share error:", err);
+        }
+        return false; // Gagal atau dibatalkan
+      }
+    }
+    return false; // Browser tidak support
+  };
+
   return {
     captureRef,
     generateImageFile,
     isDownloading,
+    triggerNativeShare,
   };
 }

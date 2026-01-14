@@ -208,7 +208,7 @@ onUnmounted(() => {
 
   <div
     v-if="showNavigation"
-    class="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[320px] bg-[#180808]/80 backdrop-blur-xl p-1.5 rounded-full border border-[#2c2021] shadow-2xl ring-1 ring-white/5 transition-transform duration-300">
+    class="md:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[49] w-[90%] max-w-[320px] bg-[#180808]/80 backdrop-blur-xl p-1.5 rounded-full border border-[#2c2021] shadow-2xl ring-1 ring-white/5 transition-transform duration-300">
     <div class="grid grid-cols-2 gap-1">
       <RouterLink
         to="/dashboard/global"
