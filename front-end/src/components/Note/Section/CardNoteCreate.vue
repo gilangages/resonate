@@ -3,15 +3,15 @@ import { ref, onBeforeMount, reactive } from "vue";
 import { noteCreate, searchMusic } from "../../../lib/api/NoteApi";
 import { useLocalStorage } from "@vueuse/core";
 import { alertSuccess, alertError } from "../../../lib/alert";
-import { userDetail } from "../../../lib/api/UserApi"; // Import userDetail
+import { userDetail } from "../../../lib/api/UserApi";
 
-const emit = defineEmits(["close", "submit"]);
+const emit = defineEmits(["create-success", "go-back"]);
 
 // --- STATE DATA ---
 const token = useLocalStorage("token", "");
 const kirimSebagai = ref("samaran");
 const namaSamaran = ref("");
-const name = ref("User"); // Default text kalau loading/gagal
+const name = ref("User");
 
 // Objek Note
 const note = reactive({
@@ -31,9 +31,7 @@ async function fetchUser() {
   try {
     const response = await userDetail(token.value);
     const responseBody = await response.json();
-
     if (response.ok) {
-      // Simpan nama user ke state
       name.value = responseBody.data.name;
     }
   } catch (error) {
@@ -44,20 +42,16 @@ async function fetchUser() {
 // --- 2. LOGIC SEARCH LAGU ---
 const handleSearchInput = () => {
   if (debounceTimer) clearTimeout(debounceTimer);
-
   selectedSong.value = null;
-
   if (queryLagu.value.length < 2) {
     searchResults.value = [];
     return;
   }
-
   isSearching.value = true;
   debounceTimer = setTimeout(async () => {
     try {
       const response = await searchMusic(token.value, queryLagu.value);
       const data = await response.json();
-
       if (data && data.tracks && data.tracks.items) {
         searchResults.value = data.tracks.items;
       } else {
@@ -77,15 +71,13 @@ const selectSong = (song) => {
   searchResults.value = [];
 };
 
-// --- 3. LOGIC SUBMIT (Payload Pindah Kesini!) ---
+// --- 3. LOGIC SUBMIT ---
 async function handleSubmit() {
-  // Validasi Lagu
   if (!selectedSong.value) {
     await alertError("Kamu belum memilih lagu! Silakan cari dan klik lagunya.");
     return;
   }
 
-  // Tentukan Initial Name
   let finalInitialName = null;
   if (kirimSebagai.value === "samaran") {
     if (!namaSamaran.value) {
@@ -95,13 +87,10 @@ async function handleSubmit() {
     finalInitialName = namaSamaran.value;
   }
 
-  // --- PERBAIKAN: Payload Dibuat Disini ---
-  // Supaya datanya FRESH sesuai apa yang diketik user saat tombol ditekan
   const payload = {
     content: note.content,
     recipient: note.recipient,
     initial_name: finalInitialName,
-
     spotify_track_id: selectedSong.value.id,
     spotify_track_name: selectedSong.value.name,
     spotify_artist: selectedSong.value.artists[0].name,
@@ -109,34 +98,31 @@ async function handleSubmit() {
     spotify_preview_url: selectedSong.value.preview_url || null,
   };
 
-  // Kirim ke Backend
   const response = await noteCreate(token.value, payload);
   const responseBody = await response.json();
 
   if (response.ok) {
     alertSuccess("Pesan berhasil dibuat!");
-    emit("submit");
-    emit("close");
+    emit("create-success");
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
     await alertError(pesanError);
   }
 }
 
-const handleClose = () => {
-  emit("close");
+const handleKembali = () => {
+  emit("go-back");
 };
 
-// --- LIFECYCLE ---
 onBeforeMount(async () => {
   kirimSebagai.value = "samaran";
-  await fetchUser(); // Panggil fetch user saat komponen dimuat
+  await fetchUser();
 });
 </script>
 
 <template>
   <div
-    class="w-full max-w-[420px] rounded-[20px] bg-[#1c1516] p-4 sm:max-w-[560px] max-h-[90vh] overflow-y-auto"
+    class="custom-scrollbar w-full max-w-[420px] rounded-[20px] bg-[#1c1516] p-4 sm:max-w-[560px] max-h-[90vh] overflow-y-auto"
     @click.stop>
     <form @submit.prevent="handleSubmit" class="flex flex-col text-[#e5e5e5] font-poppins relative">
       <h1 class="text-center text-[#9a203e] text-3xl font-bold m-0">Buat Pesan Baru</h1>
@@ -154,7 +140,7 @@ onBeforeMount(async () => {
 
         <div
           v-if="searchResults.length > 0"
-          class="absolute z-20 top-[80px] left-0 w-full bg-[#2b2122] border border-[#9a203e] rounded-[10px] max-h-[200px] overflow-y-auto shadow-lg">
+          class="custom-scrollbar absolute z-20 top-[80px] left-0 w-full bg-[#2b2122] border border-[#9a203e] rounded-[10px] max-h-[200px] overflow-y-auto shadow-lg">
           <div
             v-for="song in searchResults"
             :key="song.id"
@@ -214,7 +200,7 @@ onBeforeMount(async () => {
       <div class="mt-[26px] flex gap-[10px]">
         <button
           type="button"
-          @click="handleClose"
+          @click="handleKembali"
           class="w-full rounded-[10px] border border-[#8c8a8a] bg-[#1c1516] px-3 py-3 text-xs font-medium text-[#8c8a8a] hover:border-[#666565] hover:bg-[#120e0e] cursor-pointer">
           Kembali
         </button>
@@ -228,3 +214,26 @@ onBeforeMount(async () => {
     </form>
   </div>
 </template>
+
+<style scoped>
+/* Lebar Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* Track (Jalur) - Transparan atau Gelap */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Handle (Batang) - Abu Gelap */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #3f3233;
+  border-radius: 20px;
+}
+
+/* Handle saat Hover - Merah Maroon */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #9a203e;
+}
+</style>

@@ -15,11 +15,8 @@ const closeModal = () => {
   showCreateModal.value = false;
 };
 
-// Saat NoteCreate berhasil submit:
-const handleNoteSuccess = () => {
-  closeModal();
-  // LAPOR KE PARENT: "Woi, pesan udah jadi nih!"
-  emit("note-created");
+const triggerModal = () => {
+  emit("note-created"); // Lapor ke DashboardUser: "Buka modal dong!"
 };
 </script>
 
@@ -34,7 +31,7 @@ const handleNoteSuccess = () => {
 
     <div class="flex justify-center items-center w-[140px] mt-[-1em] mb-49">
       <button
-        @click="openModal"
+        @click="triggerModal"
         class="w-full bg-[#9a203e] text-[#e5e5e5] border-none cursor-pointer p-[1em] text-[16px] font-bold rounded-[15px] hover:bg-[#7d1a33]">
         Buat Pesan
       </button>
