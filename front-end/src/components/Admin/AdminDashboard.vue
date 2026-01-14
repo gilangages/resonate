@@ -222,7 +222,9 @@ onMounted(fetchData);
               <tr>
                 <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300">User Profile</th>
                 <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300">Account Status</th>
-                <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 w-64">Author Info</th>
+                <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 w-64 min-w-[250px]">
+                  Author Info
+                </th>
                 <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 min-w-[300px]">
                   Note Content
                 </th>
@@ -237,7 +239,7 @@ onMounted(fetchData);
                     <div class="flex items-center gap-3 md:gap-4">
                       <div class="relative shrink-0">
                         <img
-                          :src="getAvatarUrl(item.photo_url || item.avatar)"
+                          :src="getAvatarUrl(item.avatar || item.photo_url)"
                           class="w-10 h-10 rounded-full object-cover bg-gray-800 ring-2 ring-white/10" />
                         <div
                           v-if="item.role === 'admin'"
@@ -297,19 +299,25 @@ onMounted(fetchData);
                           class="w-10 h-10 rounded-full object-cover bg-gray-800 ring-2 ring-white/10" />
                       </div>
 
-                      <div class="min-w-0">
-                        <div class="font-medium text-white text-sm md:text-base break-words">
+                      <div class="min-w-0 flex-1">
+                        <div
+                          tabindex="0"
+                          class="font-medium text-white text-sm md:text-base truncate block max-w-[140px] md:max-w-[200px] cursor-pointer focus:whitespace-normal focus:max-w-full focus:overflow-visible outline-none transition-all duration-200"
+                          :title="item.user?.name || 'Unknown'">
                           {{ item.user?.name || "Unknown" }}
                         </div>
+
                         <div class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1">
-                          <span class="w-1.5 h-1.5 bg-gray-600 rounded-full"></span>
-                          {{
-                            new Date(item.created_at).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            })
-                          }}
+                          <span class="w-1.5 h-1.5 bg-gray-600 rounded-full shrink-0"></span>
+                          <span class="truncate max-w-[120px]">
+                            {{
+                              new Date(item.created_at).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })
+                            }}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -317,7 +325,7 @@ onMounted(fetchData);
 
                   <td class="p-4 md:p-5 align-top">
                     <div
-                      class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words min-w-[250px] md:min-w-[350px] max-w-[600px] p-3 md:p-4 rounded-xl border border-white/5 bg-black/20 shadow-inner">
+                      class="text-gray-300 text-sm leading-relaxed break-words min-w-[250px] md:min-w-[350px] max-w-[600px] p-3 md:p-4 rounded-xl border border-white/5 bg-black/20 shadow-inner">
                       "{{ item.content }}"
                     </div>
                   </td>
