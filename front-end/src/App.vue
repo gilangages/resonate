@@ -1,18 +1,6 @@
 <script setup>
-import { onMounted } from "vue";
-import { useCardTheme } from "./lib/useCardTheme";
-
-const { initTheme } = useCardTheme();
-onMounted(() => {
-  // Gunakan localStorage agar sinkron dengan store.js
-  const storedUser = localStorage.getItem("user");
-  if (storedUser) {
-    const user = JSON.parse(storedUser);
-    initTheme(user.id);
-  } else {
-    initTheme(null);
-  }
-});
+// App.vue sekarang hanya bertugas sebagai wadah utama (RouterView)
+// Logika inisialisasi tema sudah ditangani di level modul (useCardTheme.js)
 </script>
 
 <template>

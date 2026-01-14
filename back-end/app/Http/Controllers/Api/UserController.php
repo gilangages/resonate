@@ -28,6 +28,11 @@ class UserController extends Controller
         $user = $request->user();
         $validated = $request->validated();
 
+        // Simpan tema jika ada di request
+        if ($request->has('card_theme')) {
+            $user->card_theme = $validated['card_theme'];
+        }
+
         // 1. Update Nama
         if ($request->has('name')) {
             $user->name = $validated['name'];

@@ -19,6 +19,7 @@ class UpdateUserRequest extends FormRequest
             // Password nullable (boleh kosong), jika diisi minimal 6 karakter & harus confirmed
             'password' => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed'],
             'avatar' => ['nullable', 'image', 'max: 2048'],
+            'card_theme' => ['sometimes', 'string', 'max:20'],
         ];
     }
 

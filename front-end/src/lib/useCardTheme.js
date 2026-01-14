@@ -1,13 +1,7 @@
-import { computed, ref } from "vue";
+import { ref, watch } from "vue";
+import { store } from "./store";
+import { userUpdateProfile } from "./api/UserApi";
 
-// Base Key
-const BASE_STORAGE_KEY = "music_note_theme_preference";
-
-// 1. STATE GLOBAL
-// Default awal selalu 'red' sampai kita tahu siapa usernya
-const globalThemePreference = ref("red");
-// Kita simpan userId yang sedang aktif di sini
-const currentUserId = ref(null);
 const cardThemes = [
   {
     // 1. RED (Original)
@@ -220,60 +214,62 @@ const cardThemes = [
     shadow: "shadow-[0_0_50px_-12px_rgba(226,232,240,0.6)]",
   },
 ];
+
+// 2. STATE GLOBAL (DI LUAR)
+const savedUser = JSON.parse(localStorage.getItem("user"));
+const globalThemePreference = ref(savedUser?.card_theme || "red");
+
 export function useCardTheme() {
-  // --- FUNGSI BARU: Inisialisasi Tema Berdasarkan User ID ---
-  const initTheme = (userId) => {
-    currentUserId.value = userId;
-
-    // Jika Logout (userId null) -> Reset ke Red (Default)
-    if (!userId) {
-      globalThemePreference.value = "red";
-      return;
+  // 3. SINKRONISASI OTOMATIS (Mencegah Circular Dependency)
+  // Menunggu perubahan di store.user (misal saat login berhasil)
+  watch(
+    () => store.user?.card_theme,
+    (newTheme) => {
+      if (newTheme) {
+        globalThemePreference.value = newTheme;
+      }
     }
+  );
 
-    // Jika Login -> Cek LocalStorage dengan Key Unik User
-    const userKey = `${BASE_STORAGE_KEY}_${userId}`;
-    const savedTheme = localStorage.getItem(userKey);
-
-    // Jika user ini pernah set tema, pakai itu. Jika tidak, pakai Red.
-    globalThemePreference.value = savedTheme ? savedTheme : "red";
+  const setThemeLocally = (themeId) => {
+    globalThemePreference.value = themeId;
   };
-  // -----------------------------------------------------------
+
+  const setTheme = async (themeId) => {
+    setThemeLocally(themeId);
+
+    if (store.user) {
+      const token = localStorage.getItem("token");
+      try {
+        await userUpdateProfile(token, { card_theme: themeId });
+
+        // Update store & localstorage agar tetap sinkron
+        store.user.card_theme = themeId;
+        localStorage.setItem("user", JSON.stringify(store.user));
+      } catch (err) {
+        console.error("Gagal sinkronisasi tema ke server:", err);
+      }
+    }
+  };
 
   const getTheme = (id) => {
-    if (globalThemePreference.value === "random") {
-      if (!id) return cardThemes[0];
-      const index = id % cardThemes.length;
-      return cardThemes[index];
-    }
     const selectedTheme = cardThemes.find((t) => t.id === globalThemePreference.value);
     return selectedTheme || cardThemes[0];
   };
 
+  // 4. TAMBAHKAN KEMBALI FUNGSI INI (Agar FillContent tidak error)
   const getSelectedTheme = (note) => {
     if (!note) return cardThemes[0];
+    // Sesuai permintaan, gunakan tema global yang dipilih user
     return getTheme(note.id);
-  };
-
-  const setTheme = (themeId) => {
-    // 1. Update State Global UI
-    globalThemePreference.value = themeId;
-
-    // 2. Simpan ke Local Storage DENGAN USER ID (Jika ada yang login)
-    if (currentUserId.value) {
-      const userKey = `${BASE_STORAGE_KEY}_${currentUserId.value}`;
-      localStorage.setItem(userKey, themeId);
-    }
-    // Jika tidak ada user login (Guest), kita tidak simpan permanen
-    // atau kamu bisa simpan ke key default jika mau fitur guest.
   };
 
   return {
     cardThemes,
     getTheme,
-    getSelectedTheme,
+    getSelectedTheme, // Export agar bisa dipakai di FillContent
     globalThemePreference,
     setTheme,
-    initTheme, // <--- Jangan lupa export ini
+    setThemeLocally,
   };
 }

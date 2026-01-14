@@ -12,7 +12,11 @@ export const store = reactive({
 
   setUser(userData) {
     this.user = userData;
-    localStorage.setItem("user", JSON.stringify(userData));
+    if (userData) {
+      localStorage.setItem("user", JSON.stringify(userData));
+    } else {
+      localStorage.removeItem("user");
+    }
   },
 });
 

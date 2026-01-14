@@ -6,6 +6,7 @@ import { alertError, alertSuccess } from "../../lib/alert";
 import { useLocalStorage } from "@vueuse/core";
 import Swal from "sweetalert2";
 import { useCardTheme } from "../../lib/useCardTheme";
+import { store } from "../../lib/store";
 
 const route = useRoute();
 const router = useRouter();
@@ -65,13 +66,9 @@ async function handleSubmit() {
     if (response.ok) {
       // --- LOGIN SUKSES ---
       token.value = responseBody.token;
-      sessionStorage.setItem("user", JSON.stringify(responseBody.user));
-      sessionStorage.removeItem("last_anim_name");
 
-      // ❌ SALAH: initTheme(user.id); -> ini refer ke form input
-      // ✅ BENAR: Ambil dari responseBody
-      localStorage.setItem("user", JSON.stringify(responseBody.user));
-      initTheme(responseBody.user.id);
+      sessionStorage.removeItem("last_anim_name");
+      store.setUser(responseBody.user);
 
       if (responseBody.user.role === "admin") {
         await router.push("/dashboard/admin");
