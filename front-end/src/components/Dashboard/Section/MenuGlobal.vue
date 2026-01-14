@@ -32,31 +32,41 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 async function fetchUser() {
   try {
     const response = await userDetail(token.value);
+
+    // 1. CEK KEAMANAN: Jika token tidak valid/expired (401)
+    if (response.status === 401) {
+      localStorage.removeItem("token"); // Hapus token yang sudah basi
+      sessionStorage.clear(); // Bersihkan session animasi juga
+      window.location.href = "/login"; // Tendang ke halaman login
+      return;
+    }
+
     const responseBody = await response.json();
 
     if (response.ok) {
       const userData = responseBody.data;
       const newName = userData.name;
 
-      // LOGIC CEK APAKAH PERLU ANIMASI
-      // Kita cek apakah nama di session storage sama dengan nama dari API
+      // 2. LOGIC ANIMASI: Cek apakah nama sama dengan yang di storage
       const lastAnimName = sessionStorage.getItem("last_anim_name");
 
       if (lastAnimName === newName) {
         // --- KONDISI REFRESH (Nama masih sama) ---
         name.value = newName;
         showIntro.value = false;
-        menuTransition.value = ""; // Matikan animasi slide biar instan
+        menuTransition.value = ""; // Langsung muncul tanpa efek slide
         showMenu.value = true;
       } else {
-        // --- KONDISI LOGIN BARU ATAU GANTI NAMA ---
+        // --- KONDISI LOGIN BARU ATAU HABIS GANTI NAMA ---
         name.value = newName;
         await handleAnimation(newName);
       }
     } else {
+      // Jika error API selain 401 (misal 500), langsung tampilkan menu saja
       showMenu.value = true;
     }
   } catch (e) {
+    console.error("Fetch Error:", e);
     showMenu.value = true;
   }
 }

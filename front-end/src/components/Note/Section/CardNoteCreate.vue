@@ -28,14 +28,19 @@ let debounceTimer = null;
 
 // --- 1. FETCH USER DATA ---
 async function fetchUser() {
-  try {
-    const response = await userDetail(token.value);
-    const responseBody = await response.json();
-    if (response.ok) {
-      name.value = responseBody.data.name;
+  const response = await userDetail(token.value);
+  const responseBody = await response.json();
+  console.log(responseBody);
+  if (response.ok) {
+    name.value = responseBody.data.name;
+  } else {
+    if (response.status === 401) {
+      localStorage.removeItem("token"); // Hapus token palsu/expired
+      router.push("/login"); // Tendang ke login
+      return; // Stop eksekusi agar tidak muncul alert error di bawah
     }
-  } catch (error) {
-    console.error("Gagal ambil data user", error);
+    const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
+    await alertError(pesanError);
   }
 }
 

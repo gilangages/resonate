@@ -36,14 +36,15 @@ const router = createRouter({
     {
       path: "/dashboard",
       component: DashboardLayout,
+      meta: { requiresAuth: true },
       children: [
+        {
+          path: "",
+          component: DashboardUser,
+        },
         {
           path: "global",
           component: DashboardGlobal,
-        },
-        {
-          path: "",
-          component: DashboardUser, //ini nanti ke global
         },
         {
           path: "users/profile",
@@ -56,6 +57,28 @@ const router = createRouter({
       ],
     },
   ],
+});
+
+router.beforeEach((to, from, next) => {
+  // Ambil token dari localStorage
+  const token = localStorage.getItem("token");
+
+  // Cek apakah halaman yang dituju butuh login (requiresAuth)
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    // Jika butuh login tapi token tidak ada atau kosong ""
+    if (!token || token === '""') {
+      next("/login"); // Redirect ke login
+    } else {
+      next(); // Izinkan masuk
+    }
+  } else {
+    // Jika user sudah login tapi malah mau akses halaman login/register
+    if (token && token !== '""' && (to.path === "/login" || to.path === "/register")) {
+      next("/dashboard"); // Tendang balik ke dashboard
+    } else {
+      next(); // Halaman bebas akses (seperti landing page)
+    }
+  }
 });
 
 createApp(App).use(router).mount("#app");
