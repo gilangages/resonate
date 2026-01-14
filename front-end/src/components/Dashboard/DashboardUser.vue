@@ -59,7 +59,7 @@ onMounted(() => {
   </div>
 
   <div v-else>
-    <FillContent v-if="hasNotes" @open-modal="openModal" />
+    <FillContent v-if="hasNotes" @open-modal="openModal" @is-empty="hasNotes = false" />
 
     <EmptyContent v-else @note-created="openModal" />
   </div>

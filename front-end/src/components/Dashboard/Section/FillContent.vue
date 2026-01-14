@@ -5,7 +5,7 @@ import { onBeforeMount, ref } from "vue";
 import { alertConfirm, alertSuccess } from "../../../lib/alert";
 
 // Definisi Emit ke Parent (DashboardUser)
-const emit = defineEmits(["open-modal"]);
+const emit = defineEmits(["open-modal", "is-empty"]);
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
@@ -70,20 +70,43 @@ async function fetchNoteList(reset = true) {
 }
 
 async function handleDelete(id) {
+  // 1. Konfirmasi Hapus
   if (!(await alertConfirm("Are you sure you want to delete this note?"))) {
     return;
   }
 
-  const response = await noteDelete(token.value, id);
-  const responseBody = await response.json();
-  console.log(responseBody);
+  try {
+    // 2. Panggil API Hapus
+    const response = await noteDelete(token.value, id);
+    const responseBody = await response.json();
 
-  if (response.ok) {
-    alertSuccess("Note deleted successfully");
-    await fetchNoteList();
-  } else {
-    const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
-    await alertError(pesanError);
+    if (response.ok) {
+      alertSuccess("Note deleted successfully");
+
+      // 3. Hapus item dari Array Lokal (Tanpa fetch ulang biar cepat)
+      // Cari index note yang dihapus
+      const index = notes.value.findIndex((n) => n.id === id);
+      if (index !== -1) {
+        notes.value.splice(index, 1);
+      }
+
+      // 4. Cek apakah Array jadi kosong?
+      if (notes.value.length === 0) {
+        // Emit ke parent supaya ganti ke EmptyContent
+        emit("is-empty");
+      } else {
+        // Opsional: Jika masih ada data tapi kurang dari 15,
+        // kita bisa fetch ulang untuk memastikan pagination rapi,
+        // tapi untuk sekarang biarkan saja agar performa cepat.
+      }
+    } else {
+      // Handle Error dari Backend
+      const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
+      await alertError(pesanError);
+    }
+  } catch (error) {
+    console.error("Gagal delete:", error);
+    await alertError("Terjadi kesalahan saat menghapus note.");
   }
 }
 
@@ -105,7 +128,7 @@ onBeforeMount(async () => {
 
 <template>
   <div class="p-[2em] relative min-h-screen">
-    <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-10">Belum ada cerita yang dibuat.</div>
+    <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-10">Belum ada pesan yang dibuat.</div>
 
     <div v-else class="columns-1 min-[600px]:columns-3 gap-[2em] space-y-[2em] mb-10">
       <div

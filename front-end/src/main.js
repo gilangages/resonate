@@ -11,13 +11,14 @@ import DashboardLayout from "./components/Layout/DashboardLayout.vue";
 import UserProfile from "./components/User/UserProfile.vue";
 import UserLogout from "./components/User/UserLogout.vue";
 import DashboardUser from "./components/Dashboard/DashboardUser.vue";
+import CardNoteEdit from "./components/Note/Section/CardNoteEdit.vue";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: "/test",
-      component: Test,
+      component: CardNoteEdit,
     },
     {
       path: "/",
