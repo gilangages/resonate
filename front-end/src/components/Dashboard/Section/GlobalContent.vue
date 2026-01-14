@@ -9,8 +9,13 @@ import { useCardTheme } from "../../../lib/useCardTheme";
 import { useShareImage } from "../../../lib/useShareImage";
 import { useNow } from "@vueuse/core";
 
+// Tambahkan reactive state untuk Custom Share Modal
+const showShareOptions = ref(false);
+const generatedFileUrl = ref(null); // Menyimpan URL blob sementara
+const shareTextData = ref({ title: "", text: "" });
+
 const { getTheme, getSelectedTheme } = useCardTheme();
-const { captureRef, downloadImage, isDownloading } = useShareImage();
+const { captureRef, generateImageFile, isDownloading } = useShareImage();
 const token = useLocalStorage("token", "");
 const notes = ref([]);
 const cacheBuster = ref(Date.now());
@@ -39,7 +44,9 @@ const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 const searchQuery = ref("");
 const sortBy = ref("newest");
-const selectedTheme = getSelectedTheme(selectedNote);
+const selectedTheme = computed(() => {
+  return getSelectedTheme(selectedNote.value);
+});
 
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
@@ -155,6 +162,72 @@ const closePreview = () => {
 
 const handleSearch = useDebounceFn(() => fetchNoteList(true), 500);
 
+// --- LOGIC SHARE BARU ---
+const handleShare = async () => {
+  if (!selectedNote.value) return;
+
+  const fileName = `pesan-dari-${selectedNote.value.author_name || "user"}`;
+  const title = "Music Note Card";
+  const text = `Dengerin pesan lagu dari ${selectedNote.value.author_name} buat ${selectedNote.value.recipient} 🎵`;
+
+  // Memanggil fungsi dari useShareImage
+  const file = await generateImageFile(fileName);
+  if (!file) return;
+
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: title,
+        text: text,
+      });
+    } catch (e) {
+      if (e.name !== "AbortError") console.error(e);
+    }
+  } else {
+    generatedFileUrl.value = URL.createObjectURL(file);
+    shareTextData.value = { title, text };
+    showShareOptions.value = true;
+  }
+};
+
+// Fungsi Helper untuk download manual dari Modal Kustom
+const downloadManual = () => {
+  if (!generatedFileUrl.value) return;
+  const link = document.createElement("a");
+  link.download = `music-note-${Date.now()}.png`;
+  link.href = generatedFileUrl.value;
+  link.click();
+};
+
+// Fungsi helper share ke Sosmed via Web Intent (Untuk Desktop)
+const shareToSocial = (platform) => {
+  // Kita tidak bisa attach gambar otomatis ke WA Web/Twitter via URL intent (Browser limitation),
+  // Jadi kita hanya share Teks, dan user harus manual upload gambar yang sudah didownload/copy.
+  // Atau kita copy gambar ke clipboard (fitur canggih).
+
+  // Sederhananya: Download gambar dulu otomatis, lalu buka WA Web.
+  downloadManual();
+
+  let url = "";
+  const textEncoded = encodeURIComponent(shareTextData.value.text + "\n\n" + window.location.origin);
+
+  if (platform === "wa") {
+    url = `https://wa.me/?text=${textEncoded}`;
+  } else if (platform === "twitter") {
+    url = `https://twitter.com/intent/tweet?text=${textEncoded}`;
+  }
+
+  window.open(url, "_blank");
+};
+const closeShareOptions = () => {
+  showShareOptions.value = false;
+  if (generatedFileUrl.value) {
+    URL.revokeObjectURL(generatedFileUrl.value); // Bersihkan memory
+    generatedFileUrl.value = null;
+  }
+};
+
 const columns = computed(() => {
   // JIKA MOBILE (< 768px alias 'md' di Tailwind):
   // Kembalikan 1 kolom berisi semua notes.
@@ -175,23 +248,24 @@ const columns = computed(() => {
 const getImageUrl = (url, uniqueId = "global") => {
   if (!url) return "";
 
-  const isExternalApi =
-    url.includes("dicebear.com") ||
+  // Cek apakah URL mengarah ke luar (Google, Deezer, atau diawali http)
+  const isExternal =
+    url.includes("googleusercontent.com") ||
     url.includes("deezer.com") ||
     url.includes("dzcdn.net") ||
-    url.includes("googleusercontent.com");
-
-  if (isExternalApi) {
-    // Tambahkan cache buster bahkan untuk external API agar html-to-image tidak bingung
-    const separator = url.includes("?") ? "&" : "?";
-    return `${url}${separator}t=${cacheBuster.value}-${uniqueId}`;
-  }
+    url.includes("dicebear.com") ||
+    url.startsWith("http");
 
   const apiUrl = import.meta.env.VITE_APP_PATH || "http://localhost:8000/api";
-  const encodedImageUrl = encodeURIComponent(url);
 
-  // Pastikan t= selalu unik per note yang dibuka
-  return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${cacheBuster.value}-${uniqueId}`;
+  if (isExternal) {
+    // SEMUA URL LUAR DIARAHKAN KE PROXY BACKEND
+    const encodedImageUrl = encodeURIComponent(url);
+    return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${cacheBuster.value}-${uniqueId}`;
+  }
+
+  // Jika internal (path relatif), kembalikan apa adanya
+  return url;
 };
 
 onMounted(async () => {
@@ -403,7 +477,7 @@ onMounted(async () => {
 
                     <img
                       v-if="selectedNote?.music_album_image"
-                      :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album' + cacheBuster)"
+                      :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album')"
                       crossorigin="anonymous"
                       class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                   </div>
@@ -453,9 +527,14 @@ onMounted(async () => {
                   <div class="flex items-center gap-3">
                     <img
                       v-if="selectedNote?.author_avatar || selectedNote?.author_photo_url"
-                      @click="openPreview(selectedNote?.author_avatar || selectedNote?.author_photo_url)"
-                      :src="selectedNote?.author_avatar || selectedNote?.author_photo_url"
-                      class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-zoom-in hover:scale-110 transition-transform" />
+                      :src="
+                        getImageUrl(
+                          selectedNote?.author_avatar || selectedNote?.author_photo_url,
+                          'avatar-' + selectedNote?.id
+                        )
+                      "
+                      crossorigin="anonymous"
+                      class="w-10 h-10 rounded-full border border-white/10 object-cover" />
                     <div>
                       <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
                       <div class="flex items-center gap-2">
@@ -531,14 +610,15 @@ onMounted(async () => {
                   </button>
 
                   <button
-                    @click="downloadImage(`pesan-dari-${selectedNote?.author_name || 'user'}`)"
+                    @click="handleShare"
                     :disabled="isDownloading"
                     :class="[
                       selectedTheme.modal_btn,
                       isDownloading ? 'opacity-70 cursor-wait' : 'hover:brightness-110 cursor-pointer',
                     ]"
                     class="flex-1 py-3 rounded-[12px] text-white font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg">
-                    <span v-if="isDownloading">Proses...</span>
+                    <span v-if="isDownloading">Memproses...</span>
+
                     <span v-else class="flex items-center gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -547,12 +627,16 @@ onMounted(async () => {
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
                       </svg>
-                      Simpan
+                      Bagikan
                     </span>
                   </button>
                 </div>
@@ -589,6 +673,83 @@ onMounted(async () => {
                 class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
                 @click.stop />
               <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
+      <Teleport to="body">
+        <Transition name="fade">
+          <div
+            v-if="showShareOptions"
+            class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            @click.self="closeShareOptions">
+            <div class="bg-[#1c1516] border border-[#333] rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+              <h3 class="text-white text-lg font-bold mb-4 text-center">Bagikan Kemana?</h3>
+              <p class="text-xs text-white/50 text-center mb-6">
+                Gambar telah disiapkan. Pilih aplikasi atau simpan ke galeri.
+              </p>
+
+              <div class="grid grid-cols-2 gap-3 mb-4">
+                <button
+                  @click="shareToSocial('wa')"
+                  class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 transition-all group">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="text-[#25D366] group-hover:scale-110 transition-transform">
+                    <path
+                      d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                  </svg>
+                  <span class="text-xs font-bold text-[#25D366]">WhatsApp</span>
+                </button>
+
+                <button
+                  @click="shareToSocial('twitter')"
+                  class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-[#1DA1F2]/10 border border-[#1DA1F2]/20 hover:bg-[#1DA1F2]/20 transition-all group">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="text-[#1DA1F2] group-hover:scale-110 transition-transform">
+                    <path
+                      d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                  </svg>
+                  <span class="text-xs font-bold text-[#1DA1F2]">Twitter</span>
+                </button>
+              </div>
+
+              <button
+                @click="downloadManual"
+                class="w-full py-3 rounded-xl bg-white text-black font-bold text-sm uppercase tracking-wider hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 mb-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Simpan Gambar
+              </button>
+
+              <button
+                @click="closeShareOptions"
+                class="w-full py-2 text-xs text-white/40 hover:text-white transition-colors">
+                Batal
+              </button>
             </div>
           </div>
         </Transition>

@@ -250,12 +250,9 @@ export function useCardTheme() {
     return selectedTheme || cardThemes[0];
   };
 
-  const getSelectedTheme = (selectedNote) => {
-    return computed(() => {
-      const note = selectedNote?.value || selectedNote;
-      if (!note) return cardThemes[0];
-      return getTheme(note.id);
-    });
+  const getSelectedTheme = (note) => {
+    if (!note) return cardThemes[0];
+    return getTheme(note.id);
   };
 
   const setTheme = (themeId) => {
