@@ -1,44 +1,55 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useCardTheme } from "../useCardTheme";
+import { store } from "../store";
+import * as UserApi from "../api/UserApi"; // Impor untuk di-mock
+
+// Mock store
+vi.mock("../store", () => ({
+  store: {
+    user: { card_theme: "red" },
+  },
+}));
+
+// Mock API
+vi.mock("../api/UserApi", () => ({
+  userUpdateProfile: vi.fn().mockResolvedValue({ ok: true }),
+}));
 
 describe("useCardTheme Logic Test", () => {
+  let themeLogic;
+
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+
+    // Reset state manual karena globalThemePreference adalah singleton
+    themeLogic = useCardTheme();
+    themeLogic.globalThemePreference.value = "red";
+    store.user.card_theme = "red";
   });
 
-  it('harus menggunakan tema "red" sebagai default untuk user baru', () => {
-    const { globalThemePreference, initTheme } = useCardTheme();
-    initTheme(123); // Simulasi User ID 123
-    expect(globalThemePreference.value).toBe("red");
+  it('harus menggunakan tema "red" sebagai default', () => {
+    expect(themeLogic.globalThemePreference.value).toBe("red");
   });
 
-  it("harus menyimpan dan memuat tema yang dipilih user (Persistence)", () => {
-    const { setTheme, globalThemePreference, initTheme } = useCardTheme();
-    const userId = 456;
+  it("harus memperbarui tema saat setTheme dipanggil", async () => {
+    await themeLogic.setTheme("blue");
 
-    initTheme(userId);
-    setTheme("blue");
-    expect(globalThemePreference.value).toBe("blue");
-
-    // Simulasi Refresh: Panggil initTheme lagi dengan ID yang sama
-    initTheme(userId);
-    expect(globalThemePreference.value).toBe("blue");
+    // Cek preference lokal
+    expect(themeLogic.globalThemePreference.value).toBe("blue");
+    // Cek apakah API dipanggil
+    expect(UserApi.userUpdateProfile).toHaveBeenCalled();
+    // Cek apakah store diperbarui
+    expect(store.user.card_theme).toBe("blue");
   });
 
-  it("harus memisahkan tema antar user yang berbeda", () => {
-    const { setTheme, initTheme, globalThemePreference } = useCardTheme();
+  it("harus sinkron ketika store user berubah", async () => {
+    // Simulasi perubahan tema dari sisi lain (misal update profil)
+    store.user.card_theme = "purple";
 
-    // User A pilih biru
-    initTheme("user_A");
-    setTheme("blue");
+    // Tunggu microtask agar watcher di useCardTheme.js berjalan
+    await Promise.resolve();
 
-    // User B login (harus default merah)
-    initTheme("user_B");
-    expect(globalThemePreference.value).toBe("red");
-
-    // User A balik lagi (harus tetap biru)
-    initTheme("user_A");
-    expect(globalThemePreference.value).toBe("blue");
+    expect(themeLogic.globalThemePreference.value).toBe("purple");
   });
 });

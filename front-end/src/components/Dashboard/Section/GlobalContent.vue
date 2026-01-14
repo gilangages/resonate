@@ -244,30 +244,22 @@ const columns = computed(() => {
   return cols;
 });
 
-// --- HELPER CERDAS URL GAMBAR (VERSI FIX PROXY) ---
+// Ganti fungsi getImageUrl di GlobalContent.vue dengan ini:
 const getImageUrl = (url, uniqueId = "global") => {
   if (!url) return "";
 
-  // Cek apakah URL mengarah ke luar (Google, Deezer, atau diawali http)
-  const isExternal =
-    url.includes("googleusercontent.com") ||
-    url.includes("deezer.com") ||
-    url.includes("dzcdn.net") ||
-    url.includes("dicebear.com") ||
-    url.startsWith("http");
+  // Jika URL adalah path relatif (dari storage lokal), langsung return
+  if (!url.startsWith("http")) return url;
+
+  // Jika sudah merupakan URL proxy, jangan di-proxy lagi (mencegah loop)
+  if (url.includes("/image-proxy?url=")) return url;
 
   const apiUrl = import.meta.env.VITE_APP_PATH || "http://localhost:8000/api";
+  const encodedImageUrl = encodeURIComponent(url);
 
-  if (isExternal) {
-    // SEMUA URL LUAR DIARAHKAN KE PROXY BACKEND
-    const encodedImageUrl = encodeURIComponent(url);
-    return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${cacheBuster.value}-${uniqueId}`;
-  }
-
-  // Jika internal (path relatif), kembalikan apa adanya
-  return url;
+  // Sertakan cacheBuster dan uniqueId agar library capture tidak mengambil gambar "lama" dari cache
+  return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${cacheBuster.value}-${uniqueId}`;
 };
-
 onMounted(async () => {
   await fetchNoteList(true);
 });
@@ -525,16 +517,20 @@ onMounted(async () => {
               <div class="flex-1 bg-black/20 p-6 overflow-y-auto custom-scrollbar">
                 <div class="flex justify-between items-center mb-6 pb-4 border-b" :class="selectedTheme.border">
                   <div class="flex items-center gap-3">
-                    <img
-                      v-if="selectedNote?.author_avatar || selectedNote?.author_photo_url"
-                      :src="
-                        getImageUrl(
-                          selectedNote?.author_avatar || selectedNote?.author_photo_url,
-                          'avatar-' + selectedNote?.id
-                        )
-                      "
-                      crossorigin="anonymous"
-                      class="w-10 h-10 rounded-full border border-white/10 object-cover" />
+                    <div
+                      @click.stop="openPreview(selectedNote?.author_avatar || selectedNote?.author_photo_url)"
+                      class="relative group/avatar cursor-zoom-in">
+                      <img
+                        v-if="selectedNote?.author_avatar || selectedNote?.author_photo_url"
+                        :src="
+                          getImageUrl(
+                            selectedNote?.author_avatar || selectedNote?.author_photo_url,
+                            'avatar-' + selectedNote?.id
+                          )
+                        "
+                        crossorigin="anonymous"
+                        class="w-10 h-10 rounded-full border border-white/10 object-cover" />
+                    </div>
                     <div>
                       <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
                       <div class="flex items-center gap-2">
