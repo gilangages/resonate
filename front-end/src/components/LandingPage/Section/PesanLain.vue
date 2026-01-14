@@ -238,7 +238,7 @@ onMounted(async () => {
                 <div class="flex flex-col">
                   <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
                   <span class="text-xs text-[#999] font-medium leading-none truncate max-w-[150px]">
-                    {{ note.author }}
+                    {{ note.author_name }}
                   </span>
                 </div>
 
@@ -393,7 +393,7 @@ onMounted(async () => {
                   </div>
                   <div>
                     <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
-                    <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
+                    <p class="text-sm font-bold text-white">{{ selectedNote?.author_name }}</p>
                   </div>
                 </div>
                 <svg

@@ -26,7 +26,11 @@ const router = createRouter({
       path: "/",
       component: LandingPage,
     },
-
+    {
+      path: "/note/:id",
+      component: LandingPage,
+      props: true,
+    },
     {
       path: "/",
       component: Layout,
