@@ -1,11 +1,20 @@
 <script setup>
-import { ref, onBeforeMount, reactive } from "vue";
-import { noteCreate, searchMusic } from "../../../lib/api/NoteApi";
+import { ref, onMounted, reactive } from "vue";
+// Pastikan import noteUpdate
+import { noteUpdate, searchMusic } from "../../../lib/api/NoteApi";
 import { useLocalStorage } from "@vueuse/core";
 import { alertSuccess, alertError } from "../../../lib/alert";
 import { userDetail } from "../../../lib/api/UserApi";
 
-const emit = defineEmits(["create-success", "go-back"]);
+// 1. TERIMA DATA DARI PARENT (Dashboard)
+const props = defineProps({
+  noteData: {
+    type: Object,
+    required: true,
+  },
+});
+
+const emit = defineEmits(["update-success", "go-back"]);
 
 // --- STATE DATA ---
 const token = useLocalStorage("token", "");
@@ -13,7 +22,6 @@ const kirimSebagai = ref("samaran");
 const namaSamaran = ref("");
 const name = ref("User");
 
-// Objek Note
 const note = reactive({
   content: "",
   recipient: "",
@@ -26,7 +34,7 @@ const selectedSong = ref(null);
 const isSearching = ref(false);
 let debounceTimer = null;
 
-// --- 1. FETCH USER DATA ---
+// --- 2. FETCH USER DATA ---
 async function fetchUser() {
   try {
     const response = await userDetail(token.value);
@@ -39,10 +47,39 @@ async function fetchUser() {
   }
 }
 
-// --- 2. LOGIC SEARCH LAGU ---
+// --- 3. ISI FORM DENGAN DATA LAMA (Populate) ---
+// Kita tidak perlu fetch API lagi, karena data sudah dikirim dari Dashboard
+const populateForm = () => {
+  const d = props.noteData;
+  if (!d) return;
+
+  // Isi Text
+  note.content = d.content;
+  note.recipient = d.recipient;
+
+  // Isi Lagu
+  selectedSong.value = {
+    id: d.spotify_track_id,
+    name: d.spotify_track_name,
+    artists: [{ name: d.spotify_artist }],
+    album: { images: [{ url: d.spotify_album_image }] },
+    preview_url: d.spotify_preview_url,
+  };
+  queryLagu.value = `${d.spotify_track_name} - ${d.spotify_artist}`;
+
+  // Isi Pengirim
+  if (d.initial_name) {
+    kirimSebagai.value = "samaran";
+    namaSamaran.value = d.initial_name;
+  } else {
+    kirimSebagai.value = "asli";
+  }
+};
+
+// --- 4. LOGIC SEARCH LAGU ---
 const handleSearchInput = () => {
   if (debounceTimer) clearTimeout(debounceTimer);
-  selectedSong.value = null;
+  selectedSong.value = null; // Reset saat mengetik ulang
   if (queryLagu.value.length < 2) {
     searchResults.value = [];
     return;
@@ -71,13 +108,54 @@ const selectSong = (song) => {
   searchResults.value = [];
 };
 
+// --- 5. LOGIC UPDATE (PUT) ---
+async function handleUpdate() {
+  if (!selectedSong.value) {
+    await alertError("Kamu belum memilih lagu!");
+    return;
+  }
+
+  let finalInitialName = null;
+  if (kirimSebagai.value === "samaran") {
+    if (!namaSamaran.value) {
+      await alertError("Nama samaran wajib diisi!");
+      return;
+    }
+    finalInitialName = namaSamaran.value;
+  }
+
+  const payload = {
+    content: note.content,
+    recipient: note.recipient,
+    initial_name: finalInitialName,
+    spotify_track_id: selectedSong.value.id,
+    spotify_track_name: selectedSong.value.name,
+    spotify_artist: selectedSong.value.artists[0].name,
+    spotify_album_image: selectedSong.value.album.images?.[0]?.url || "",
+    spotify_preview_url: selectedSong.value.preview_url || null,
+  };
+
+  // Panggil API Update (Pastikan props.noteData.id ada)
+  const response = await noteUpdate(token.value, props.noteData.id, payload);
+  const responseBody = await response.json();
+
+  if (response.ok) {
+    alertSuccess("Pesan berhasil diperbarui!");
+    emit("update-success"); // Beritahu parent
+  } else {
+    const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
+    await alertError(pesanError);
+  }
+}
+
 const handleKembali = () => {
   emit("go-back");
 };
 
-onBeforeMount(async () => {
-  kirimSebagai.value = "samaran";
+// --- LIFECYCLE ---
+onMounted(async () => {
   await fetchUser();
+  populateForm(); // Isi form saat komponen muncul
 });
 </script>
 
@@ -85,7 +163,7 @@ onBeforeMount(async () => {
   <div
     class="custom-scrollbar w-full max-w-[420px] rounded-[20px] bg-[#1c1516] p-4 sm:max-w-[560px] max-h-[90vh] overflow-y-auto"
     @click.stop>
-    <form @submit.prevent="handleSubmit" class="flex flex-col text-[#e5e5e5] font-poppins relative">
+    <form @submit.prevent="handleUpdate" class="flex flex-col text-[#e5e5e5] font-poppins relative">
       <h1 class="text-center text-[#9a203e] text-3xl font-bold m-0">Edit Pesan</h1>
       <p class="mt-0 mb-[3em] text-center text-[12px] text-[#8c8a8a]">Edit lagu dan pesanmu.</p>
 
@@ -177,23 +255,17 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
-/* Lebar Scrollbar */
+/* Style sama seperti sebelumnya */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
-
-/* Track (Jalur) - Transparan atau Gelap */
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-
-/* Handle (Batang) - Abu Gelap */
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #3f3233;
   border-radius: 20px;
 }
-
-/* Handle saat Hover - Merah Maroon */
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #9a203e;
 }

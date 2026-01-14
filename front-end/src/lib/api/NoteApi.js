@@ -60,3 +60,13 @@ export const noteDelete = async (token, id) => {
     },
   });
 };
+
+export const noteDetail = async (token, id) => {
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
