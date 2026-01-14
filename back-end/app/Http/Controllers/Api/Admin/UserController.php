@@ -36,7 +36,7 @@ class UserController extends Controller
      */
     public function indexNotes(Request $request): JsonResponse
     {
-        $query = Note::with('user:id,name,email');
+        $query = Note::with('user:id,name,email,avatar');
 
         if ($search = $request->input('search')) {
             $query->where('content', 'like', "%{$search}%")

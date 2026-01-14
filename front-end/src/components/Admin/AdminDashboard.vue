@@ -293,7 +293,7 @@ onMounted(fetchData);
                     <div class="flex items-start gap-3 md:gap-4">
                       <div class="relative shrink-0">
                         <img
-                          :src="getAvatarUrl(item.avatar)"
+                          :src="getAvatarUrl(item.user.avatar)"
                           class="w-10 h-10 rounded-full object-cover bg-gray-800 ring-2 ring-white/10" />
                       </div>
 
