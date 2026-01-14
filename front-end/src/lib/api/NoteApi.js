@@ -40,9 +40,9 @@ export const searchMusic = async (token, { query }) => {
     },
   });
 };
-
-export const noteList = async (token) => {
-  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes`, {
+// Function khusus untuk ambil note milik sendiri (panggil endpoint /notes/my)
+export const myNoteList = async (token) => {
+  return await fetch(`${import.meta.env.VITE_APP_PATH}/notes/my`, {
     method: "GET",
     headers: {
       Accept: "application/json",

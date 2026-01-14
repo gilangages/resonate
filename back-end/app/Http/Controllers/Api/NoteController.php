@@ -94,4 +94,16 @@ class NoteController extends Controller
             'message' => 'Note deleted successfully',
         ]);
     }
+
+    /**
+     * GET /api/notes/my
+     * Auth: Mengambil daftar note milik user yang sedang login
+     */
+    public function myNotes(Request $request)
+    {
+        // Ambil user dari token, lalu ambil notes-nya
+        $notes = $request->user()->notes()->with('user')->latest()->get();
+
+        return NoteResource::collection($notes);
+    }
 }

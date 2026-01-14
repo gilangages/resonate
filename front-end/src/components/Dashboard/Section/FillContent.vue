@@ -1,6 +1,6 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
-import { noteList } from "../../../lib/api/NoteApi";
+import { myNoteList } from "../../../lib/api/NoteApi";
 import { onBeforeMount, ref } from "vue";
 
 const token = useLocalStorage("token", "");
@@ -32,7 +32,7 @@ const getCardHeight = (index) => {
 
 async function fetchNoteList() {
   try {
-    const response = await noteList(token.value);
+    const response = await myNoteList(token.value);
     const responseBody = await response.json();
     console.log("Response API:", responseBody);
 
@@ -58,7 +58,7 @@ onBeforeMount(async () => {
 
     <div v-else class="columns-1 min-[600px]:columns-3 gap-[2em] space-y-[2em]">
       <div
-        v-for="(note, index) in notes"
+        v-for="note in notes"
         :key="note.id || index"
         :class="[
           'break-inside-avoid relative flex flex-col justify-between rounded-[10px] bg-[#1c1516] p-[10px] transition-transform duration-200 hover:scale-[1.02]',
