@@ -66,6 +66,9 @@ Route::middleware(['auth:sanctum', 'check.banned'])->group(function () {
     // User Profile
     Route::get('/users/current', [UserController::class, 'show']);
     Route::patch('/users/current', [UserController::class, 'update']);
+
+    //delete
+    Route::delete('/users/current', [UserController::class, 'destroy']);
 });
 
 // ⚠️ PERUBAHAN DI SINI: Tambahkan 'check.banned' juga untuk keamanan ganda

@@ -1,8 +1,14 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
 import { computed, onMounted, ref } from "vue";
-import { userDetail, userUpdatePassword, userUpdatePhoto, userUpdateProfile } from "../../lib/api/UserApi";
-import { alertError, alertSuccess } from "../../lib/alert";
+import {
+  userDeleteAccount,
+  userDetail,
+  userUpdatePassword,
+  userUpdatePhoto,
+  userUpdateProfile,
+} from "../../lib/api/UserApi";
+import { alertConfirm, alertError, alertSuccess } from "../../lib/alert";
 import { getAvatarUrl, userState } from "../../lib/store";
 import { store } from "../../lib/store";
 
@@ -119,6 +125,39 @@ async function handleChangePassword() {
     }
   } catch (error) {
     await alertError("Terjadi kesalahan sistem.");
+  }
+}
+
+async function handleDeleteAccount() {
+  const confirmed = await alertConfirm(
+    "Yakin hapus akun?",
+    "Tindakan ini permanen! Semua notes dan data kamu akan hilang selamanya."
+  );
+
+  if (!confirmed) return;
+
+  isLoading.value = true;
+  try {
+    const response = await userDeleteAccount(token.value);
+
+    if (response.ok) {
+      await alertSuccess("Akun berhasil dihapus. Sampai jumpa!");
+
+      // Bersihkan state & redirect
+      token.value = null;
+      store.setUser(null);
+
+      // Redirect manual ke login/landing agar bersih
+      window.location.href = "/";
+    } else {
+      const responseBody = await response.json();
+      await alertError(responseBody.message || "Gagal menghapus akun.");
+    }
+  } catch (error) {
+    console.error(error);
+    await alertError("Terjadi kesalahan sistem.");
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -366,6 +405,35 @@ onMounted(() => {
               Ganti Password
             </button>
           </form>
+
+          <div v-if="store.user?.role !== 'admin'" class="zona-bahaya mt-[3em] pt-[2em] border-t border-[#2b2122]">
+            <h2 class="mb-[8px] font-bold text-xl text-red-500">Zona Bahaya</h2>
+            <p class="text-sm text-[#8c8a8a] mb-4">
+              Menghapus akun akan menghilangkan semua data secara permanen. Tindakan ini tidak dapat dibatalkan.
+            </p>
+
+            <button
+              type="button"
+              @click="handleDeleteAccount"
+              class="w-full sm:w-auto border border-red-800 text-red-500 hover:bg-red-900/20 font-semibold rounded-[8px] p-[10px] transition-colors cursor-pointer flex items-center justify-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              Hapus Akun Saya
+            </button>
+          </div>
         </div>
       </Transition>
     </div>
