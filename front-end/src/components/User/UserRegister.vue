@@ -14,7 +14,7 @@ const user = reactive({
 
 async function handleSubmit() {
   if (user.password !== user.password_confirmation) {
-    await alertError("Password do not match");
+    await alertError("Password minimal harus 8 karakter dan harus sama!");
     return;
   }
 
@@ -33,7 +33,6 @@ async function handleSubmit() {
     // 2. Kalau ada, ambil value pertama, lalu ambil pesan pertama array-nya.
     // 3. Kalau gak ada, ambil 'responseBody.message'.
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
-
     await alertError(pesanError);
   }
 }

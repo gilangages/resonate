@@ -23,8 +23,7 @@ async function handleSubmit() {
       path: "/dashboard/global",
     });
   } else {
-    const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
-    await alertError(pesanError);
+    await alertError("Email atau password salah!");
   }
 }
 </script>
