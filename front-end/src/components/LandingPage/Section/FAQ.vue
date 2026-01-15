@@ -3,39 +3,42 @@ import { ref } from "vue";
 
 const faqs = ref([
   {
-    question: "Apakah identitas saya harus asli atau bisa anonim?",
+    question: "Apakah saya harus menggunakan nama asli?",
     answer:
-      "Pilihan sepenuhnya ada di tanganmu. Kamu bebas menggunakan nama asli untuk membangun personal branding, atau menggunakan inisial/nama samaran jika ingin lebih privat. Kami menghargai kenyamananmu berekspresi.",
+      "Tidak harus, senyamannya kamu saja. Kamu boleh pakai nama asli jika ingin temanmu tahu itu kamu, atau gunakan inisial/nama samaran jika ingin lebih privat dan misterius.",
     open: false,
   },
   {
     question: "Bagaimana cara membalas pesan yang saya suka?",
+    // Ganti **...** dengan <strong>...</strong>
     answer:
-      "Cukup unik! Di sini kamu merespon curhatan bukan dengan teks panjang, melainkan dengan **Lagu Balasan**. Pilih lagu dari Deezer yang mewakili perasaanmu terhadap pesan tersebut. Biarkan musik yang berbicara.",
+      "Di sini musik adalah bahasa utamanya. Kamu bisa merespon curhatan dengan mengirimkan <strong>Lagu Balasan</strong> via Deezer yang mewakili perasaanmu, opsional dengan pesan teks singkat.",
     open: false,
   },
   {
-    question: "Kenapa saya tidak bisa membalas 'reply' (balasan) orang lain?",
+    question: "Kenapa saya tidak bisa membalas 'reply' orang lain?",
+    // Ganti **...** dengan <strong>...</strong>
     answer:
-      "Kami menerapkan konsep 'One-Way Tribute'. Tujuannya agar setiap interaksi tetap sederhana dan bermakna, serta menjaga fokus pada apresiasi musik tanpa memicu diskusi yang berkepanjangan.",
+      "Music Note menerapkan konsep <strong>'One-Way Tribute'</strong>. Tujuannya agar interaksi tetap sederhana, fokus pada apresiasi lagu, dan menghindari debat panjang yang tidak perlu.",
     open: false,
   },
   {
-    question: "Apakah saya perlu akun Premium untuk mendengar lagu?",
+    question: "Apakah saya perlu akun Premium untuk memutar lagu?",
     answer:
-      "Tidak perlu! Kami menggunakan layanan Deezer yang memungkinkan siapa saja mendengarkan cuplikan (preview) lagu selama 30 detik secara gratis tanpa perlu login atau berlangganan aplikasi musik apapun.",
+      "Tidak perlu! Berkat integrasi Deezer, siapa saja bisa mendengarkan cuplikan (preview) lagu selama 30 detik secara gratis tanpa perlu login atau berlangganan aplikasi musik apapun.",
     open: false,
   },
   {
-    question: "Bagaimana jika saya menemukan pesan kasar atau tidak pantas?",
+    question: "Bagaimana jika saya menemukan pesan yang tidak pantas?",
+    // Ganti **...** dengan <strong>...</strong>
     answer:
-      "Sistem kami memiliki filter otomatis untuk menyaring kata-kata kasar. Namun jika masih ada yang lolos, kamu bisa melaporkannya kepada kami melalui menu 'Hubungi Kami' di bagian bawah (Footer) halaman. Sertakan detail pesannya, dan kami akan menindaklanjutinya.",
+      "Sistem sudah memiliki filter kata otomatis. Namun jika masih ada yang lolos, kamu bisa melaporkannya melalui <strong>form Laporan Bug</strong> yang ada di menu <strong>'About'</strong>. Laporanmu akan segera ditinjau.",
     open: false,
   },
   {
-    question: "Bisakah saya mengubah tampilan kartu atau menghapus akun?",
+    question: "Bisakah saya mengubah tampilan atau menghapus akun?",
     answer:
-      "Tentu saja. Kamu bisa mengkustomisasi tema warna kartu sesuai mood kamu. Jika ingin berhenti, tersedia juga opsi untuk menghapus akun secara permanen di menu pengaturan profil.",
+      "Tentu. Kamu bisa mengubah tema kartu dan foto profil (avatar) sesuka hati. Jika ingin berhenti, tersedia juga opsi untuk menghapus akun secara permanen di pengaturan profil.",
     open: false,
   },
 ]);
@@ -96,7 +99,3 @@ const toggleFaq = (index) => {
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Tidak perlu keyframes lagi karena kita pakai Grid Transition */
-</style>

@@ -121,7 +121,7 @@ onMounted(() => {
             yang kita rasakan.
           </p>
           <p>
-            Saya percaya bahwa setiap perasaan layak untuk didengar. Entah itu surat cinta yang tak terkirim, curahan
+            Kami percaya bahwa setiap perasaan layak untuk didengar. Entah itu surat cinta yang tak terkirim, curahan
             hati yang berat, atau sekadar lelucon untuk menghibur diri sendiri. Namun, teks seringkali terasa datar.
             Itulah mengapa di sini, kata-kata digabungkan dengan musik.
           </p>
@@ -174,7 +174,7 @@ onMounted(() => {
           </div>
           <h3 class="text-xl font-bold text-white mb-3">Tanpa Penghakiman</h3>
           <p class="text-sm text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
-            Lewat fitur Anonim, saya menciptakan ruang aman. Kamu bebas menjadi dirimu sendiri tanpa perlu khawatir
+            Lewat fitur Anonim, Kami menciptakan ruang aman. Kamu bebas menjadi dirimu sendiri tanpa perlu khawatir
             tentang identitas.
           </p>
         </div>
