@@ -161,11 +161,11 @@ onBeforeMount(async () => {
           <div class="flex gap-4 items-center relative z-10 mb-5">
             <div
               class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
-              <img :src="note.spotify_album_image" class="w-full h-full object-cover" />
+              <img :src="note.music_album_image" class="w-full h-full object-cover" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-white truncate">{{ note.spotify_track_name }}</p>
-              <p class="text-xs text-[#888] truncate">{{ note.spotify_artist }}</p>
+              <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
+              <p class="text-xs text-[#888] truncate">{{ note.music_artist }}</p>
             </div>
           </div>
 
@@ -286,20 +286,20 @@ onBeforeMount(async () => {
               :class="{ 'animate-spin-slow': isVinylSpinning }">
               <div class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
               <img
-                :src="selectedNote?.spotify_album_image"
+                :src="selectedNote?.music_album_image"
                 class="w-[60px] h-[60px] rounded-full object-cover border-2 border-[#111] relative z-10" />
             </div>
 
             <h2 class="text-2xl font-bold text-white text-center leading-tight px-4">
-              {{ selectedNote?.spotify_track_name }}
+              {{ selectedNote?.music_track_name }}
             </h2>
             <p class="text-[#9a203e] text-sm font-medium uppercase tracking-wide mb-5 mt-1">
-              {{ selectedNote?.spotify_artist }}
+              {{ selectedNote?.music_artist_name }}
             </p>
 
             <a
-              v-if="selectedNote?.spotify_track_link"
-              :href="selectedNote?.spotify_track_link"
+              v-if="selectedNote?.music_preview_url"
+              :href="selectedNote?.music_preview_url"
               target="_blank"
               class="flex items-center gap-2 bg-[#1ed760] hover:bg-[#1db954] text-black px-6 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(30,215,96,0.2)] no-underline decoration-0">
               <svg

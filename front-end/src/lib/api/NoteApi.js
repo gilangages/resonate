@@ -6,11 +6,11 @@ export const noteCreate = async (
     content,
     recipient,
     initial_name,
-    spotify_track_id,
-    spotify_track_name,
-    spotify_artist,
-    spotify_album_image,
-    spotify_preview_url,
+    music_track_id,
+    music_track_name,
+    music_artist_name,
+    music_album_image,
+    music_preview_url,
   }
 ) => {
   return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes`, {
@@ -24,11 +24,11 @@ export const noteCreate = async (
       content,
       recipient,
       initial_name,
-      spotify_track_id,
-      spotify_track_name,
-      spotify_artist,
-      spotify_album_image,
-      spotify_preview_url,
+      music_track_id,
+      music_track_name,
+      music_artist_name,
+      music_album_image,
+      music_preview_url,
     }),
   });
 };
@@ -80,11 +80,11 @@ export const noteUpdate = async (
     content,
     recipient,
     initial_name,
-    spotify_track_id,
-    spotify_track_name,
-    spotify_artist,
-    spotify_album_image,
-    spotify_preview_url,
+    music_track_id,
+    music_track_name,
+    music_artist_name,
+    music_album_image,
+    music_preview_url,
   }
 ) => {
   return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/${id}`, {
@@ -98,11 +98,11 @@ export const noteUpdate = async (
       content,
       recipient,
       initial_name,
-      spotify_track_id,
-      spotify_track_name,
-      spotify_artist,
-      spotify_album_image,
-      spotify_preview_url,
+      music_track_id,
+      music_track_name,
+      music_artist_name,
+      music_album_image,
+      music_preview_url,
     }),
   });
 };

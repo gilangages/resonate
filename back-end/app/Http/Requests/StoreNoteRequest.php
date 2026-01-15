@@ -26,18 +26,12 @@ class StoreNoteRequest extends FormRequest
             // Jika user ketik "Nama Samaran", frontend kirim string.
             'initial_name' => 'nullable|string|max:50',
 
-            // 4. SPOTIFY DATA (Lagu):
-            // Kita ubah jadi REQUIRED karena user WAJIB pilih lagu.
-            'spotify_track_id' => 'required|string|max:255',
-
-            // Metadata juga wajib required supaya DB tidak bolong
-            'spotify_track_name' => 'required|string|max:255',
-            'spotify_artist' => 'required|string|max:255',
-            'spotify_album_image' => 'required|url',
-
-            // Preview url kadang dari Spotify-nya kosong, jadi aman kalau nullable
-            'spotify_preview_url' => 'nullable|url',
-            'spotify_track_link' => ['nullable', 'string', 'url'],
+            'music_track_id' => 'required|string|max:255',
+            'music_track_name' => 'required|string|max:255',
+            'music_artist_name' => 'required|string|max:255', // sesuaikan nama key
+            'music_album_image' => 'required|url',
+            'music_preview_url' => 'nullable|url',
+            'music_track_link' => ['nullable', 'string', 'url'],
         ];
     }
 }

@@ -29,12 +29,12 @@ class UpdateNoteRequest extends FormRequest
             'initial_name' => 'nullable|string|max:255', // Pengganti is_anonymous
 
             // Data Lagu (WAJIB DITAMBAHKAN AGAR BISA DIUPDATE)
-            'spotify_track_id' => 'required|string',
-            'spotify_track_name' => 'required|string',
-            'spotify_artist' => 'required|string',
-            'spotify_album_image' => 'nullable|string',
-            'spotify_preview_url' => 'nullable|string',
-            'spotify_track_link' => ['sometimes', 'nullable', 'string', 'url'],
+            'music_track_id' => 'required|string|max:255',
+            'music_track_name' => 'required|string|max:255',
+            'music_artist_name' => 'required|string|max:255', // sesuaikan nama key
+            'music_album_image' => 'required|url',
+            'music_preview_url' => 'nullable|url',
+            'music_track_link' => ['nullable', 'string', 'url'],
         ];
     }
 }

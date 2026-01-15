@@ -22,12 +22,13 @@ class NoteResource extends JsonResource
             : $this->user->photo_url,
 
             // [FIX] Tambahkan field ini agar sesuai docs & kebutuhan frontend
-            'spotify_track_id' => $this->spotify_track_id,
-            'spotify_track_name' => $this->spotify_track_name, // Pastikan kolom ini ada di DB
-            'spotify_artist' => $this->spotify_artist, // Pastikan kolom ini ada di DB
-            'spotify_album_image' => $this->spotify_album_image, // Pastikan kolom ini ada di DB
-            'spotify_preview_url' => $this->spotify_preview_url, // Pastikan kolom ini ada di DB
-            'spotify_track_link' => $this->spotify_track_link,
+            // UBAH KE 'music_' DAN BACA DARI PROPERTI MODEL YANG BENAR
+            'music_track_id' => $this->music_track_id,
+            'music_track_name' => $this->music_track_name,
+            'music_artist_name' => $this->music_artist_name, // di DB namanya music_artist_name
+            'music_album_image' => $this->music_album_image,
+            'music_preview_url' => $this->music_preview_url,
+            'music_track_link' => $this->music_track_link,
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
