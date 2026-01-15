@@ -36,9 +36,9 @@ class Note extends Model
         return $this->belongsTo(Note::class, 'parent_id');
     }
 
-    // Relasi ke Anak (Balasan-balasan)
+    // GANTI dengan relasi ke tabel baru:
     public function replies()
     {
-        return $this->hasMany(Note::class, 'parent_id')->orderBy('created_at', 'desc');
+        return $this->hasMany(NoteReply::class, 'note_id')->orderBy('created_at', 'desc');
     }
 }

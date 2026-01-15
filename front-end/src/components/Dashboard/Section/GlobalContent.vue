@@ -1,7 +1,15 @@
 <script setup>
 import { useLocalStorage, useWindowSize } from "@vueuse/core";
 // UPDATE 1: Tambahkan 'noteDelete' ke dalam import agar fungsi deleteReply berjalan
-import { noteList, searchMusic, noteCreate, noteDetail, noteDelete } from "../../../lib/api/NoteApi";
+import {
+  noteList,
+  searchMusic,
+  noteCreate,
+  noteDetail,
+  noteDelete,
+  createReply,
+  deleteReplyApi,
+} from "../../../lib/api/NoteApi";
 import { onMounted, ref, nextTick, Teleport, computed, reactive } from "vue";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
 import { useDebounceFn } from "@vueuse/core";
@@ -68,11 +76,12 @@ const deleteReply = async (replyId) => {
   if (!(await alertConfirm("Hapus balasan lagu ini?"))) return;
 
   try {
-    const response = await noteDelete(token.value, replyId);
+    // Gunakan API deleteReplyApi yang baru
+    const response = await deleteReplyApi(token.value, replyId);
 
     if (response.ok) {
       alertSuccess("Balasan dihapus.");
-      // Refresh modal data
+      // Refresh data
       const res = await noteDetail(token.value, selectedNote.value.id);
       if (res.ok) {
         const resData = await res.json();
@@ -97,7 +106,7 @@ const formatDateDetail = (dateString) => {
   const optionsDate = { weekday: "long", day: "numeric", month: "short", year: "numeric" };
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${date.toLocaleDateString("id-ID", optionsDate)} 窶｢ ${hours}:${minutes} WIB`;
+  return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
 };
 
 const formatTimeMusic = (time) => {
@@ -251,10 +260,9 @@ const submitReply = async () => {
   }
   const senderName = replyNote.initial_name.trim() || "Teman Rahasia";
 
+  // Payload disesuaikan dengan Controller baru
   const payload = {
-    parent_id: selectedNote.value.id,
     content: replyNote.content || "Membalas dengan lagu...",
-    recipient: selectedNote.value.author_name,
     initial_name: senderName,
     music_track_id: selectedReplySong.value.id,
     music_track_name: selectedReplySong.value.name,
@@ -265,7 +273,8 @@ const submitReply = async () => {
   };
 
   try {
-    const response = await noteCreate(token.value, payload);
+    // Panggil API createReply (bukan noteCreate lagi)
+    const response = await createReply(token.value, selectedNote.value.id, payload);
     const responseBody = await response.json();
 
     if (response.ok) {
@@ -273,6 +282,7 @@ const submitReply = async () => {
       alertSuccess("Balasan terkirim!");
       cancelReply();
 
+      // Refresh detail note untuk melihat reply baru
       const res = await noteDetail(token.value, selectedNote.value.id);
       if (res.ok) {
         const resData = await res.json();

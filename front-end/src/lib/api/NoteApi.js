@@ -175,3 +175,27 @@ export const getAdminNotes = async (token, page = 1, search) => {
     },
   });
 };
+
+// API BARU: Kirim Reply ke tabel khusus
+export const createReply = async (token, noteId, payload) => {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/${noteId}/reply`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+};
+
+// API BARU: Hapus Reply dari tabel khusus
+export const deleteReplyApi = async (token, replyId) => {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/replies/${replyId}`, {
+    method: "DELETE",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\ImageProxyController;
 use App\Http\Controllers\Api\MusicController;
 use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\NoteReplyController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,10 @@ Route::middleware(['auth:sanctum', 'check.banned'])->group(function () {
 
     Route::get('/notes', [NoteController::class, 'index']);
     Route::post('/notes/bulk-delete', [NoteController::class, 'bulkDestroy']);
+
+    // ROUTE BARU UNTUK REPLY TERPISAH
+    Route::post('/notes/{id}/reply', [NoteReplyController::class, 'store']);
+    Route::delete('/replies/{id}', [NoteReplyController::class, 'destroy']);
 
     // CRUD Notes
     Route::post('/notes', [NoteController::class, 'store']);
