@@ -3,6 +3,7 @@ import { customFetch } from "./BaseApi";
 export const noteCreate = async (
   token,
   {
+    parent_id = null,
     content,
     recipient,
     initial_name,
@@ -21,6 +22,7 @@ export const noteCreate = async (
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
+      parent_id,
       content,
       recipient,
       initial_name,
@@ -167,6 +169,30 @@ export const getAdminNotes = async (token, page = 1, search) => {
   const params = new URLSearchParams({ page, search });
   return await customFetch(`${import.meta.env.VITE_APP_PATH}/admin/notes?${params.toString()}`, {
     method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+// API BARU: Kirim Reply ke tabel khusus
+export const createReply = async (token, noteId, payload) => {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/${noteId}/reply`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+};
+
+// API BARU: Hapus Reply dari tabel khusus
+export const deleteReplyApi = async (token, replyId) => {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/replies/${replyId}`, {
+    method: "DELETE",
     headers: {
       Accept: "application/json",
       Authorization: `Bearer ${token}`,

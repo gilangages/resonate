@@ -52,13 +52,17 @@ const populateForm = () => {
     music_preview_url: d.music_preview_url,
   });
 
+  // Membentuk object selectedSong agar UI Card langsung muncul saat Edit dibuka
   selectedSong.value = {
     id: d.music_track_id,
     name: d.music_track_name,
     artists: [{ name: d.music_artist_name }],
     album: { images: [{ url: d.music_album_image }] },
+    preview_url: d.music_preview_url,
   };
-  queryLagu.value = `${d.music_track_name} - ${d.music_artist_name}`;
+
+  // queryLagu tidak perlu diisi karena inputnya akan disembunyikan oleh selectedSong
+  queryLagu.value = "";
 
   if (d.initial_name) {
     kirimSebagai.value = "samaran";
@@ -82,7 +86,7 @@ async function fetchUser() {
 
 const handleSearchInput = () => {
   if (debounceTimer) clearTimeout(debounceTimer);
-  selectedSong.value = null;
+  selectedSong.value = null; // Reset
   if (queryLagu.value.length < 2) {
     searchResults.value = [];
     return;
@@ -107,7 +111,8 @@ const handleSearchInput = () => {
 
 const selectSong = (song) => {
   selectedSong.value = song;
-  queryLagu.value = `${song.name} - ${song.artists[0].name}`;
+  // Bersihkan search
+  queryLagu.value = "";
   searchResults.value = [];
 
   note.music_track_id = song.id;
@@ -115,6 +120,14 @@ const selectSong = (song) => {
   note.music_artist_name = song.artists[0].name;
   note.music_album_image = song.album.images[0]?.url || "";
   note.music_preview_url = song.preview_url;
+};
+
+// Fungsi Remove Lagu untuk Edit Mode
+const removeSelectedSong = () => {
+  selectedSong.value = null;
+  // Reset field di object note juga jika perlu, tapi tidak wajib sampai user save
+  queryLagu.value = "";
+  searchResults.value = [];
 };
 
 // --- LOGIC UPDATE ---
@@ -133,6 +146,13 @@ async function handleUpdate() {
   } else {
     note.initial_name = null;
   }
+
+  // Pastikan data note terupdate dengan selectedSong terbaru sebelum kirim
+  note.music_track_id = selectedSong.value.id;
+  note.music_track_name = selectedSong.value.name;
+  note.music_artist_name = selectedSong.value.artists[0].name;
+  note.music_album_image = selectedSong.value.album.images[0]?.url || "";
+  note.music_preview_url = selectedSong.value.preview_url || null;
 
   const response = await noteUpdate(token.value, props.noteData.id, note);
   const responseBody = await response.json();
@@ -164,32 +184,64 @@ onMounted(async () => {
       <h1 class="text-center text-[#9a203e] text-3xl font-bold m-0">Edit Pesan</h1>
       <p class="mt-0 mb-[3em] text-center text-[12px] text-[#8c8a8a]">Edit lagu dan pesanmu.</p>
 
-      <div class="text-[14px] relative">
-        <label>Pilih Lagu (Cari)</label>
-        <input
-          type="text"
-          v-model="queryLagu"
-          @input="handleSearchInput"
-          required
-          placeholder="Ketik judul lagu..."
-          class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+      <div class="text-[14px] relative mb-[20px]">
+        <label class="block mb-[6px]">Pilih Lagu</label>
 
         <div
-          v-if="searchResults.length > 0"
-          class="custom-scrollbar absolute z-20 top-[80px] left-0 w-full bg-[#2b2122] border border-[#9a203e] rounded-[10px] max-h-[200px] overflow-y-auto shadow-lg">
+          v-if="selectedSong"
+          class="flex items-center gap-3 bg-[#2b2122] p-3 rounded-[10px] border border-[#9a203e] shadow-md animate-fade-in">
+          <img :src="selectedSong.album.images[0]?.url" class="w-12 h-12 rounded shadow-sm" alt="album art" />
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-sm text-[#e5e5e5] truncate">{{ selectedSong.name }}</p>
+            <p class="text-xs text-[#8c8a8a] truncate">{{ selectedSong.artists[0].name }}</p>
+          </div>
+          <button
+            type="button"
+            @click="removeSelectedSong"
+            class="p-2 text-[#8c8a8a] hover:text-[#e5e5e5] hover:bg-[#9a203e] rounded-full transition-colors cursor-pointer"
+            title="Ganti Lagu">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div v-else class="relative">
+          <input
+            type="text"
+            v-model="queryLagu"
+            @input="handleSearchInput"
+            placeholder="Ketik judul lagu..."
+            class="w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+
+          <div v-if="isSearching" class="absolute top-[14px] right-4 text-xs text-gray-400">Searching...</div>
+
           <div
-            v-for="song in searchResults"
-            :key="song.id"
-            @click="selectSong(song)"
-            class="p-3 hover:bg-[#9a203e] cursor-pointer flex items-center gap-3 border-b border-[#1c1516] last:border-0">
-            <img :src="song.album.images[0]?.url" class="w-10 h-10 rounded" alt="art" />
-            <div>
-              <p class="font-bold text-sm">{{ song.name }}</p>
-              <p class="text-xs text-gray-400">{{ song.artists[0].name }}</p>
+            v-if="searchResults.length > 0"
+            class="custom-scrollbar absolute z-20 top-[60px] left-0 w-full bg-[#2b2122] border border-[#9a203e] rounded-[10px] max-h-[200px] overflow-y-auto shadow-lg">
+            <div
+              v-for="song in searchResults"
+              :key="song.id"
+              @click="selectSong(song)"
+              class="p-3 hover:bg-[#9a203e] cursor-pointer flex items-center gap-3 border-b border-[#1c1516] last:border-0">
+              <img :src="song.album.images[0]?.url" class="w-10 h-10 rounded" alt="art" />
+              <div>
+                <p class="font-bold text-sm">{{ song.name }}</p>
+                <p class="text-xs text-gray-400">{{ song.artists[0].name }}</p>
+              </div>
             </div>
           </div>
         </div>
-        <div v-if="isSearching" class="absolute top-[45px] right-4 text-xs text-gray-400">Searching...</div>
       </div>
 
       <div class="text-[14px]">
@@ -291,5 +343,19 @@ onMounted(async () => {
   margin-bottom: 0;
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

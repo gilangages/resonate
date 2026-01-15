@@ -38,6 +38,11 @@ class NoteController extends Controller
             $query->latest(); // Default Newest
         }
 
+        // Jika tidak sedang mencari spesifik ID, tampilkan hanya Parent Note di feed utama
+        if (!$request->has('show_replies')) {
+            $query->whereNull('parent_id');
+        }
+
         return $query;
     }
     public function index(Request $request)
@@ -71,7 +76,13 @@ class NoteController extends Controller
      */
     public function show($id)
     {
-        $note = Note::with('user')->findOrFail($id);
+        // BEST PRACTICE: Eager Loading dengan Limit
+        // Kita hanya mengambil 50 balasan terbaru untuk menjaga performa
+        $note = Note::with(['user', 'replies' => function ($query) {
+            $query->with('user')
+                ->latest() // Urutkan dari yang terbaru
+                ->limit(25); // Batasi cuma 50 agar modal tidak berat
+        }])->findOrFail($id);
 
         return new NoteResource($note);
     }

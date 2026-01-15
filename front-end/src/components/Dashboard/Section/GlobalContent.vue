@@ -1,20 +1,30 @@
 <script setup>
 import { useLocalStorage, useWindowSize } from "@vueuse/core";
-import { noteList } from "../../../lib/api/NoteApi";
-import { onMounted, ref, nextTick, Teleport, computed } from "vue";
+// UPDATE 1: Tambahkan 'noteDelete' ke dalam import agar fungsi deleteReply berjalan
+import {
+  noteList,
+  searchMusic,
+  noteCreate,
+  noteDetail,
+  noteDelete,
+  createReply,
+  deleteReplyApi,
+} from "../../../lib/api/NoteApi";
+import { onMounted, ref, nextTick, Teleport, computed, reactive } from "vue";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
 import { useDebounceFn } from "@vueuse/core";
 import DashboardToolbar from "./DashboardToolbar.vue";
 import { useCardTheme } from "../../../lib/useCardTheme";
 import { useShareImage } from "../../../lib/useShareImage";
 import { useNow } from "@vueuse/core";
-import { alertSuccess } from "../../../lib/alert";
+import { alertSuccess, alertError, alertConfirm } from "../../../lib/alert";
+import { userDetail } from "../../../lib/api/UserApi";
 
-// --- DECLARATIONS (Pindahkan ke atas agar aman) ---
+// --- DECLARATIONS LAMA (TIDAK DIUBAH) ---
 const showShareOptions = ref(false);
 const generatedFileUrl = ref(null);
 const shareTextData = ref({ title: "", text: "" });
-const tempFile = ref(null); // Pindah ke sini
+const tempFile = ref(null);
 const notes = ref([]);
 const isLoading = ref(true);
 const currentPage = ref(1);
@@ -39,11 +49,57 @@ const canNativeShare = computed(() => !!navigator.share);
 const currentAudio = ref(new Audio());
 const currentTime = ref(0);
 
+// --- DECLARATIONS BARU (UNTUK FITUR REPLY) ---
+const isReplying = ref(false);
+const replyQuery = ref("");
+const replySearchResults = ref([]);
+const isSearchingReply = ref(false);
+const selectedReplySong = ref(null);
+const replyNote = reactive({ content: "", initial_name: "" });
+let replyDebounceTimer = null;
+const currentUser = ref(null);
+
+// Fetch User Profile
+const fetchCurrentUser = async () => {
+  if (!token.value) return;
+  try {
+    const res = await userDetail(token.value);
+    const data = await res.json();
+    if (res.ok) currentUser.value = data.data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+// Fungsi Delete Reply (Pastikan noteDelete sudah diimport di atas)
+const deleteReply = async (replyId) => {
+  if (!(await alertConfirm("Hapus balasan lagu ini?"))) return;
+
+  try {
+    // Gunakan API deleteReplyApi yang baru
+    const response = await deleteReplyApi(token.value, replyId);
+
+    if (response.ok) {
+      alertSuccess("Balasan dihapus.");
+      // Refresh data
+      const res = await noteDetail(token.value, selectedNote.value.id);
+      if (res.ok) {
+        const resData = await res.json();
+        selectedNote.value = resData.data;
+      }
+    } else {
+      await alertError("Gagal menghapus.");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 const selectedTheme = computed(() => {
   return getSelectedTheme(selectedNote.value);
 });
 
-// --- FUNCTIONS ---
+// --- FUNCTIONS LAMA ---
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -92,7 +148,28 @@ const loadMore = async () => {
   }
 };
 
-const openModalDetail = (note) => {
+const playAudio = (item) => {
+  let streamUrl = null;
+  if (item.music_track_id) {
+    streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${item.music_track_id}`;
+  } else if (item.music_preview_url) {
+    streamUrl = item.music_preview_url;
+  }
+
+  if (streamUrl) {
+    currentAudio.value.pause();
+    currentAudio.value.currentTime = 0;
+    currentAudio.value.src = streamUrl;
+    currentAudio.value.volume = 0.5;
+    currentAudio.value.loop = true;
+    currentAudio.value.ontimeupdate = () => {
+      currentTime.value = currentAudio.value.currentTime;
+    };
+    currentAudio.value.play().catch((e) => console.error("Gagal play audio:", e));
+  }
+};
+
+const openModalDetail = async (note) => {
   if (!localStorage.getItem("token")) {
     window.location.href = "/login";
     return;
@@ -102,28 +179,27 @@ const openModalDetail = (note) => {
   showModal.value = true;
   currentTime.value = 0;
 
-  let streamUrl = null;
-  if (note.music_track_id) {
-    streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
-  } else if (note.music_preview_url) {
-    streamUrl = note.music_preview_url;
-  }
+  isReplying.value = false;
+  selectedReplySong.value = null;
+  replyNote.content = "";
+  replySearchResults.value = [];
+  replyQuery.value = "";
 
-  if (streamUrl) {
-    currentAudio.value.src = streamUrl;
-    currentAudio.value.volume = 0.5;
-    currentAudio.value.loop = true;
-    currentAudio.value.ontimeupdate = () => {
-      currentTime.value = currentAudio.value.currentTime;
-    };
-    currentAudio.value.play().catch((e) => console.error("Gagal play audio:", e));
+  playAudio(note);
+
+  try {
+    const res = await noteDetail(token.value, note.id);
+    if (res.ok) {
+      const resData = await res.json();
+      selectedNote.value = resData.data;
+    }
+  } catch (e) {
+    console.error("Gagal refresh detail note", e);
   }
 
   nextTick(() => {
-    // KUNCI: Pastikan saat modal buka, captureRef diarahkan ke Modal
     const modalElement = document.querySelector(".modal-capture-target");
     if (modalElement) captureRef.value = modalElement;
-
     setTimeout(() => {
       isVinylSpinning.value = true;
     }, 300);
@@ -141,6 +217,87 @@ const closeModalDetail = () => {
   }, 100);
 };
 
+const handleReplySearchInput = () => {
+  if (replyDebounceTimer) clearTimeout(replyDebounceTimer);
+  if (replyQuery.value.length < 2) {
+    replySearchResults.value = [];
+    return;
+  }
+  isSearchingReply.value = true;
+  replyDebounceTimer = setTimeout(async () => {
+    try {
+      const response = await searchMusic(token.value, { query: replyQuery.value });
+      const data = await response.json();
+      if (data && data.tracks && data.tracks.items) {
+        replySearchResults.value = data.tracks.items;
+      } else {
+        replySearchResults.value = [];
+      }
+    } catch (error) {
+      console.error("Error search reply:", error);
+    } finally {
+      isSearchingReply.value = false;
+    }
+  }, 300);
+};
+
+const selectSongForReply = (song) => {
+  selectedReplySong.value = song;
+  replyQuery.value = "";
+  replySearchResults.value = [];
+};
+
+const cancelReply = () => {
+  isReplying.value = false;
+  selectedReplySong.value = null;
+  replyNote.content = "";
+};
+
+const submitReply = async () => {
+  if (!selectedReplySong.value) {
+    await alertError("Pilih lagu dulu dong!");
+    return;
+  }
+  const senderName = replyNote.initial_name.trim() || "Teman Rahasia";
+
+  // Payload disesuaikan dengan Controller baru
+  const payload = {
+    content: replyNote.content || "Membalas dengan lagu...",
+    initial_name: senderName,
+    music_track_id: selectedReplySong.value.id,
+    music_track_name: selectedReplySong.value.name,
+    music_artist_name: selectedReplySong.value.artists[0].name,
+    music_album_image: selectedReplySong.value.album.images[0]?.url || "",
+    music_preview_url: selectedReplySong.value.preview_url || null,
+    music_track_link: selectedReplySong.value.external_urls?.spotify || null,
+  };
+
+  try {
+    // Panggil API createReply (bukan noteCreate lagi)
+    const response = await createReply(token.value, selectedNote.value.id, payload);
+    const responseBody = await response.json();
+
+    if (response.ok) {
+      replyNote.initial_name = "";
+      alertSuccess("Balasan terkirim!");
+      cancelReply();
+
+      // Refresh detail note untuk melihat reply baru
+      const res = await noteDetail(token.value, selectedNote.value.id);
+      if (res.ok) {
+        const resData = await res.json();
+        selectedNote.value = resData.data;
+      }
+    } else {
+      const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
+      await alertError(pesanError);
+    }
+  } catch (error) {
+    console.error(error);
+    await alertError("Terjadi kesalahan koneksi.");
+  }
+};
+
 const openPreview = (url) => {
   if (!url) return;
   previewImageUrl.value = url;
@@ -156,16 +313,11 @@ const handleShare = async () => {
   if (!selectedNote.value) return;
   const fileName = `pesan-dari-${selectedNote.value.author_name || "user"}`;
   const title = "Music Note Card";
-  const text = `Dengerin pesan lagu dari ${selectedNote.value.author_name} buat ${selectedNote.recipient} 🎵`;
+  const text = `Dengerin pesan lagu dari ${selectedNote.value.author_name} buat ${selectedNote.recipient} 七`;
 
   try {
     const file = await generateImageFile(fileName);
-
-    if (!file) {
-      console.error("Gagal men-generate file gambar. Pastikan elemen tersedia.");
-      return;
-    }
-
+    if (!file) return;
     tempFile.value = file;
     generatedFileUrl.value = URL.createObjectURL(file);
     shareTextData.value = { title, text };
@@ -177,17 +329,14 @@ const handleShare = async () => {
 
 const downloadManual = () => {
   if (!generatedFileUrl.value) return;
-
-  // 1. Jalankan proses download
   const link = document.createElement("a");
-  link.download = `music-note-${Date.now()}.png`;
+
+  // UPDATE: Gunakan nama file dari tempFile jika ada, fallback ke timestamp jika null
+  link.download = tempFile.value?.name || `music-note-${Date.now()}.png`;
+
   link.href = generatedFileUrl.value;
   link.click();
-
-  // 2. Tutup modal pilihan share
   showShareOptions.value = false;
-
-  // 3. Beri feedback sukses setelah modal tertutup (delay 300ms agar animasi slide-up selesai)
   setTimeout(() => {
     alertSuccess("Gambar berhasil disimpan ke galeri!");
   }, 300);
@@ -196,14 +345,9 @@ const downloadManual = () => {
 const onCopyLink = async () => {
   if (!selectedNote.value) return;
   const shareUrl = `${window.location.origin}/note/${selectedNote.value.id}`;
-
   try {
     await navigator.clipboard.writeText(shareUrl);
-
-    // 1. Tutup modal share terlebih dahulu
     showShareOptions.value = false;
-
-    // 2. Tampilkan alert sukses setelah modal hilang dari layar
     setTimeout(() => {
       alertSuccess("Link berhasil disalin!");
     }, 300);
@@ -214,13 +358,8 @@ const onCopyLink = async () => {
 
 const onNativeShare = async () => {
   if (tempFile.value) {
-    // Simpan status share
     const success = await triggerNativeShare(tempFile.value, shareTextData.value.text);
-
-    // Jika berhasil memicu menu share sistem, langsung tutup modal kustom kita
-    if (success) {
-      showShareOptions.value = false;
-    }
+    if (success) showShareOptions.value = false;
   }
 };
 
@@ -243,45 +382,31 @@ const columns = computed(() => {
 
 const getImageUrl = (url, uniqueId = "global") => {
   if (!url) return "";
-
-  // Jika URL adalah SVG dari dicebear atau data:image, jangan lewatkan proxy (sering bikin error 500)
-  if (url.includes("api.dicebear.com") || url.startsWith("data:")) {
-    return url;
-  }
-
+  if (url.includes("api.dicebear.com") || url.startsWith("data:")) return url;
   if (!url.startsWith("http")) return url;
   if (url.includes("/image-proxy?url=")) return url;
-
   const apiUrl = import.meta.env.VITE_APP_PATH || "http://localhost:8000/api";
   const encodedImageUrl = encodeURIComponent(url);
-
-  // Saya hapus sementara query &t= jika backend kamu belum siap menerima param tambahan
-  // Ini sering menyebabkan error 500 di Laravel jika tidak ditangani di Controller
   return `${apiUrl}/image-proxy?url=${encodedImageUrl}`;
 };
 
 const handleQuickShare = async (note, event) => {
   if (isDownloading.value) return;
-
   event.stopPropagation();
   event.preventDefault();
-
   selectedNote.value = note;
-
   const parentCard = event.currentTarget.closest(".group\\/card");
   const cardElement = parentCard ? parentCard.querySelector(".rounded-\\[24px\\]") : null;
-
   if (cardElement) {
     captureRef.value = cardElement;
     await nextTick();
-    // Kurangi ke 80ms - 100ms agar terasa lebih responsif
     await new Promise((resolve) => setTimeout(resolve, 80));
   }
-
   await handleShare();
 };
 
 onMounted(async () => {
+  await fetchCurrentUser();
   await fetchNoteList(true);
 });
 </script>
@@ -302,7 +427,6 @@ onMounted(async () => {
               <div class="h-3 w-10 bg-[#2b2122] rounded mb-2"></div>
               <div class="h-8 w-3/4 bg-[#2b2122] rounded-[8px]"></div>
             </div>
-
             <div class="flex gap-4 items-center mb-5">
               <div class="w-14 h-14 bg-[#2b2122] rounded-[12px]"></div>
               <div class="flex-1 space-y-2">
@@ -310,20 +434,7 @@ onMounted(async () => {
                 <div class="h-3 w-1/3 bg-[#2b2122] rounded"></div>
               </div>
             </div>
-
             <div class="h-24 bg-[#2b2122] rounded-[16px] mb-4 w-full"></div>
-
-            <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] mt-auto">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-[#2b2122]"></div>
-                <div class="h-3 w-20 bg-[#2b2122] rounded"></div>
-                <div class="ml-auto h-3 w-16 bg-[#2b2122] rounded"></div>
-              </div>
-
-              <div class="w-full mt-2">
-                <div class="w-full h-9 bg-[#2b2122] rounded-lg"></div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -341,12 +452,8 @@ onMounted(async () => {
             @click="openModalDetail(note)">
             <button
               @click.stop="handleQuickShare(note, $event)"
-              class="absolute top-4 right-4 z-30 p-2.5 bg-black/60 backdrop-blur-md rounded-full border transition-all duration-300 flex items-center justify-center group/btn"
-              :class="[
-                getTheme(note.id).border, // Border default sesuai tema
-                'opacity-100 md:opacity-0 md:group-hover/card:opacity-100', // Visibilitas Laptop vs HP
-                'hover:scale-110 active:scale-95', // Efek klik kecil
-              ]">
+              class="absolute top-4 right-4 z-30 p-2.5 bg-black/60 backdrop-blur-md rounded-full border transition-all duration-300 flex items-center justify-center group/btn opacity-100 md:opacity-0 md:group-hover/card:opacity-100 hover:scale-110 active:scale-95"
+              :class="getTheme(note.id).border">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -369,7 +476,6 @@ onMounted(async () => {
               <div
                 :class="`bg-gradient-to-b ${getTheme(note.id).gradient} to-transparent`"
                 class="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
-
               <div class="mb-5 relative z-10">
                 <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">UNTUK</p>
                 <h2
@@ -378,7 +484,6 @@ onMounted(async () => {
                   {{ note.recipient }}
                 </h2>
               </div>
-
               <div class="flex gap-4 items-center relative z-10 mb-5">
                 <div
                   class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
@@ -392,7 +497,6 @@ onMounted(async () => {
                   <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
                 </div>
               </div>
-
               <div
                 :class="[getTheme(note.id).border, `group-hover/card:border-${getTheme(note.id).id}-500/50`]"
                 class="bg-black/20 rounded-[16px] p-4 border mb-4 transition-colors relative z-10">
@@ -400,7 +504,6 @@ onMounted(async () => {
                   v-text="'&quot;' + note.content + '&quot;'"
                   class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6"></p>
               </div>
-
               <div :class="getTheme(note.id).border" class="flex flex-col gap-3 pt-4 border-t relative z-10 mt-auto">
                 <div class="flex items-center gap-2">
                   <img
@@ -410,10 +513,7 @@ onMounted(async () => {
                   <div class="flex flex-col">
                     <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
                     <div class="flex items-center gap-1.5">
-                      <span class="text-xs text-[#999] font-medium leading-none">
-                        {{ note.author_name }}
-                      </span>
-
+                      <span class="text-xs text-[#999] font-medium leading-none">{{ note.author_name }}</span>
                       <span
                         v-if="note.is_admin"
                         class="bg-[#9a203e] text-white text-[9px] px-1.5 py-0.5 rounded-[4px] font-bold uppercase tracking-wider border border-white/10 shadow-[0_0_10px_rgba(154,32,62,0.6)]">
@@ -431,7 +531,6 @@ onMounted(async () => {
                     </span>
                   </span>
                 </div>
-
                 <div
                   class="w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
                   <button
@@ -506,26 +605,19 @@ onMounted(async () => {
                 <div
                   class="absolute inset-0 opacity-40 pointer-events-none bg-gradient-to-b to-transparent"
                   :class="selectedTheme.gradient"></div>
-
                 <div class="relative z-10 w-full flex flex-col items-center">
                   <div
                     class="w-[160px] h-[160px] rounded-full bg-[#111] border-4 border-[#1c1c1c] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
                     :class="[isVinylSpinning ? 'animate-spin-slow' : '', selectedTheme.shadow]">
-                    <div
-                      class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
-                    <div class="absolute inset-0 rounded-full border border-[#333] opacity-30 transform scale-75"></div>
-
                     <img
                       v-if="selectedNote?.music_album_image"
                       :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album')"
                       crossorigin="anonymous"
                       class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                   </div>
-
                   <h2 class="text-xl font-bold text-white text-center leading-tight px-4">
                     {{ selectedNote?.music_track_name }}
                   </h2>
-
                   <p :class="selectedTheme.text" class="text-xs font-medium uppercase tracking-wide mb-3 mt-1">
                     {{ selectedNote?.music_artist_name }}
                   </p>
@@ -591,19 +683,6 @@ onMounted(async () => {
                       </div>
                     </div>
                   </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    class="text-white/30"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
                   <div class="text-right">
                     <p class="text-[10px] text-white/50 uppercase tracking-wide">UNTUK</p>
                     <p :class="selectedTheme.text" class="text-sm font-bold">{{ selectedNote?.recipient }}</p>
@@ -617,7 +696,7 @@ onMounted(async () => {
                 </div>
 
                 <div
-                  class="flex items-center gap-2 text-[11px] text-white/60 font-mono bg-black/20 p-3 rounded-lg border"
+                  class="flex items-center gap-2 text-[11px] text-white/60 font-mono bg-black/20 p-3 rounded-lg border mb-6"
                   :class="selectedTheme.border">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -641,6 +720,196 @@ onMounted(async () => {
                   </span>
                 </div>
 
+                <div class="border-t border-white/10 pt-6 exclude-from-capture">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-[#e5e5e5] text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                      Resonansi Balasan ({{ selectedNote?.replies?.length || 0 }})
+                    </h3>
+                    <button
+                      v-if="!isReplying"
+                      @click="isReplying = true"
+                      class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full transition-colors font-semibold">
+                      + Balas Lagu
+                    </button>
+                  </div>
+
+                  <div
+                    v-if="isReplying"
+                    class="bg-black/30 p-4 rounded-xl border border-white/10 mb-6 animate-slide-up">
+                    <div class="mb-4 relative">
+                      <label class="text-[10px] text-white/50 font-bold uppercase mb-1 block">Pilih Lagu Balasan</label>
+                      <div
+                        v-if="selectedReplySong"
+                        class="flex items-center gap-3 bg-white/5 p-2 rounded-lg border border-white/10">
+                        <img :src="selectedReplySong.album.images[0]?.url" class="w-10 h-10 rounded shadow" />
+                        <div class="flex-1 min-w-0">
+                          <p class="text-xs font-bold text-white truncate">{{ selectedReplySong.name }}</p>
+                          <p class="text-[10px] text-white/50 truncate">{{ selectedReplySong.artists[0].name }}</p>
+                        </div>
+                        <button @click="selectedReplySong = null" class="text-red-400 hover:text-red-300 p-1">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                      </div>
+
+                      <input
+                        v-else
+                        v-model="replyQuery"
+                        @input="handleReplySearchInput"
+                        type="text"
+                        placeholder="Ketik judul lagu..."
+                        class="w-full bg-black/40 border rounded-lg px-3 py-2 text-xs text-white focus:outline-none transition-colors"
+                        :class="selectedTheme.border" />
+
+                      <div
+                        v-if="replySearchResults.length > 0"
+                        class="absolute z-50 left-0 right-0 top-full mt-1 bg-[#1c1516] border border-white/10 rounded-lg max-h-40 overflow-y-auto shadow-xl custom-scrollbar">
+                        <div
+                          v-for="song in replySearchResults"
+                          :key="song.id"
+                          @click="selectSongForReply(song)"
+                          class="flex items-center gap-3 p-2 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0">
+                          <img :src="song.album.images[0]?.url" class="w-8 h-8 rounded" />
+                          <div class="min-w-0">
+                            <p class="text-xs font-bold text-white truncate">{{ song.name }}</p>
+                            <p class="text-[10px] text-white/50 truncate">{{ song.artists[0].name }}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mb-2">
+                      <label class="text-[10px] text-white/50 font-bold uppercase mb-1 block">Pesan (Opsional)</label>
+                      <textarea
+                        v-model="replyNote.content"
+                        rows="2"
+                        placeholder="Tulis pesan singkat..."
+                        class="w-full bg-black/40 border rounded-lg px-3 py-2 text-xs text-white focus:outline-none transition-colors resize-none"
+                        :class="selectedTheme.border"></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                      <label class="text-[10px] text-white/50 font-bold uppercase mb-1 block">Dari Siapa?</label>
+                      <div class="flex gap-2">
+                        <input
+                          v-model="replyNote.initial_name"
+                          type="text"
+                          placeholder="Ketik nama (atau kosongkan utk Anonim)"
+                          class="flex-1 bg-black/40 border rounded-lg px-3 py-2 text-xs text-white focus:outline-none transition-colors"
+                          :class="selectedTheme.border" />
+                      </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                      <button
+                        @click="cancelReply"
+                        class="flex-1 py-2 text-[10px] uppercase font-bold text-white/40 hover:text-white border border-white/5 rounded-lg">
+                        Batal
+                      </button>
+                      <button
+                        @click="submitReply"
+                        class="flex-1 py-2 text-[10px] uppercase font-bold text-white rounded-lg shadow-lg"
+                        :class="selectedTheme.modal_btn">
+                        Kirim Balasan
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-col gap-3">
+                    <div
+                      v-if="!selectedNote?.replies || selectedNote.replies.length === 0"
+                      class="text-center py-4 text-white/20 text-xs italic">
+                      Belum ada yang membalas dengan lagu.
+                    </div>
+
+                    <div
+                      v-for="reply in selectedNote.replies"
+                      :key="reply.id"
+                      class="flex items-center gap-3 bg-black/20 p-3 rounded-xl border hover:border-white/10 transition-colors group/reply"
+                      :class="selectedTheme.border">
+                      <div class="relative w-10 h-10 shrink-0">
+                        <img
+                          :src="reply.music_album_image"
+                          class="w-full h-full rounded-md object-cover brightness-75 group-hover/reply:brightness-100 transition-all" />
+                        <button
+                          @click="playAudio(reply)"
+                          class="absolute inset-0 flex items-center justify-center text-white opacity-0 group-hover/reply:opacity-100 transition-opacity">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start">
+                          <p class="text-xs font-bold text-white truncate pr-2">{{ reply.music_track_name }}</p>
+                          <span class="text-[9px] text-white/30 whitespace-nowrap">
+                            {{ formatTime(reply.created_at, now) }}
+                          </span>
+                        </div>
+                        <p class="text-[10px] font-medium truncate" :class="selectedTheme.text">
+                          {{ reply.music_artist_name }}
+                        </p>
+                        <p v-if="reply.content" class="text-[10px] text-white/60 italic truncate mt-0.5">
+                          "{{ reply.content }}"
+                        </p>
+                        <p class="text-[9px] text-white/30 mt-1">Dari: {{ reply.author_name || "Anonim" }}</p>
+                      </div>
+
+                      <button
+                        v-if="currentUser && (reply.user_id === currentUser.id || currentUser.role === 'admin')"
+                        @click.stop="deleteReply(reply.id)"
+                        class="text-white/20 hover:text-red-500 transition-colors p-1"
+                        title="Hapus Balasan">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path
+                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <div v-if="selectedNote?.replies?.length >= 10" class="text-center py-4">
+                      <p class="text-[10px] text-white/30 italic">
+                        Menampilkan 25 balasan terbaru.
+                        <span class="block">Pesan ini sangat populer! 🔥</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="mt-6 flex gap-3 exclude-from-capture">
                   <button
                     @click="closeModalDetail"
@@ -652,7 +921,6 @@ onMounted(async () => {
                     class="flex-1 py-3 rounded-[12px] border font-bold text-xs uppercase tracking-widest transition-all cursor-pointer">
                     Tutup
                   </button>
-
                   <button
                     @click="handleShare"
                     :disabled="isDownloading"
@@ -662,7 +930,6 @@ onMounted(async () => {
                     ]"
                     class="flex-1 py-3 rounded-[12px] text-white font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg">
                     <span v-if="isDownloading">Memproses...</span>
-
                     <span v-else class="flex items-center gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -716,7 +983,6 @@ onMounted(async () => {
                 :src="previewImageUrl"
                 class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
                 @click.stop />
-              <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
             </div>
           </div>
         </Transition>
@@ -729,46 +995,28 @@ onMounted(async () => {
             @click.self="closeShareOptions">
             <div
               class="bg-[#1c1516] border border-[#333] rounded-t-[32px] sm:rounded-3xl p-6 w-full max-w-sm shadow-2xl relative animate-slide-up">
-              <div class="w-12 h-1.5 bg-[#333] rounded-full mx-auto mb-6 sm:hidden"></div>
-
               <h3 class="text-white text-lg font-bold mb-2 text-center">Bagikan Pesan</h3>
-              <p class="text-xs text-white/40 text-center mb-6 px-4">
-                Pilih cara terbaik untuk membagikan kartu musikmu.
-              </p>
-
-              <div class="grid grid-cols-1 gap-3">
+              <div class="grid grid-cols-1 gap-3 mt-6">
                 <button
                   v-if="canNativeShare"
                   @click="onNativeShare"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-[#9a203e]/10 border border-[#9a203e]/20 hover:bg-[#9a203e]/20 transition-all text-left">
                   <span class="text-2xl">📱</span>
-                  <div>
-                    <p class="text-sm font-bold text-[#f87171]">Bagikan ke Aplikasi</p>
-                    <p class="text-[10px] text-white/40">WhatsApp, Instagram Story, dll.</p>
-                  </div>
+                  <div><p class="text-sm font-bold text-[#f87171]">Bagikan ke Aplikasi</p></div>
                 </button>
-
                 <button
                   @click="downloadManual"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
-                  <span class="text-2xl">📥</span>
-                  <div>
-                    <p class="text-sm font-bold text-white">Simpan ke Galeri</p>
-                    <p class="text-[10px] text-white/40">Download sebagai file gambar PNG.</p>
-                  </div>
+                  <span class="text-2xl">💾</span>
+                  <div><p class="text-sm font-bold text-white">Simpan ke Galeri</p></div>
                 </button>
-
                 <button
                   @click="onCopyLink"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
                   <span class="text-2xl">🔗</span>
-                  <div>
-                    <p class="text-sm font-bold text-white">Salin Link Pesan</p>
-                    <p class="text-[10px] text-white/40">Bagikan lewat teks saja.</p>
-                  </div>
+                  <div><p class="text-sm font-bold text-white">Salin Link Pesan</p></div>
                 </button>
               </div>
-
               <button
                 @click="closeShareOptions"
                 class="w-full mt-6 py-3 text-xs font-bold text-white/30 hover:text-white transition-colors uppercase tracking-widest">
@@ -782,4 +1030,50 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out forwards;
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  bg: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+</style>

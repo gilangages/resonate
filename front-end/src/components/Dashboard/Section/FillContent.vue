@@ -480,7 +480,7 @@ defineExpose({
         <button
           v-if="!isSelectionMode"
           @click="$emit('open-modal')"
-          class="cursor-pointer fixed bottom-24 right-6 md:bottom-8 md:right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#9a203e] text-white shadow-[0_0_30px_rgba(154,32,62,0.4)] transition-all duration-300 hover:scale-110 hover:bg-[#821c35] active:scale-95 focus:outline-none sm:bottom-12 sm:right-12 sm:h-16 sm:w-16 group"
+          class="cursor-pointer fixed bottom-24 right-6 md:bottom-18 md:right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#9a203e] text-white shadow-[0_0_30px_rgba(154,32,62,0.4)] transition-all duration-300 hover:scale-110 hover:bg-[#821c35] active:scale-95 focus:outline-none sm:bottom-12 sm:right-12 sm:h-16 sm:w-16 group"
           :class="{ 'md:hidden': notes.length === 0 }"
           title="Buat Cerita Baru">
           <svg

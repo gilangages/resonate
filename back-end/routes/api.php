@@ -9,9 +9,11 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ImageProxyController;
 use App\Http\Controllers\Api\MusicController;
 use App\Http\Controllers\Api\NoteController;
+use App\Http\Controllers\Api\NoteReplyController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +30,8 @@ Route::get('/test-sanctum', function () {
 Route::post('/users', RegisterController::class);
 Route::post('/users/login', LoginController::class);
 Route::post('/users/appeal', [AppealController::class, 'sendAppeal']);
+// Contact / Report Bug
+Route::post('/contact', [ContactController::class, 'sendMessage']);
 
 // get Global Notes (Bisa diakses siapa saja)
 Route::get('/notes/global', [NoteController::class, 'globalIndex']);
@@ -55,6 +59,10 @@ Route::middleware(['auth:sanctum', 'check.banned'])->group(function () {
 
     Route::get('/notes', [NoteController::class, 'index']);
     Route::post('/notes/bulk-delete', [NoteController::class, 'bulkDestroy']);
+
+    // ROUTE BARU UNTUK REPLY TERPISAH
+    Route::post('/notes/{id}/reply', [NoteReplyController::class, 'store']);
+    Route::delete('/replies/{id}', [NoteReplyController::class, 'destroy']);
 
     // CRUD Notes
     Route::post('/notes', [NoteController::class, 'store']);
