@@ -1,22 +1,22 @@
 <script setup>
 import Navbar from "./Navbar.vue";
-// 1. Import NavbarDashboard (sesuaikan path folder)
+// Import NavbarDashboard (sesuaikan path folder jika perlu)
 import NavbarDashboard from "../../Dashboard/Section/NavbarDashboard.vue";
 import Footer from "./Footer.vue";
-import { ref, onMounted } from "vue"; // Tambahkan onMounted
+import { ref, onMounted } from "vue";
 import Swal from "sweetalert2";
 
 // State untuk Form
 const form = ref({
   name: "",
   email: "",
-  subject: "Bug Report", // Default value
+  subject: "Bug Report",
   message: "",
 });
 
 const isLoading = ref(false);
 
-// --- LOGIKA UI DROPDOWN (TIDAK DIUBAH) ---
+// --- LOGIKA UI DROPDOWN ---
 const isDropdownOpen = ref(false);
 const dropdownOptions = [
   { value: "Bug Report", label: "🐛 Melaporkan Bug / Error" },
@@ -33,9 +33,8 @@ const selectOption = (value) => {
   form.value.subject = value;
   isDropdownOpen.value = false;
 };
-// ------------------------------------------------------------------
 
-// Logic Kirim Pesan (TIDAK DIUBAH)
+// Logic Kirim Pesan
 const submitContact = async () => {
   if (!form.value.name || !form.value.email || !form.value.message) {
     Swal.fire({
@@ -91,11 +90,10 @@ const submitContact = async () => {
   }
 };
 
-// --- LOGIKA BARU UNTUK CEK LOGIN ---
+// --- LOGIKA CEK LOGIN ---
 const isLoggedIn = ref(false);
 
 onMounted(() => {
-  // Cek apakah ada token di localStorage
   const token = localStorage.getItem("token");
   if (token) {
     isLoggedIn.value = true;
@@ -331,10 +329,11 @@ onMounted(() => {
 
       <div class="mt-20 text-center relative z-10 animate-fade-in-up" style="animation-delay: 0.7s">
         <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mb-4">Developed Solo By</p>
+
         <div
-          class="inline-flex items-center justify-center gap-3 px-8 py-3 rounded-full bg-white/5 border border-white/10 hover:border-[#9a203e]/50 hover:bg-[#9a203e]/10 transition-all duration-300 cursor-default group">
-          <div class="w-2 h-2 rounded-full bg-[#9a203e] animate-ping opacity-75 absolute"></div>
-          <div class="w-2 h-2 rounded-full bg-[#9a203e] relative"></div>
+          class="card-abdian-glow inline-flex items-center justify-center gap-3 px-8 py-3 rounded-full bg-white/5 border border-white/10 cursor-default group">
+          <div class="w-2 h-2 rounded-full bg-[#9a203e]"></div>
+
           <span class="font-semibold text-white tracking-widest group-hover:text-[#ff4d6d] transition-colors">
             Abdian
           </span>
@@ -375,5 +374,23 @@ onMounted(() => {
 }
 .animate-fade-in-fast {
   animation: fadeInFast 0.2s ease-out forwards;
+}
+
+/* Animasi Glow untuk Card Abdian */
+@keyframes abdian-pulse {
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 transparent;
+  }
+  50% {
+    border-color: rgba(154, 32, 62, 0.6);
+    box-shadow: 0 0 15px rgba(154, 32, 62, 0.3);
+    background-color: rgba(154, 32, 62, 0.1);
+  }
+}
+
+.card-abdian-glow {
+  animation: abdian-pulse 3s infinite ease-in-out;
 }
 </style>
