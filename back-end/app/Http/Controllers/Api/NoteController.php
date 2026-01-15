@@ -76,8 +76,13 @@ class NoteController extends Controller
      */
     public function show($id)
     {
-        // Eager load 'replies' dan user pembuat reply tersebut
-        $note = Note::with(['user', 'replies.user'])->findOrFail($id);
+        // BEST PRACTICE: Eager Loading dengan Limit
+        // Kita hanya mengambil 50 balasan terbaru untuk menjaga performa
+        $note = Note::with(['user', 'replies' => function ($query) {
+            $query->with('user')
+                ->latest() // Urutkan dari yang terbaru
+                ->limit(10); // Batasi cuma 50 agar modal tidak berat
+        }])->findOrFail($id);
 
         return new NoteResource($note);
     }

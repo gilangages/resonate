@@ -1,7 +1,7 @@
 <script setup>
 import { useLocalStorage, useWindowSize } from "@vueuse/core";
-// UPDATE IMPORT: Tambahkan searchMusic, noteCreate, noteDetail
-import { noteList, searchMusic, noteCreate, noteDetail } from "../../../lib/api/NoteApi";
+// UPDATE 1: Tambahkan 'noteDelete' ke dalam import agar fungsi deleteReply berjalan
+import { noteList, searchMusic, noteCreate, noteDetail, noteDelete } from "../../../lib/api/NoteApi";
 import { onMounted, ref, nextTick, Teleport, computed, reactive } from "vue";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
 import { useDebounceFn } from "@vueuse/core";
@@ -9,8 +9,8 @@ import DashboardToolbar from "./DashboardToolbar.vue";
 import { useCardTheme } from "../../../lib/useCardTheme";
 import { useShareImage } from "../../../lib/useShareImage";
 import { useNow } from "@vueuse/core";
-// UPDATE IMPORT: Pastikan alertError diimport
-import { alertSuccess, alertError } from "../../../lib/alert";
+import { alertSuccess, alertError, alertConfirm } from "../../../lib/alert";
+import { userDetail } from "../../../lib/api/UserApi";
 
 // --- DECLARATIONS LAMA (TIDAK DIUBAH) ---
 const showShareOptions = ref(false);
@@ -42,13 +42,49 @@ const currentAudio = ref(new Audio());
 const currentTime = ref(0);
 
 // --- DECLARATIONS BARU (UNTUK FITUR REPLY) ---
-const isReplying = ref(false); // Toggle form reply
-const replyQuery = ref(""); // Input search lagu
-const replySearchResults = ref([]); // Hasil search
-const isSearchingReply = ref(false); // Loading search
-const selectedReplySong = ref(null); // Lagu yang dipilih
-const replyNote = reactive({ content: "", initial_name: "" }); // Pesan teks
+const isReplying = ref(false);
+const replyQuery = ref("");
+const replySearchResults = ref([]);
+const isSearchingReply = ref(false);
+const selectedReplySong = ref(null);
+const replyNote = reactive({ content: "", initial_name: "" });
 let replyDebounceTimer = null;
+const currentUser = ref(null);
+
+// Fetch User Profile
+const fetchCurrentUser = async () => {
+  if (!token.value) return;
+  try {
+    const res = await userDetail(token.value);
+    const data = await res.json();
+    if (res.ok) currentUser.value = data.data;
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+// Fungsi Delete Reply (Pastikan noteDelete sudah diimport di atas)
+const deleteReply = async (replyId) => {
+  if (!(await alertConfirm("Hapus balasan lagu ini?"))) return;
+
+  try {
+    const response = await noteDelete(token.value, replyId);
+
+    if (response.ok) {
+      alertSuccess("Balasan dihapus.");
+      // Refresh modal data
+      const res = await noteDetail(token.value, selectedNote.value.id);
+      if (res.ok) {
+        const resData = await res.json();
+        selectedNote.value = resData.data;
+      }
+    } else {
+      await alertError("Gagal menghapus.");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 const selectedTheme = computed(() => {
   return getSelectedTheme(selectedNote.value);
@@ -103,7 +139,6 @@ const loadMore = async () => {
   }
 };
 
-// --- LOGIC AUDIO PLAYER (Refactored agar bisa dipakai Reply) ---
 const playAudio = (item) => {
   let streamUrl = null;
   if (item.music_track_id) {
@@ -113,10 +148,8 @@ const playAudio = (item) => {
   }
 
   if (streamUrl) {
-    // Reset jika sedang main
     currentAudio.value.pause();
     currentAudio.value.currentTime = 0;
-
     currentAudio.value.src = streamUrl;
     currentAudio.value.volume = 0.5;
     currentAudio.value.loop = true;
@@ -127,35 +160,29 @@ const playAudio = (item) => {
   }
 };
 
-// --- MODAL & REPLY LOGIC ---
 const openModalDetail = async (note) => {
   if (!localStorage.getItem("token")) {
     window.location.href = "/login";
     return;
   }
   cacheBuster.value = Date.now();
-
-  // Set data awal (dari list)
   selectedNote.value = note;
   showModal.value = true;
   currentTime.value = 0;
 
-  // Reset State Reply
   isReplying.value = false;
   selectedReplySong.value = null;
   replyNote.content = "";
   replySearchResults.value = [];
   replyQuery.value = "";
 
-  // Putar lagu utama
   playAudio(note);
 
-  // FETCH DETAIL (Supaya dapat data replies terbaru dari DB)
   try {
     const res = await noteDetail(token.value, note.id);
     if (res.ok) {
       const resData = await res.json();
-      selectedNote.value = resData.data; // Update data di modal dengan yang lengkap
+      selectedNote.value = resData.data;
     }
   } catch (e) {
     console.error("Gagal refresh detail note", e);
@@ -181,7 +208,6 @@ const closeModalDetail = () => {
   }, 100);
 };
 
-// --- LOGIC SEARCH & SUBMIT REPLY (BARU) ---
 const handleReplySearchInput = () => {
   if (replyDebounceTimer) clearTimeout(replyDebounceTimer);
   if (replyQuery.value.length < 2) {
@@ -223,13 +249,12 @@ const submitReply = async () => {
     await alertError("Pilih lagu dulu dong!");
     return;
   }
-  // Tentukan nama pengirim: Kalau user isi, pakai itu. Kalau kosong, pakai "Teman Rahasia"
   const senderName = replyNote.initial_name.trim() || "Teman Rahasia";
 
   const payload = {
-    parent_id: selectedNote.value.id, // REFERENSI INDUK
+    parent_id: selectedNote.value.id,
     content: replyNote.content || "Membalas dengan lagu...",
-    recipient: selectedNote.value.author_name, // Balas ke author note
+    recipient: selectedNote.value.author_name,
     initial_name: senderName,
     music_track_id: selectedReplySong.value.id,
     music_track_name: selectedReplySong.value.name,
@@ -248,7 +273,6 @@ const submitReply = async () => {
       alertSuccess("Balasan terkirim!");
       cancelReply();
 
-      // Refresh lagi biar balasan muncul
       const res = await noteDetail(token.value, selectedNote.value.id);
       if (res.ok) {
         const resData = await res.json();
@@ -264,7 +288,6 @@ const submitReply = async () => {
   }
 };
 
-// --- LOGIC SHARE & PREVIEW LAMA ---
 const openPreview = (url) => {
   if (!url) return;
   previewImageUrl.value = url;
@@ -370,6 +393,7 @@ const handleQuickShare = async (note, event) => {
 };
 
 onMounted(async () => {
+  await fetchCurrentUser();
   await fetchNoteList(true);
 });
 </script>
@@ -828,12 +852,38 @@ onMounted(async () => {
                         <p class="text-[10px] font-medium truncate" :class="selectedTheme.text">
                           {{ reply.music_artist_name }}
                         </p>
-
                         <p v-if="reply.content" class="text-[10px] text-white/60 italic truncate mt-0.5">
                           "{{ reply.content }}"
                         </p>
                         <p class="text-[9px] text-white/30 mt-1">Dari: {{ reply.author_name || "Anonim" }}</p>
                       </div>
+
+                      <button
+                        v-if="currentUser && (reply.user_id === currentUser.id || currentUser.role === 'admin')"
+                        @click.stop="deleteReply(reply.id)"
+                        class="text-white/20 hover:text-red-500 transition-colors p-1"
+                        title="Hapus Balasan">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path
+                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                      </button>
+                    </div>
+                    <div v-if="selectedNote?.replies?.length >= 10" class="text-center py-4">
+                      <p class="text-[10px] text-white/30 italic">
+                        Menampilkan 10 balasan terbaru.
+                        <span class="block">Pesan ini sangat populer! 🔥</span>
+                      </p>
                     </div>
                   </div>
                 </div>
