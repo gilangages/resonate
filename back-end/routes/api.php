@@ -23,6 +23,8 @@ Route::post('/users/login', LoginController::class);
 //get  Global Notes (Bisa diakses siapa saja)
 Route::get('/notes/global', [NoteController::class, 'globalIndex']);
 
+Route::get('/stream/{trackId}', [AudioStreamController::class, 'stream']);
+
 // 🔐 AUTH ROUTES (Prioritas Tinggi)
 Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/logout', LogoutController::class);

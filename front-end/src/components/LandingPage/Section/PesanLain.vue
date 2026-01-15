@@ -48,29 +48,28 @@ const openModal = (note) => {
   selectedNote.value = note;
   showModal.value = true;
 
-  // Cek apakah ada URL musiknya
-  if (note.music_preview_url) {
-    console.log("Mencoba memutar:", note.music_preview_url); // DEBUGGING: Cek URL di Console
+  // LOGIKA BARU: Gunakan Proxy URL dari Backend kita sendiri
+  // Pastikan note punya ID lagu
+  if (note.music_track_id) {
+    // Atau note.spotify_track_id sesuaikan namamu
 
-    currentAudio.value.src = note.music_preview_url;
+    // URL Backend Laravel
+    // Sesuaikan base URL API kamu, misal: http://localhost:8000/api/stream/
+    const streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
+
+    console.log("Memutar via Proxy:", streamUrl);
+
+    currentAudio.value.src = streamUrl;
     currentAudio.value.volume = 0.5;
     currentAudio.value.loop = true;
 
-    // Play dengan Error Handling yang Benar
     currentAudio.value.play().catch((e) => {
-      // Bedakan Error Autoplay vs Error Link Rusak
-      if (e.name === "NotSupportedError") {
-        console.error("Link lagu sudah kedaluwarsa (Expired Token).");
-        // Opsional: Reset src agar tidak looping error
-        currentAudio.value.src = "";
-        // Opsional: Alert ke user
-        // alert("Maaf, preview lagu ini sudah kedaluwarsa dari Deezer.");
-      } else {
-        console.error("Gagal play:", e);
-      }
+      console.error("Gagal play audio:", e);
     });
-  } else {
-    console.log("Note ini tidak memiliki preview lagu (URL null/kosong).");
+  } else if (note.music_preview_url) {
+    // Fallback: Kalau data lama banget yg gapunya ID tapi punya URL (meski mungkin basi)
+    currentAudio.value.src = note.music_preview_url;
+    currentAudio.value.play().catch((e) => console.log(e));
   }
 
   nextTick(() => {
