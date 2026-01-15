@@ -81,7 +81,7 @@ class NoteController extends Controller
         $note = Note::with(['user', 'replies' => function ($query) {
             $query->with('user')
                 ->latest() // Urutkan dari yang terbaru
-                ->limit(10); // Batasi cuma 50 agar modal tidak berat
+                ->limit(25); // Batasi cuma 50 agar modal tidak berat
         }])->findOrFail($id);
 
         return new NoteResource($note);

@@ -903,8 +903,8 @@ onMounted(async () => {
                     </div>
                     <div v-if="selectedNote?.replies?.length >= 10" class="text-center py-4">
                       <p class="text-[10px] text-white/30 italic">
-                        Menampilkan 10 balasan terbaru.
-                        <span class="block">Pesan ini sangat populer! 櫨</span>
+                        Menampilkan 25 balasan terbaru.
+                        <span class="block">Pesan ini sangat populer! 🔥</span>
                       </p>
                     </div>
                   </div>
@@ -1001,19 +1001,19 @@ onMounted(async () => {
                   v-if="canNativeShare"
                   @click="onNativeShare"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-[#9a203e]/10 border border-[#9a203e]/20 hover:bg-[#9a203e]/20 transition-all text-left">
-                  <span class="text-2xl">導</span>
+                  <span class="text-2xl">📱</span>
                   <div><p class="text-sm font-bold text-[#f87171]">Bagikan ke Aplikasi</p></div>
                 </button>
                 <button
                   @click="downloadManual"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
-                  <span class="text-2xl">沈</span>
+                  <span class="text-2xl">💾</span>
                   <div><p class="text-sm font-bold text-white">Simpan ke Galeri</p></div>
                 </button>
                 <button
                   @click="onCopyLink"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
-                  <span class="text-2xl">迫</span>
+                  <span class="text-2xl">🔗</span>
                   <div><p class="text-sm font-bold text-white">Salin Link Pesan</p></div>
                 </button>
               </div>
