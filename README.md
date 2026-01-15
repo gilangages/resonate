@@ -1,59 +1,132 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Resonate 🎵
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Resonate** adalah aplikasi berbasis web yang memungkinkan pengguna untuk berbagi pesan (notes) yang terhubung dengan musik. Pengguna dapat mencari trek musik, memberikan balasan, dan berinteraksi dalam komunitas yang dimoderasi.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## ✨ Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Integrasi Musik**: Cari dan hubungkan lagu favorit dari layanan musik (Deezer) ke dalam pesan Anda.
+- **Sistem Pesan (Notes)**: Buat pesan publik (Global) atau pribadi (My Notes).
+- **Interaksi Real-time**: Sistem balasan (replies) pada setiap pesan dan notifikasi langsung.
+- **Autentikasi Ganda**: Login konvensional atau menggunakan **Google OAuth**.
+- **Panel Admin**: Moderasi konten, manajemen pengguna, dan sistem banned/blokir.
+- **Kustomisasi Profil**: Unggah avatar dan pilih tema kartu (Card Theme).
+- **Keamanan**: Dilengkapi dengan middleware untuk mengecek status akun (banned) secara real-time.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Teknologi yang Digunakan
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### Back-end (Laravel 12)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Framework**: Laravel 12
+- **Authentication**: Laravel Sanctum (API) & Socialite (Google Auth)
+- **Database**: MySQL / SQLite
+- **Mailing**: SMTP Gmail
 
-## Laravel Sponsors
+### Front-end (Vue 3)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- **Framework**: Vue 3 dengan Vite
+- **Styling**: Tailwind CSS 4
+- **State Management**: VueUse
+- **Lainnya**: SweetAlert2, Day.js, Vue Router
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 🛠️ Panduan Instalasi
 
-## Contributing
+Ikuti langkah-langkah berikut untuk menjalankan Resonate di lingkungan lokal Anda.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 1. Persiapan Back-end
 
-## Code of Conduct
+Masuk ke folder `back-end`, lalu jalankan:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```
+# Install dependensi PHP
+composer install
 
-## Security Vulnerabilities
+# Salin file konfigurasi .env
+cp .env.example .env
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Generate application key
+php artisan key:generate
+```
+### 2. Konfigurasi Database & Environment
+Buka file .env dan sesuaikan pengaturan berikut:
+- Database: Buat database kosong bernama music_note_app di MySQL Anda.
+- Google Auth: Dapatkan ID dan Secret dari [Google Cloud Console](https://console.cloud.google.com/)
+- Email: Gunakan "App Password" dari akun Google Anda untuk MAIL_PASSWORD.
 
-## License
+```
+DB_DATABASE=music_note_app
+DB_USERNAME=root
+DB_PASSWORD=
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Konfigurasi Google OAuth
+GOOGLE_CLIENT_ID=isi_dengan_id_anda
+GOOGLE_CLIENT_SECRET=isi_dengan_secret_anda
+GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+
+# Konfigurasi Email (Gmail)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=email_anda@gmail.com
+MAIL_PASSWORD=kode_password_aplikasi_google
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=email_anda@gmail.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### 3. Migrasi & Storage Link (Penting!)
+- Agar foto profil/avatar bisa tampil, Anda wajib menjalankan perintah link storage.
+```
+# Jalankan migrasi database dan seeder
+php artisan migrate --seed
+
+# Hubungkan folder storage ke publik (Wajib agar foto muncul)
+php artisan storage:link
+```
+### 4. Persiapan Front-end
+- Masuk ke folder front-end, lalu jalankan:
+```
+# Install dependensi Node.js
+npm install
+
+# Jalankan server development
+npm run dev
+```
+
+---
+
+## ⚙️ Konfigurasi Tambahan
+### Foto Profil Tidak Muncul?
+Pastikan Anda sudah menjalankan php artisan storage:link. Laravel akan membuat shortcut dari folder storage/app/public ke public/storage. Pastikan juga APP_URL di .env sudah benar (http://localhost).
+
+### Notifikasi Email
+ Untuk menerima email reset password atau notifikasi lainnya:
+   - Aktifkan 2-Step Verification di akun Google Anda.
+   - Cari menu App Passwords (Password Aplikasi).
+   - Buat password baru untuk "Mail" dan pilih perangkat "Other".
+   - Copy kode 16 digit tersebut ke MAIL_PASSWORD di file .env.
+
+   ---
+
+## 📂 Struktur Folder
+- /back-end: Berisi kode sumber API Laravel, Model, Controller, dan Migrations.
+
+- /front-end: Berisi kode sumber Vue.js, Components, Assets, dan logic tampilan.
+
+---
+
+## 🤝 Kontribusi
+Kontribusi sangat diterima! Jika kamu menemukan bug atau ingin menambah fitur:
+1. Fork repository ini.
+2. Buat branch fitur baru (git checkout -b fitur-keren).
+3. Commit perubahanmu (git commit -m 'Menambahkan fitur keren').
+4. Push ke branch (git push origin fitur-keren).
+5. Buat Pull Request.
+
+
+## Dibuat dengan ❤️ oleh Abdian
