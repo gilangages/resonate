@@ -97,7 +97,7 @@ const formatDateDetail = (dateString) => {
   const optionsDate = { weekday: "long", day: "numeric", month: "short", year: "numeric" };
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
+  return `${date.toLocaleDateString("id-ID", optionsDate)} 窶｢ ${hours}:${minutes} WIB`;
 };
 
 const formatTimeMusic = (time) => {
@@ -303,7 +303,7 @@ const handleShare = async () => {
   if (!selectedNote.value) return;
   const fileName = `pesan-dari-${selectedNote.value.author_name || "user"}`;
   const title = "Music Note Card";
-  const text = `Dengerin pesan lagu dari ${selectedNote.value.author_name} buat ${selectedNote.recipient} 🎵`;
+  const text = `Dengerin pesan lagu dari ${selectedNote.value.author_name} buat ${selectedNote.recipient} 七`;
 
   try {
     const file = await generateImageFile(fileName);
@@ -511,6 +511,15 @@ onMounted(async () => {
                       </span>
                     </div>
                   </div>
+                  <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
+                    {{ formatTime(note.created_at, now) }}
+                    <span
+                      v-if="isEdited(note.created_at, note.updated_at)"
+                      :class="getTheme(note.id).text"
+                      class="italic ml-1 block sm:inline">
+                      (diedit)
+                    </span>
+                  </span>
                 </div>
                 <div
                   class="w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
@@ -885,7 +894,7 @@ onMounted(async () => {
                     <div v-if="selectedNote?.replies?.length >= 10" class="text-center py-4">
                       <p class="text-[10px] text-white/30 italic">
                         Menampilkan 10 balasan terbaru.
-                        <span class="block">Pesan ini sangat populer! 🔥</span>
+                        <span class="block">Pesan ini sangat populer! 櫨</span>
                       </p>
                     </div>
                   </div>
@@ -982,19 +991,19 @@ onMounted(async () => {
                   v-if="canNativeShare"
                   @click="onNativeShare"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-[#9a203e]/10 border border-[#9a203e]/20 hover:bg-[#9a203e]/20 transition-all text-left">
-                  <span class="text-2xl">📱</span>
+                  <span class="text-2xl">導</span>
                   <div><p class="text-sm font-bold text-[#f87171]">Bagikan ke Aplikasi</p></div>
                 </button>
                 <button
                   @click="downloadManual"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
-                  <span class="text-2xl">💾</span>
+                  <span class="text-2xl">沈</span>
                   <div><p class="text-sm font-bold text-white">Simpan ke Galeri</p></div>
                 </button>
                 <button
                   @click="onCopyLink"
                   class="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-left">
-                  <span class="text-2xl">🔗</span>
+                  <span class="text-2xl">迫</span>
                   <div><p class="text-sm font-bold text-white">Salin Link Pesan</p></div>
                 </button>
               </div>
