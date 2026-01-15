@@ -22,6 +22,18 @@ import About from "./components/LandingPage/Section/About.vue";
 
 const router = createRouter({
   history: createWebHistory(),
+  // --- TAMBAHAN DI SINI ---
+  // Menambahkan scrollBehavior untuk menangani posisi scroll saat pindah halaman
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      // Jika user menekan tombol Back/Forward browser, kembali ke posisi sebelumnya
+      return savedPosition;
+    } else {
+      // Jika navigasi biasa (seperti klik link di footer), scroll ke paling atas dengan animasi
+      return { top: 0, behavior: "smooth" };
+    }
+  },
+  // ------------------------
   routes: [
     {
       path: "/",
@@ -34,7 +46,6 @@ const router = createRouter({
     {
       path: "/note/:id",
       component: LandingPage,
-      // props: true,
     },
     {
       path: "/",
