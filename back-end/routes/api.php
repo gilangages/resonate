@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\ImageProxyController;
 use App\Http\Controllers\Api\MusicController;
 use App\Http\Controllers\Api\NoteController;
@@ -29,6 +30,8 @@ Route::get('/test-sanctum', function () {
 Route::post('/users', RegisterController::class);
 Route::post('/users/login', LoginController::class);
 Route::post('/users/appeal', [AppealController::class, 'sendAppeal']);
+// Contact / Report Bug
+Route::post('/contact', [ContactController::class, 'sendMessage']);
 
 // get Global Notes (Bisa diakses siapa saja)
 Route::get('/notes/global', [NoteController::class, 'globalIndex']);
