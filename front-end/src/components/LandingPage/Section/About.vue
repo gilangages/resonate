@@ -105,7 +105,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="min-h-screen flex flex-col bg-[#0f0505] font-['Poppins'] overflow-x-hidden selection:bg-[#9a203e] selection:text-white">
+    class="min-h-screen flex flex-col bg-[#0f0505] font-['Poppins'] overflow-x-hidden selection:bg-[#9a203e] selection:text-white pb-28 md:pb-0">
     <NavbarDashboard v-if="isLoggedIn" />
     <Navbar v-else />
 

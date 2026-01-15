@@ -4,7 +4,7 @@ import NavbarDashboard from "../Dashboard/Section/NavbarDashboard.vue";
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#0f0505] font-poppins flex flex-col">
+  <div class="min-h-screen bg-[#0f0505] font-poppins flex flex-col pb-28 md:pb-0">
     <NavbarDashboard />
 
     <RouterView v-slot="{ Component }">
