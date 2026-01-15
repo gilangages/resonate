@@ -17,7 +17,7 @@ const emit = defineEmits(["update-success", "go-back"]);
 const token = useLocalStorage("token", "");
 const kirimSebagai = ref("samaran");
 const namaSamaran = ref("");
-const name = ref("User");
+const name = ref("");
 
 // INI KUNCINYA: Semua data update akan masuk ke sini
 const note = reactive({

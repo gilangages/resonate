@@ -87,21 +87,21 @@ async function handleAnimation(userName) {
   // Kita bungkus userName dengan span yang memiliki warna #9a203e
   const welcomeText = `Selamat Datang, <span style="color: #9a203e; font-weight: bold; font-style: normal;">${userName}</span>`;
   await typeWriter(welcomeText, 50);
-  await wait(1500);
+  await wait(700);
   isTextVisible.value = false;
   await wait(600);
 
   // --- TAHAP 2: Apa kabar ---
   isTextVisible.value = true;
   await typeWriter("Apa kabarmu hari ini?", 50);
-  await wait(1500);
+  await wait(700);
   isTextVisible.value = false;
   await wait(600);
 
   // --- TAHAP 3: Instruksi ---
   isTextVisible.value = true;
   await typeWriter("Mulailah menulis pesan dan jangan lupa sisipkan lagu ya ^_^", 40);
-  await wait(2500);
+  await wait(1000);
 
   sessionStorage.setItem("last_anim_name", userName);
   showIntro.value = false;

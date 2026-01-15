@@ -38,7 +38,7 @@ onBeforeMount(async () => {
   <!-- NAVBAR -->
   <div class="bg-[#180808] p-[12px] flex items-center justify-between relative">
     <!-- LOGO -->
-    <RouterLink to="/dashboard/global">
+    <RouterLink to="/dashboard">
       <h1 class="text-[#9a203e] text-[16px] ml-[1em] font-bold sm:text-[24px]">Resonate</h1>
     </RouterLink>
 
