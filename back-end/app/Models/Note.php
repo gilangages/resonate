@@ -14,12 +14,12 @@ class Note extends Model
         'content', // pastikan ini sesuai nama kolom di DB
         'recipient',
         'initial_name',
-        'spotify_track_id',
-        'spotify_track_name',
-        'spotify_artist',
-        'spotify_album_image',
-        'spotify_preview_url',
-        'spotify_track_link',
+        'music_track_id', // sebelumnya spotify_track_id
+        'music_track_name', // sebelumnya spotify_track_name
+        'music_artist_name', // sebelumnya spotify_artist
+        'music_album_image', // sebelumnya spotify_album_image
+        'music_preview_url', // sebelumnya spotify_preview_url
+        'music_track_link', // sebelumnya spotify_track_link
     ];
 
     // Note milik satu user

@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\MusicProvider;
-use App\Services\MockSpotifyService;
+use App\Services\DeezerService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(MusicProvider::class, MockSpotifyService::class);
+        $this->app->bind(MusicProvider::class, DeezerService::class);
     }
 
     /**
