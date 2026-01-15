@@ -146,7 +146,7 @@ onBeforeMount(async () => {
             :key="song.id"
             @click="selectSong(song)"
             class="p-3 hover:bg-[#9a203e] cursor-pointer flex items-center gap-3 border-b border-[#1c1516] last:border-0">
-            <img :src="song.album.images[2]?.url" class="w-10 h-10 rounded" alt="art" />
+            <img :src="song.album.images[0]?.url" class="w-10 h-10 rounded" alt="art" />
             <div>
               <p class="font-bold text-sm">{{ song.name }}</p>
               <p class="text-xs text-gray-400">{{ song.artists[0].name }}</p>

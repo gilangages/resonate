@@ -168,7 +168,7 @@ onMounted(async () => {
             <div
               class="w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
               <button
-                class="w-full py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-widest hover:bg-[#9a203e] hover:text-white transition-all flex items-center justify-center gap-2">
+                class="cursor-pointer w-full py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-widest hover:bg-[#9a203e] hover:text-white transition-all flex items-center justify-center gap-2">
                 Lihat Detail
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

@@ -10,6 +10,7 @@ const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
+const currentAudio = ref(new Audio());
 
 // --- STATE PAGINATION ---
 const currentPage = ref(1);
@@ -99,6 +100,14 @@ const loadMore = async () => {
 const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
+
+  // LOGIKA PEMUTAR MUSIK BARU
+  if (note.music_preview_url) {
+    currentAudio.value.src = note.music_preview_url;
+    currentAudio.value.volume = 0.5; // Set volume 50%
+    currentAudio.value.play().catch((e) => console.log("Gagal memutar audio:", e));
+  }
+
   nextTick(() => {
     setTimeout(() => {
       isVinylSpinning.value = true;
@@ -108,6 +117,11 @@ const openModalDetail = (note) => {
 
 const closeModalDetail = () => {
   isVinylSpinning.value = false;
+
+  // STOP MUSIK SAAT DITUTUP
+  currentAudio.value.pause();
+  currentAudio.value.currentTime = 0; // Reset ke awal
+
   setTimeout(() => {
     showModal.value = false;
     selectedNote.value = null;
@@ -165,7 +179,7 @@ onBeforeMount(async () => {
             </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
-              <p class="text-xs text-[#888] truncate">{{ note.music_artist }}</p>
+              <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
             </div>
           </div>
 
