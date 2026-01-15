@@ -37,4 +37,13 @@ class UpdateNoteRequest extends FormRequest
             'music_track_link' => ['nullable', 'string', 'url'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'content.required' => 'Isi pesan tidak boleh kosong.',
+            'recipient.required' => 'Nama penerima wajib diisi.',
+            'music_track_id.required' => 'Lagu wajib dipilih.',
+        ];
+    }
 }

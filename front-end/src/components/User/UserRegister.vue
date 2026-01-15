@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { userRegister } from "../../lib/api/UserApi";
 import { alertError, alertSuccess } from "../../lib/alert";
 import { useRouter } from "vue-router";
@@ -12,9 +12,13 @@ const user = reactive({
   password_confirmation: "",
 });
 
+// State untuk toggle visibility
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+
 async function handleSubmit() {
   if (user.password !== user.password_confirmation) {
-    await alertError("Password minimal harus 8 karakter dan harus sama!");
+    await alertError("Password harus sama!");
     return;
   }
 
@@ -23,35 +27,28 @@ async function handleSubmit() {
   console.log(responseBody);
 
   if (response.ok) {
-    await alertSuccess("User created successfully");
+    await alertSuccess("Akun berhasil dibuat! Silakan masuk.");
     await router.push({
       path: "/login",
     });
   } else {
-    // INI LOGIKANYA:
-    // 1. Cek apa ada field 'errors' (validasi)?
-    // 2. Kalau ada, ambil value pertama, lalu ambil pesan pertama array-nya.
-    // 3. Kalau gak ada, ambil 'responseBody.message'.
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
     await alertError(pesanError);
   }
 }
 </script>
+
 <template>
-  <!-- FORM CONTAINER -->
   <div class="flex justify-center items-center min-h-screen -mt-[2.8em] sm:-mt-[3.5em] lg:-mt-[2.5em]">
     <div
       class="bg-[#1c1516] text-[#e5e5e5] text-[14px] rounded-[30px] w-full max-w-[420px] px-3 py-6 mx-6 sm:max-w-[560px] sm:mx-0">
-      <!-- TITLE -->
       <div class="flex flex-col items-center text-[#9a203e] mt-[-1em]">
         <h1 class="text-[24px] font-bold leading-tight">Daftar</h1>
         <p class="mt-1 text-[12px] text-[#8c8a8a] leading-normal">Daftar akun Resonate</p>
       </div>
 
-      <!-- FORM -->
       <form v-on:submit.prevent="handleSubmit">
         <div class="mt-2">
-          <!-- Nama -->
           <div class="m-[14px]">
             <label>Nama</label>
             <br />
@@ -62,7 +59,6 @@ async function handleSubmit() {
               class="w-full mt-1 px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
           </div>
 
-          <!-- Email -->
           <div class="m-[14px]">
             <label>Email</label>
             <br />
@@ -74,32 +70,101 @@ async function handleSubmit() {
               class="w-full mt-1 px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
           </div>
 
-          <!-- Password -->
           <div class="m-[14px]">
             <label>Password</label>
-            <br />
-            <input
-              v-model="user.password"
-              type="password"
-              required
-              placeholder="Minimal 8 karakter"
-              class="w-full mt-1 px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+            <div class="relative mt-1">
+              <input
+                v-model="user.password"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                placeholder="Minimal 8 karakter"
+                class="w-full px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e] pr-10" />
+
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute inset-y-0 right-0 px-3 flex items-center text-[#8c8a8a] hover:text-[#9a203e] focus:outline-none cursor-pointer transition-colors">
+                <svg
+                  v-if="showPassword"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
           </div>
 
-          <!-- Konfirmasi Password -->
           <div class="m-[14px]">
             <label>Konfirmasi Password</label>
-            <br />
-            <input
-              v-model="user.password_confirmation"
-              type="password"
-              required
-              placeholder="Masukkan ulang kata sandi"
-              class="w-full mt-1 px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+            <div class="relative mt-1">
+              <input
+                v-model="user.password_confirmation"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                required
+                placeholder="Masukkan ulang kata sandi"
+                class="w-full px-[1em] py-[1em] bg-[#2b2122] text-[#e5e5e5] rounded-[10px] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e] pr-10" />
+
+              <button
+                type="button"
+                @click="showConfirmPassword = !showConfirmPassword"
+                class="absolute inset-y-0 right-0 px-3 flex items-center text-[#8c8a8a] hover:text-[#9a203e] focus:outline-none cursor-pointer transition-colors">
+                <svg
+                  v-if="showConfirmPassword"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg
+                  v-else
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- BUTTON -->
         <div class="px-[1em] mt-[2em] w-full">
           <button
             type="submit"
@@ -109,7 +174,6 @@ async function handleSubmit() {
         </div>
       </form>
 
-      <!-- LOGIN -->
       <div class="text-center mt-4">
         <p class="text-[#8c8a8a]">
           Sudah punya akun?

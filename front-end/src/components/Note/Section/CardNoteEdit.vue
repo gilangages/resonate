@@ -150,7 +150,7 @@ async function handleUpdate() {
   const responseBody = await response.json();
 
   if (response.ok) {
-    alertSuccess("Note updated successfully!");
+    alertSuccess("Pesan berhasil diperbarui.");
     emit("update-success");
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;

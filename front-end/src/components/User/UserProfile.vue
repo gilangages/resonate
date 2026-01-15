@@ -44,7 +44,7 @@ async function handleFileChange(event) {
 
     if (response.ok) {
       userState.value = responseBody.data;
-      await alertSuccess("Photo updated successfully!");
+      await alertSuccess("Foto profil berhasil di perbarui!");
     } else {
       throw new Error(responseBody.message);
     }
@@ -63,7 +63,7 @@ async function handleChangeName() {
   const responseBody = await response.json();
 
   if (response.ok) {
-    await alertSuccess("Profile updated successfully");
+    await alertSuccess("Nama berhasil diubah.");
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
     await alertError(pesanError);

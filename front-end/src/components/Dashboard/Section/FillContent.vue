@@ -72,7 +72,7 @@ async function handleDelete(id) {
     const responseBody = await response.json();
 
     if (response.ok) {
-      alertSuccess("Note deleted successfully");
+      alertSuccess("Pesan berhasil dihapus.");
       const index = notes.value.findIndex((n) => n.id === id);
       if (index !== -1) notes.value.splice(index, 1);
       if (notes.value.length === 0) emit("is-empty");

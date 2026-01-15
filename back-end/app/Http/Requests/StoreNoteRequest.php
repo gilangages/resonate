@@ -34,4 +34,19 @@ class StoreNoteRequest extends FormRequest
             'music_track_link' => ['nullable', 'string', 'url'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'content.required' => 'Isi pesan wajib diisi.',
+            'content.max' => 'Pesan tidak boleh lebih dari 1000 karakter.',
+            'recipient.required' => 'Nama penerima (Kepada) wajib diisi.',
+            'recipient.max' => 'Nama penerima maksimal 50 karakter.',
+            'initial_name.max' => 'Nama samaran maksimal 50 karakter.',
+
+            // Pesan Error Khusus Lagu (Biar user paham)
+            'music_track_id.required' => 'Kamu belum memilih lagu. Silakan cari dan pilih lagu.',
+            'music_album_image.required' => 'Data lagu tidak lengkap (gambar album hilang).',
+        ];
+    }
 }

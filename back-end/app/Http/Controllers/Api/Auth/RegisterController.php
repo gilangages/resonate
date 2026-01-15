@@ -15,6 +15,14 @@ class RegisterController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|confirmed|min:8',
+        ], [
+            'name.required' => 'Nama lengkap wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email ini sudah terdaftar. Silakan login.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal harus 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
         $user = User::create([
@@ -24,7 +32,7 @@ class RegisterController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => 'Registrasi berhasil! Silakan login.',
             'user' => $user, // <--- Lebih simpel, photo_url otomatis masuk
         ], 201);
     }

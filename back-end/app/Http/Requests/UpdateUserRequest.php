@@ -20,4 +20,15 @@ class UpdateUserRequest extends FormRequest
             'avatar' => ['nullable', 'image', 'max:2048'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama pengguna wajib diisi.',
+            'password.min' => 'Password baru minimal harus 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'avatar.image' => 'File harus berupa gambar.',
+            'avatar.max' => 'Ukuran gambar maksimal 2MB.',
+        ];
+    }
 }

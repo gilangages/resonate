@@ -62,7 +62,7 @@ const handleSearchInput = () => {
     } finally {
       isSearching.value = false;
     }
-  }, 500);
+  }, 300);
 };
 
 const selectSong = (song) => {
@@ -102,7 +102,7 @@ async function handleSubmit() {
   const responseBody = await response.json();
 
   if (response.ok) {
-    alertSuccess("Note created successfully!");
+    alertSuccess("Pesan berhasil dibuat.");
     emit("create-success");
   } else {
     const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
