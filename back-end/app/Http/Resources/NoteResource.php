@@ -40,6 +40,9 @@ class NoteResource extends JsonResource
             'music_album_image' => $this->music_album_image,
             'music_preview_url' => $this->music_preview_url,
             'music_track_link' => $this->music_track_link,
+            // Kita return replies menggunakan resource yang sama (rekursif) tapi tanpa nesting dalam
+            'replies' => NoteResource::collection($this->whenLoaded('replies')),
+            'parent_id' => $this->parent_id,
 
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

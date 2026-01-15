@@ -3,6 +3,7 @@ import { customFetch } from "./BaseApi";
 export const noteCreate = async (
   token,
   {
+    parent_id = null,
     content,
     recipient,
     initial_name,
@@ -21,6 +22,7 @@ export const noteCreate = async (
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
+      parent_id,
       content,
       recipient,
       initial_name,

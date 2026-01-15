@@ -11,6 +11,7 @@ class Note extends Model
     use HasFactory;
 
     protected $fillable = [
+        'parent_id',
         'content', // pastikan ini sesuai nama kolom di DB
         'recipient',
         'initial_name',
@@ -27,5 +28,17 @@ class Note extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relasi ke Induk (Note yang dibalas)
+    public function parent()
+    {
+        return $this->belongsTo(Note::class, 'parent_id');
+    }
+
+    // Relasi ke Anak (Balasan-balasan)
+    public function replies()
+    {
+        return $this->hasMany(Note::class, 'parent_id')->orderBy('created_at', 'desc');
     }
 }
