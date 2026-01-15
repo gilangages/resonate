@@ -44,7 +44,7 @@ async function handleFileChange(event) {
 
     if (response.ok) {
       userState.value = responseBody.data;
-      await alertSuccess("Foto profil berhasil diubah!");
+      await alertSuccess("Photo updated successfully!");
     } else {
       throw new Error(responseBody.message);
     }

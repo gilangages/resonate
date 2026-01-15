@@ -149,7 +149,8 @@ onMounted(async () => {
               </div>
               <div
                 class="bg-[#121011] rounded-[12px] p-3 border border-[#2c2021] group-hover/card:border-[#9a203e]/30 transition-colors">
-                <p class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words">
+                <p
+                  class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6">
                   "{{ note.content }}"
                 </p>
               </div>

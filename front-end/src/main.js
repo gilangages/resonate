@@ -60,26 +60,20 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  // Ambil token dari localStorage
   const token = localStorage.getItem("token");
 
-  // Cek apakah halaman yang dituju butuh login (requiresAuth)
-  if (to.matched.some((record) => record.meta.requiresAuth)) {
-    // Jika butuh login tapi token tidak ada atau kosong ""
-    if (!token || token === '""') {
-      next("/login"); // Redirect ke login
-    } else {
-      next(); // Izinkan masuk
-    }
-  } else {
-    // Jika user sudah login tapi malah mau akses halaman login/register
-    if (token && token !== '""' && (to.path === "/login" || to.path === "/register")) {
-      next("/dashboard"); // Tendang balik ke dashboard
-    } else {
-      next(); // Halaman bebas akses (seperti landing page)
-    }
+  // 1. Jika rute butuh auth (dashboard) tapi tidak ada token
+  if (to.path.startsWith("/dashboard") && !token) {
+    next("/login");
+  }
+  // 2. Jika rute login/register tapi user SUDAH punya token (biar ga login 2x)
+  else if ((to.path === "/login" || to.path === "/register") && token) {
+    next("/dashboard");
+  }
+  // 3. Lanjut normal
+  else {
+    next();
   }
 });
 
 createApp(App).use(router).mount("#app");
-export default router;

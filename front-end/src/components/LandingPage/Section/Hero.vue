@@ -12,7 +12,7 @@
       <div class="text-center">
         <RouterLink to="/login">
           <button
-            class="cursor-pointer mt-[10px] bg-[#9a203e] text-[#e5e5e5] font-semibold tracking-[2px] px-[24px] py-[16px] rounded-[10px] hover:bg-[#7d1a33]">
+            class="cursor-pointer mt-[10px] bg-[#9a203e] text-[#e5e5e5] font-semibold tracking-[2px] px-[24px] py-[16px] rounded-[10px] border border-transparent transition-transform transition-colors duration-200 ease-out hover:text-[#9a203e] hover:bg-[#0F0505] hover:border-[#9a203e] hover:scale-105">
             Mulai Menulis
           </button>
         </RouterLink>

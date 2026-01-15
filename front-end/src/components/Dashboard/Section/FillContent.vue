@@ -179,7 +179,8 @@ onBeforeMount(async () => {
 
           <div
             class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
-            <p class="text-base text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words">
+            <p
+              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6">
               "{{ note.content }}"
             </p>
           </div>

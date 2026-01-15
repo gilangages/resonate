@@ -12,7 +12,7 @@
       </RouterLink>
       <RouterLink
         to="/login"
-        class="cursor-pointer bg-[#9a203e] text-[#e5e5e5] text-[14px] font-semibold px-[16px] py-[8px] rounded-[20px] hover:bg-[#7d1a33]">
+        class="cursor-pointer bg-[#180808] transition-transform duration-200 ease-out hover:scale-105 border border-[#9a203e] hover:bg-[#9a203e] text-[#e5e5e5] text-[14px] font-semibold px-[16px] py-[8px] rounded-[20px]">
         Masuk
       </RouterLink>
     </div>
