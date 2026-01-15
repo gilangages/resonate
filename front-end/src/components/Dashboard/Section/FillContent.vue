@@ -3,6 +3,7 @@ import { useLocalStorage } from "@vueuse/core";
 import { myNoteList, noteDelete } from "../../../lib/api/NoteApi";
 import { onBeforeMount, ref, nextTick } from "vue";
 import { alertConfirm, alertError, alertSuccess } from "../../../lib/alert";
+import { formatTime, isEdited } from "../../../lib/dateFormatter";
 
 // Emit ke Parent
 const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
@@ -22,16 +23,7 @@ const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 
-// --- FORMATTER ---
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-};
-
+// --- FORMATTER LAMA (Hanya untuk detail di Modal biar lengkap) ---
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -192,7 +184,16 @@ onBeforeMount(async () => {
                 <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
                 <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
               </div>
-              <span class="text-[10px] text-[#555] font-mono ml-auto">{{ formatDate(note.created_at) }}</span>
+
+              <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
+                {{ formatTime(note.created_at) }}
+
+                <span
+                  v-if="isEdited(note.created_at, note.updated_at)"
+                  class="text-[#9a203e] italic ml-1 block sm:inline">
+                  (diedit)
+                </span>
+              </span>
             </div>
 
             <div
@@ -215,14 +216,28 @@ onBeforeMount(async () => {
 
     <div
       v-if="currentPage < lastPage"
-      class="mb-[5em] flex justify-center py-6 text-[#e5e5e5] gap-2 cursor-pointer hover:opacity-80">
+      class="mb-[5em] flex justify-center py-6 text-[#e5e5e5] gap-1.5 hover:opacity-80">
       <button
         @click="loadMore"
         :disabled="isLoadingMore"
-        class="bg-transparent font-semibold uppercase hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed tracking-widest text-sm">
+        class="bg-transparent font-semibold uppercase hover:underline cursor-pointer disabled:opacity-50 tracking-widest text-sm">
         {{ isLoadingMore ? "Memuat..." : "Lihat Lebih Banyak" }}
       </button>
-      <img v-if="!isLoadingMore" src="../../../assets/img/arrow-down.svg" class="w-[16px]" />
+      <svg
+        v-if="!isLoadingMore"
+        @click="loadMore"
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="cursor-pointer">
+        <path d="M6 9l6 6 6-6" />
+      </svg>
     </div>
 
     <button

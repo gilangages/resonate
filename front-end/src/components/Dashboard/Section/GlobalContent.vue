@@ -2,6 +2,7 @@
 import { useLocalStorage } from "@vueuse/core";
 import { noteList } from "../../../lib/api/NoteApi";
 import { onMounted, ref, nextTick } from "vue";
+import { formatTime, isEdited } from "../../../lib/dateFormatter";
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
@@ -104,7 +105,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="p-6 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
+  <div class="p-4 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
     <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
       Belum ada pesan yang dibuat.
     </div>
@@ -116,65 +117,73 @@ onMounted(async () => {
         class="break-inside-avoid relative group/card cursor-pointer"
         @click="openModal(note)">
         <div
-          class="bg-[#1c1516] rounded-[24px] p-5 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col">
+          class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col h-full">
           <div
             class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
-          <div class="flex justify-between items-start mb-4 relative z-10">
-            <div>
-              <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-0.5">UNTUK</p>
-              <h2
-                class="text-[18px] font-bold text-white group-hover/card:text-[#9a203e] transition-colors leading-tight break-words">
-                {{ note.recipient }}
-              </h2>
-            </div>
-            <div class="text-right">
-              <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-0.5">DARI</p>
-              <div class="flex items-center justify-end gap-2">
-                <span class="text-[13px] font-bold text-[#ccc] truncate max-w-[100px]">{{ note.author }}</span>
-                <img :src="note.author_avatar" class="w-7 h-7 rounded-full border border-[#333] object-cover" />
-              </div>
-            </div>
+          <div class="mb-5 relative z-10">
+            <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">UNTUK</p>
+            <h2
+              class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors break-words leading-tight">
+              {{ note.recipient }}
+            </h2>
           </div>
 
-          <div class="flex gap-4 items-start relative z-10">
+          <div class="flex gap-4 items-center relative z-10 mb-5">
             <div
-              class="w-[70px] h-[70px] rounded-[14px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
+              class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
               <img :src="note.spotify_album_image" class="w-full h-full object-cover" />
             </div>
             <div class="flex-1 min-w-0">
-              <div class="mb-2">
-                <p class="text-sm font-bold text-white truncate">{{ note.spotify_track_name }}</p>
-                <p class="text-xs text-[#888] truncate">{{ note.spotify_artist }}</p>
-              </div>
-              <div
-                class="bg-[#121011] rounded-[12px] p-3 border border-[#2c2021] group-hover/card:border-[#9a203e]/30 transition-colors">
-                <p
-                  class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6">
-                  "{{ note.content }}"
-                </p>
-              </div>
+              <p class="text-sm font-bold text-white truncate">{{ note.spotify_track_name }}</p>
+              <p class="text-xs text-[#888] truncate">{{ note.spotify_artist }}</p>
             </div>
           </div>
 
-          <div class="mt-4 flex justify-between items-center border-t border-[#2c2021] pt-3 relative z-10">
-            <span class="text-[11px] text-[#555]">{{ formatDate(note.created_at) }}</span>
-            <span
-              class="text-[11px] font-bold text-[#e5e5e5] group-hover/card:text-[#9a203e] transition-colors flex items-center gap-1">
-              BUKA
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </span>
+          <div
+            class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
+            <p
+              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6">
+              "{{ note.content }}"
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
+            <div class="flex items-center gap-2">
+              <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
+              <div class="flex flex-col">
+                <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
+                <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
+              </div>
+              <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
+                {{ formatTime(note.created_at) }}
+                <span
+                  v-if="isEdited(note.created_at, note.updated_at)"
+                  class="text-[#9a203e] italic ml-1 block sm:inline">
+                  (diedit)
+                </span>
+              </span>
+            </div>
+
+            <div
+              class="w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
+              <button
+                class="w-full py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-widest hover:bg-[#9a203e] hover:text-white transition-all flex items-center justify-center gap-2">
+                Lihat Detail
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -189,11 +198,21 @@ onMounted(async () => {
         class="bg-transparent font-semibold uppercase hover:underline cursor-pointer disabled:opacity-50 tracking-widest text-sm">
         {{ isLoadingMore ? "Memuat..." : "Lihat Lebih Banyak" }}
       </button>
-      <img
+      <svg
         v-if="!isLoadingMore"
         @click="loadMore"
-        src="../../../assets/img/arrow-down.svg"
-        class="cursor-pointer w-[14px]" />
+        xmlns="http://www.w3.org/2000/svg"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="cursor-pointer">
+        <path d="M6 9l6 6 6-6" />
+      </svg>
     </div>
 
     <Transition name="fade">
@@ -267,10 +286,11 @@ onMounted(async () => {
                   <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
                 </div>
               </div>
+
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#555"
@@ -279,6 +299,7 @@ onMounted(async () => {
                 stroke-linejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
+
               <div class="text-right">
                 <p class="text-[10px] text-[#666] uppercase tracking-wide">UNTUK</p>
                 <p class="text-sm font-bold text-[#9a203e]">{{ selectedNote?.recipient }}</p>
