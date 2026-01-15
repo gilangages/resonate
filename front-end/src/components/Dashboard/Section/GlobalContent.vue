@@ -76,15 +76,26 @@ const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
 
-  // LOGIKA PEMUTAR MUSIK
-  if (note.music_preview_url) {
-    currentAudio.value.src = note.music_preview_url;
-    currentAudio.value.volume = 0.5;
+  // LOGIKA BARU: Gunakan Proxy URL dari Backend kita sendiri
+  // Pastikan note punya ID lagu
+  if (note.music_track_id) {
+    // URL Backend Laravel
+    // Sesuaikan base URL API kamu, misal: http://localhost:8000/api/stream/
+    const streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
 
-    // TAMBAHKAN INI AGAR LOOPING (MENGULANG TERUS)
+    console.log("Memutar via Proxy:", streamUrl);
+
+    currentAudio.value.src = streamUrl;
+    currentAudio.value.volume = 0.5;
     currentAudio.value.loop = true;
 
-    currentAudio.value.play().catch((e) => console.log("Gagal memutar audio:", e));
+    currentAudio.value.play().catch((e) => {
+      console.error("Gagal play audio:", e);
+    });
+  } else if (note.music_preview_url) {
+    // Fallback: Kalau data lama banget yg gapunya ID tapi punya URL (meski mungkin basi)
+    currentAudio.value.src = note.music_preview_url;
+    currentAudio.value.play().catch((e) => console.log(e));
   }
 
   nextTick(() => {
@@ -278,36 +289,14 @@ onMounted(async () => {
             </p>
 
             <a
-              v-if="selectedNote?.spotify_track_link || selectedNote?.music_track_id"
-              :href="selectedNote?.spotify_track_link || `https://www.deezer.com/track/${selectedNote?.music_track_id}`"
+              v-if="selectedNote?.music_track_id"
+              :href="`https://www.deezer.com/track/${selectedNote?.music_track_id}`"
               target="_blank"
-              class="flex items-center gap-3 bg-[#a238ff] hover:bg-[#8b21e0] text-white px-6 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(162,56,255,0.3)] mt-2 no-underline decoration-0 group">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="text-white">
-                <path d="M10 20H6V4H10V20ZM16 20H12V8H16V20ZM22 20H18V12H22V20ZM4 20H0V12H4V20Z" />
+              class="flex items-center gap-2 bg-[#9a203e] hover:bg-[#7d1a33] text-white px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(154,32,62,0.3)] no-underline decoration-0 group">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
               </svg>
-              <span>Dengar di Deezer</span>
-
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="opacity-70 group-hover:translate-x-0.5 transition-transform">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
+              <span>Putar Lagu Penuh</span>
             </a>
           </div>
 
@@ -341,7 +330,7 @@ onMounted(async () => {
               </div>
             </div>
             <div class="mb-6">
-              <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide whitespace-pre-wrap break-words">
+              <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide break-words">
                 "{{ selectedNote?.content }}"
               </p>
             </div>

@@ -2,6 +2,7 @@
 import { onMounted, ref, nextTick } from "vue";
 import { noteListGlobal } from "../../../lib/api/NoteApi";
 import { alertError } from "../../../lib/alert";
+import { formatTime, isEdited } from "../../../lib/dateFormatter";
 
 // --- STATE ---
 const notes = ref([]);
@@ -44,15 +45,13 @@ const scroll = (direction) => {
 };
 
 // --- MODAL & AUDIO LOGIC ---
-const openModal = (note) => {
+const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
 
   // LOGIKA BARU: Gunakan Proxy URL dari Backend kita sendiri
   // Pastikan note punya ID lagu
   if (note.music_track_id) {
-    // Atau note.spotify_track_id sesuaikan namamu
-
     // URL Backend Laravel
     // Sesuaikan base URL API kamu, misal: http://localhost:8000/api/stream/
     const streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
@@ -79,7 +78,7 @@ const openModal = (note) => {
   });
 };
 
-const closeModal = () => {
+const closeModalDetail = () => {
   isVinylSpinning.value = false;
 
   // 4. STOP AUDIO & RESET
@@ -108,11 +107,6 @@ const closePreview = () => {
 };
 
 // --- FORMATTER ---
-const formatDateShort = (dateString) => {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-};
-
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -160,7 +154,7 @@ onMounted(async () => {
         <div
           v-for="(note, index) in notes"
           :key="note.id || index"
-          @click="openModal(note)"
+          @click="openModalDetail(note)"
           class="min-w-[85vw] sm:min-w-[450px] snap-center group/card cursor-pointer">
           <div
             class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden h-full flex flex-col">
@@ -188,10 +182,10 @@ onMounted(async () => {
             </div>
 
             <div
-              class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10 flex-1">
-              <p class="text-[15px] text-[#ccc] italic font-hand leading-relaxed line-clamp-3 break-words">
-                "{{ note.content }}"
-              </p>
+              class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
+              <p
+                v-text="'&quot;' + note.content + '&quot;'"
+                class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap line-clamp-3 break-words"></p>
             </div>
 
             <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
@@ -206,7 +200,12 @@ onMounted(async () => {
 
                 <div class="ml-auto flex items-center gap-3">
                   <span class="text-[10px] text-[#555] font-mono">
-                    {{ formatDateShort(note.created_at) }}
+                    {{ formatTime(note.created_at) }}
+                    <span
+                      v-if="isEdited(note.created_at, note.updated_at)"
+                      class="text-[#9a203e] italic ml-1 block sm:inline">
+                      (diedit)
+                    </span>
                   </span>
 
                   <div
@@ -257,12 +256,12 @@ onMounted(async () => {
       <div
         v-if="showModal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
-        @click.self="closeModal">
+        @click.self="closeModalDetail">
         <div
           class="bg-[#1c1516] w-full max-w-[420px] rounded-[24px] shadow-2xl border border-[#2c2021] flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
           :class="showModal ? 'scale-100' : 'scale-95'">
           <button
-            @click="closeModal"
+            @click="closeModalDetail"
             class="absolute top-4 right-4 z-50 bg-black/40 hover:bg-[#9a203e] text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -343,7 +342,7 @@ onMounted(async () => {
             </div>
 
             <div class="mb-6">
-              <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide whitespace-pre-wrap">
+              <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide break-words">
                 "{{ selectedNote?.content }}"
               </p>
             </div>
@@ -366,7 +365,7 @@ onMounted(async () => {
 
             <div class="mt-6">
               <button
-                @click="closeModal"
+                @click="closeModalDetail"
                 class="w-full py-3 rounded-[12px] border border-[#3f3233] text-[#888] font-bold text-xs uppercase tracking-widest hover:bg-[#2c2021] hover:text-white transition-all cursor-pointer">
                 Tutup Catatan
               </button>
