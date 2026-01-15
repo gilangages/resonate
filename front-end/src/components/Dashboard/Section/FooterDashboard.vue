@@ -12,7 +12,7 @@
 
       <router-link
         to="/about"
-        class="text-[#e5e5e5]/40 hover:text-[#9a203e] text-[10px] font-medium transition-colors duration-300">
+        class="text-[#e5e5e5]/40 hover:text-[#9a203e] text-[10px] font-medium transition-colors duration-300 md:py-2">
         About
       </router-link>
     </div>

@@ -103,11 +103,12 @@ onMounted(() => {
 
 <template>
   <div
-    class="min-h-screen flex flex-col bg-[#0f0505] font-['Poppins'] overflow-x-hidden selection:bg-[#9a203e] selection:text-white pb-28 md:pb-0">
-    <NavbarDashboard v-if="isLoggedIn" />
-    <Navbar v-else />
+    class="min-h-screen flex flex-col bg-[#0f0505] font-['Poppins'] selection:bg-[#9a203e] selection:text-white pb-28 md:pb-0">
+    <NavbarDashboard class="sticky top-0 z-50" v-if="isLoggedIn" />
+    <Navbar class="sticky top-0 z-50" v-else />
 
-    <div class="flex-grow flex flex-col items-center justify-center px-6 py-12 md:px-8 mt-16 relative">
+    <div
+      class="flex-grow flex flex-col items-center justify-center px-6 py-12 md:px-8 mt-16 relative overflow-x-hidden">
       <div class="relative z-10 text-center max-w-4xl mx-auto mb-16 animate-fade-in-up" style="animation-delay: 0.1s">
         <h1 class="text-4xl md:text-6xl font-extrabold text-[#9a203e] mb-6 tracking-tight drop-shadow-sm">
           Tentang Resonate
@@ -333,7 +334,6 @@ onMounted(() => {
         <div
           class="card-abdian-glow inline-flex items-center justify-center gap-3 px-8 py-3 rounded-full bg-white/5 border border-white/10 cursor-default group">
           <div class="w-2 h-2 rounded-full bg-[#9a203e]"></div>
-
           <span class="font-semibold text-white tracking-widest group-hover:text-[#ff4d6d] transition-colors">
             Abdian
           </span>
