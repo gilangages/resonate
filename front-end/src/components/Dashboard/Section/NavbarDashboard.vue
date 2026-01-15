@@ -159,6 +159,7 @@ onUnmounted(() => {
           <img
             :src="userState.avatar ? getAvatarUrl(userState.avatar) : userState.photo_url"
             alt="me"
+            referrerpolicy="no-referrer"
             class="w-[36px] h-[36px] sm:w-[40px] sm:h-[40px] rounded-full object-cover block border border-[#2c2021] shadow-sm" />
         </div>
 

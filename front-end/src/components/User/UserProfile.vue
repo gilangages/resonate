@@ -446,6 +446,7 @@ onMounted(() => {
         <div class="relative flex flex-col items-center w-full max-w-[90vw] max-h-[90vh] cursor-default">
           <img
             :src="userState.avatar ? getAvatarUrl(userState.avatar) : userState.photo_url"
+            referrerpolicy="no-referrer"
             class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
             @click.stop />
           <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>

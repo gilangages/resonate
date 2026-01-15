@@ -1,7 +1,9 @@
 <script setup>
 import Navbar from "./Navbar.vue";
+// 1. Import NavbarDashboard (sesuaikan path folder)
+import NavbarDashboard from "../../Dashboard/Section/NavbarDashboard.vue";
 import Footer from "./Footer.vue";
-import { ref } from "vue";
+import { ref, onMounted } from "vue"; // Tambahkan onMounted
 import Swal from "sweetalert2";
 
 // State untuk Form
@@ -88,12 +90,24 @@ const submitContact = async () => {
     isLoading.value = false;
   }
 };
+
+// --- LOGIKA BARU UNTUK CEK LOGIN ---
+const isLoggedIn = ref(false);
+
+onMounted(() => {
+  // Cek apakah ada token di localStorage
+  const token = localStorage.getItem("token");
+  if (token) {
+    isLoggedIn.value = true;
+  }
+});
 </script>
 
 <template>
   <div
     class="min-h-screen flex flex-col bg-[#0f0505] font-['Poppins'] overflow-x-hidden selection:bg-[#9a203e] selection:text-white">
-    <Navbar />
+    <NavbarDashboard v-if="isLoggedIn" />
+    <Navbar v-else />
 
     <div class="flex-grow flex flex-col items-center justify-center px-6 py-12 md:px-8 mt-16 relative">
       <div class="relative z-10 text-center max-w-4xl mx-auto mb-16 animate-fade-in-up" style="animation-delay: 0.1s">
