@@ -18,6 +18,7 @@ import UserResetPassword from "./components/User/UserResetPassword.vue";
 import AdminDashboard from "./components/Admin/AdminDashboard.vue";
 import { alertError } from "./lib/alert";
 import AllNotifications from "./components/Dashboard/AllNotifications.vue";
+import About from "./components/LandingPage/Section/About.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -25,6 +26,10 @@ const router = createRouter({
     {
       path: "/",
       component: LandingPage,
+    },
+    {
+      path: "/about",
+      component: About,
     },
     {
       path: "/note/:id",

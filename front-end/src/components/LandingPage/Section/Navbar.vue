@@ -2,8 +2,12 @@
 <template>
   <!-- NAVBAR -->
   <div class="flex items-center justify-between bg-[#180808] p-[12px] text-[#e5e5e5] sticky top-0 z-50">
-    <h1 class="text-[16px] sm:text-[24px] text-[#9a203e] m-0 sm:ml-[1em] font-bold">Resonate</h1>
-
+    <RouterLink to="/" data-title="Resonate" class="tooltip-container-mid no-underline">
+      <h1
+        class="text-[16px] sm:text-[24px] text-[#9a203e] m-0 sm:ml-[1em] font-bold hover:text-[#b92b4a] transition-colors cursor-pointer">
+        Resonate
+      </h1>
+    </RouterLink>
     <div class="flex items-center gap-[10px] pr-[10px] justify-center">
       <RouterLink
         to="/register"
