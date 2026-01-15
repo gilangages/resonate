@@ -6,13 +6,12 @@ import { alertError } from "../../../lib/alert";
 // --- STATE ---
 const notes = ref([]);
 const scrollContainer = ref(null);
+const currentAudio = ref(new Audio()); // State Audio Player
 
-// Modal
+// Modal & Preview
 const showModal = ref(false);
 const selectedNote = ref(null);
 const isVinylSpinning = ref(false);
-
-// Image Preview
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 
@@ -21,7 +20,6 @@ async function fetchNoteGlobal() {
   try {
     const response = await noteListGlobal();
     const responseBody = await response.json();
-
     if (response.ok) {
       notes.value = responseBody.data;
     } else {
@@ -33,10 +31,10 @@ async function fetchNoteGlobal() {
   }
 }
 
-// --- SCROLL ---
+// --- SCROLL LOGIC ---
 const scroll = (direction) => {
   if (scrollContainer.value) {
-    const scrollAmount = 450; // Lebar card baru
+    const scrollAmount = 450;
     if (direction === "left") {
       scrollContainer.value.scrollBy({ left: -scrollAmount, behavior: "smooth" });
     } else {
@@ -45,10 +43,36 @@ const scroll = (direction) => {
   }
 };
 
-// --- MODAL ---
+// --- MODAL & AUDIO LOGIC ---
 const openModal = (note) => {
   selectedNote.value = note;
   showModal.value = true;
+
+  // Cek apakah ada URL musiknya
+  if (note.music_preview_url) {
+    console.log("Mencoba memutar:", note.music_preview_url); // DEBUGGING: Cek URL di Console
+
+    currentAudio.value.src = note.music_preview_url;
+    currentAudio.value.volume = 0.5;
+    currentAudio.value.loop = true;
+
+    // Play dengan Error Handling yang Benar
+    currentAudio.value.play().catch((e) => {
+      // Bedakan Error Autoplay vs Error Link Rusak
+      if (e.name === "NotSupportedError") {
+        console.error("Link lagu sudah kedaluwarsa (Expired Token).");
+        // Opsional: Reset src agar tidak looping error
+        currentAudio.value.src = "";
+        // Opsional: Alert ke user
+        // alert("Maaf, preview lagu ini sudah kedaluwarsa dari Deezer.");
+      } else {
+        console.error("Gagal play:", e);
+      }
+    });
+  } else {
+    console.log("Note ini tidak memiliki preview lagu (URL null/kosong).");
+  }
+
   nextTick(() => {
     setTimeout(() => {
       isVinylSpinning.value = true;
@@ -58,19 +82,25 @@ const openModal = (note) => {
 
 const closeModal = () => {
   isVinylSpinning.value = false;
+
+  // 4. STOP AUDIO & RESET
+  currentAudio.value.pause();
+  currentAudio.value.currentTime = 0;
+  currentAudio.value.loop = false; // Matikan loop saat tutup
+
   setTimeout(() => {
     showModal.value = false;
     selectedNote.value = null;
   }, 100);
 };
 
-// --- PREVIEW IMAGE ---
+// --- IMAGE PREVIEW ---
 const openPreview = (url) => {
-  if (!url) return;
-  previewImageUrl.value = url;
-  showImagePreview.value = true;
+  if (url) {
+    previewImageUrl.value = url;
+    showImagePreview.value = true;
+  }
 };
-
 const closePreview = () => {
   showImagePreview.value = false;
   setTimeout(() => {
@@ -81,11 +111,7 @@ const closePreview = () => {
 // --- FORMATTER ---
 const formatDateShort = (dateString) => {
   if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return new Date(dateString).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
 };
 
 const formatDateDetail = (dateString) => {
@@ -138,62 +164,69 @@ onMounted(async () => {
           @click="openModal(note)"
           class="min-w-[85vw] sm:min-w-[450px] snap-center group/card cursor-pointer">
           <div
-            class="bg-[#1c1516] rounded-[20px] p-5 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden h-full flex flex-col">
+            class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden h-full flex flex-col">
             <div
               class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
-            <div class="flex justify-between items-start mb-5 relative z-10">
-              <div>
-                <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-0.5">UNTUK</p>
-                <h2
-                  class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors truncate max-w-[200px]">
-                  {{ note.recipient }}
-                </h2>
-              </div>
-              <div class="text-right">
-                <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-0.5">DARI</p>
-                <div class="flex items-center justify-end gap-2">
-                  <span class="text-sm font-bold text-[#ccc] truncate max-w-[140px]">{{ note.author }}</span>
-                  <img :src="note.author_avatar" class="w-8 h-8 rounded-full border border-[#333] object-cover" />
-                </div>
-              </div>
+            <div class="mb-5 relative z-10">
+              <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">KEPADA</p>
+              <h2 class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors truncate">
+                {{ note.recipient }}
+              </h2>
             </div>
 
-            <div class="flex gap-5 items-start relative z-10 flex-1">
+            <div class="flex gap-4 items-center relative z-10 mb-5">
               <div
-                class="w-20 h-20 rounded-[14px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform">
-                <img :src="note.spotify_album_image" class="w-full h-full object-cover" />
+                class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
+                <img :src="note.music_album_image" class="w-full h-full object-cover" />
               </div>
               <div class="flex-1 min-w-0">
-                <div class="mb-1.5">
-                  <p class="text-[15px] font-bold text-white truncate">{{ note.spotify_track_name }}</p>
-                  <p class="text-xs text-[#888] truncate">{{ note.spotify_artist }}</p>
-                </div>
-                <div
-                  class="bg-[#121011] rounded-[10px] p-3 border border-[#2c2021] mt-2 group-hover/card:border-[#9a203e]/30 transition-colors">
-                  <p class="text-base text-[#aaa] italic font-hand leading-snug line-clamp-2">"{{ note.content }}"</p>
-                </div>
+                <p class="text-sm font-bold text-white truncate">
+                  {{ note.music_track_name }}
+                </p>
+                <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
               </div>
             </div>
 
-            <div class="mt-5 flex justify-between items-center border-t border-[#2c2021] pt-4 relative z-10">
-              <span class="text-xs text-[#555]">{{ formatDateShort(note.created_at) }}</span>
-              <span
-                class="text-[11px] font-bold text-[#e5e5e5] group-hover/card:text-[#9a203e] transition-colors flex items-center gap-1.5 uppercase tracking-wide">
-                Buka
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </span>
+            <div
+              class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10 flex-1">
+              <p class="text-[15px] text-[#ccc] italic font-hand leading-relaxed line-clamp-3 break-words">
+                "{{ note.content }}"
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
+              <div class="flex items-center gap-2">
+                <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
+                  <span class="text-xs text-[#999] font-medium leading-none truncate max-w-[150px]">
+                    {{ note.author }}
+                  </span>
+                </div>
+
+                <div class="ml-auto flex items-center gap-3">
+                  <span class="text-[10px] text-[#555] font-mono">
+                    {{ formatDateShort(note.created_at) }}
+                  </span>
+
+                  <div
+                    class="text-[#e5e5e5] group-hover/card:text-[#9a203e] transition-colors transform group-hover/card:translate-x-1 duration-300">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -252,33 +285,26 @@ onMounted(async () => {
               :class="{ 'animate-spin-slow': isVinylSpinning }">
               <div class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
               <img
-                :src="selectedNote?.spotify_album_image"
+                :src="selectedNote?.music_album_image"
                 class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
             </div>
 
             <h2 class="text-xl font-bold text-white text-center leading-tight">
-              {{ selectedNote?.spotify_track_name }}
+              {{ selectedNote?.music_track_name }}
             </h2>
             <p class="text-[#9a203e] text-xs font-medium uppercase tracking-wide mb-4 mt-1">
-              {{ selectedNote?.spotify_artist }}
+              {{ selectedNote?.music_artist_name }}
             </p>
 
             <a
-              v-if="selectedNote?.spotify_track_link"
-              :href="selectedNote?.spotify_track_link"
+              v-if="selectedNote?.music_track_id"
+              :href="`https://www.deezer.com/track/${selectedNote?.music_track_id}`"
               target="_blank"
-              class="flex items-center gap-2 bg-[#1ed760] hover:bg-[#1db954] text-black px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(30,215,96,0.2)] no-underline decoration-0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                class="text-black">
-                <path
-                  d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.4-1.02 15.96 1.74.539.3.66 1.022.359 1.561-.3.479-1.02.6-1.56.3z" />
+              class="flex items-center gap-2 bg-[#9a203e] hover:bg-[#7d1a33] text-white px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(154,32,62,0.3)] no-underline decoration-0 group">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z" />
               </svg>
-              <span>Dengar di Spotify</span>
+              <span>Putar Lagu Penuh</span>
             </a>
           </div>
 
@@ -291,32 +317,17 @@ onMounted(async () => {
                   <img
                     :src="selectedNote?.author_avatar"
                     class="w-10 h-10 rounded-full border border-[#3f3233] object-cover transition-transform group-hover/avatar:scale-110" />
-                  <div
-                    class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="12"
-                      height="12"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      stroke-width="3"
-                      stroke-linecap="round"
-                      stroke-linejoin="round">
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                  </div>
                 </div>
                 <div>
                   <p class="text-[10px] text-[#666] uppercase tracking-wide">DARI</p>
                   <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
                 </div>
               </div>
+
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#555"
@@ -325,6 +336,7 @@ onMounted(async () => {
                 stroke-linejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
+
               <div class="text-right">
                 <p class="text-[10px] text-[#666] uppercase tracking-wide">UNTUK</p>
                 <p class="text-sm font-bold text-[#9a203e]">{{ selectedNote?.recipient }}</p>
@@ -398,6 +410,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* CSS Sama Seperti Sebelumnya */
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap");
 

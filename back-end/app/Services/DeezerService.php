@@ -9,9 +9,11 @@ class DeezerService implements MusicProvider
 {
     public function searchTrack(string $query): array
     {
+        // Tambahkan baris ini sementara untuk tes
         $response = Http::get('https://api.deezer.com/search', [
             'q' => $query,
             'limit' => 10,
+            'order' => 'RANKING',
         ]);
 
         if ($response->failed()) {

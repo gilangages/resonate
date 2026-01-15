@@ -47,21 +47,21 @@ const populateForm = () => {
     content: d.content,
     recipient: d.recipient,
     initial_name: d.initial_name,
-    spotify_track_id: d.spotify_track_id,
-    spotify_track_name: d.spotify_track_name,
-    spotify_artist: d.spotify_artist,
-    spotify_album_image: d.spotify_album_image,
-    spotify_preview_url: d.spotify_preview_url,
+    music_track_id: d.music_track_id,
+    music_track_name: d.music_track_name,
+    music_artist_name: d.music_artist_name,
+    music_album_image: d.music_album_image,
+    music_preview_url: d.music_preview_url,
   });
 
   // 2. Isi UI Search
   selectedSong.value = {
-    id: d.spotify_track_id,
-    name: d.spotify_track_name,
-    artists: [{ name: d.spotify_artist }],
-    album: { images: [{ url: d.spotify_album_image }] },
+    id: d.music_track_id,
+    name: d.music_track_name,
+    artists: [{ name: d.music_artist_name }],
+    album: { images: [{ url: d.music_album_image }] },
   };
-  queryLagu.value = `${d.spotify_track_name} - ${d.spotify_artist}`;
+  queryLagu.value = `${d.music_track_name} - ${d.music_artist_name}`;
 
   if (d.initial_name) {
     kirimSebagai.value = "samaran";
@@ -94,7 +94,7 @@ const handleSearchInput = () => {
   isSearching.value = true;
   debounceTimer = setTimeout(async () => {
     try {
-      const response = await searchMusic(token.value, queryLagu.value);
+      const response = await searchMusic(token.value, { query: queryLagu.value });
       const data = await response.json();
       if (data && data.tracks && data.tracks.items) {
         searchResults.value = data.tracks.items;
@@ -115,11 +115,11 @@ const selectSong = (song) => {
   searchResults.value = [];
 
   // PENTING: Update object 'note' saat lagu diganti
-  note.spotify_track_id = song.id;
-  note.spotify_track_name = song.name;
-  note.spotify_artist = song.artists[0].name;
-  note.spotify_album_image = song.album.images[0]?.url || "";
-  note.spotify_preview_url = song.preview_url;
+  note.music_track_id = song.id;
+  note.music_track_name = song.name;
+  note.music_artist_name = song.artists[0].name;
+  note.music_album_image = song.album.images[0]?.url || "";
+  note.music_preview_url = song.preview_url;
 };
 
 // --- BAGIAN YANG DIPERBAIKI ---
@@ -221,17 +221,17 @@ onMounted(async () => {
           required
           v-model="note.content"
           placeholder="Tulis pesanmu"
-          class="mt-[6px] mb-[20px] h-[120px] w-full resize-y rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]"></textarea>
+          class="custom-scrollbar mt-[6px] mb-[20px] h-[120px] w-full resize-y rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]"></textarea>
       </div>
 
       <div class="text-[14px]">
         <label>Kirim Sebagai</label>
 
         <div class="mt-[6px] mb-[20px] flex items-center gap-2">
-          <input type="radio" value="asli" v-model="kirimSebagai" class="cursor-pointer" />
+          <input type="radio" value="asli" v-model="kirimSebagai" class="cursor-pointer w-5 h-5 accent-[#9a203e]" />
           <span class="mr-[2em]">{{ name }} (Asli)</span>
 
-          <input type="radio" value="samaran" v-model="kirimSebagai" class="cursor-pointer" />
+          <input type="radio" value="samaran" v-model="kirimSebagai" class="cursor-pointer w-5 h-5 accent-[#9a203e]" />
           <span>Nama Samaran</span>
         </div>
 
@@ -265,6 +265,13 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* Class untuk Scrollbar Custom */
+.custom-scrollbar {
+  /* Support untuk Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #3f3233 transparent;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }

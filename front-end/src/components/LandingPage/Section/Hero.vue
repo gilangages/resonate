@@ -6,7 +6,7 @@
     <div class="flex flex-col gap-[10px] justify-center">
       <h2 class="text-[20px] font-semibold text-center m-0">Ungkapkan Perasaanmu Lewat Nada!</h2>
       <h1 class="text-[28px] text-center m-0 sm:text-[26px] lg:text-[36px] font-semibold">
-        Tulis pesanmu, sematkan lagu Spotify yang pas, dan biarkan dunia mendengarkannya.
+        Tulis pesanmu, sematkan lagu yang pas, dan biarkan dunia mendengarkannya.
       </h1>
 
       <div class="text-center">

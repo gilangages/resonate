@@ -24,7 +24,7 @@ const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 
-// --- FORMATTER LAMA (Hanya untuk detail di Modal biar lengkap) ---
+// --- FORMATTER LAMA ---
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -101,10 +101,14 @@ const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
 
-  // LOGIKA PEMUTAR MUSIK BARU
+  // LOGIKA PEMUTAR MUSIK
   if (note.music_preview_url) {
     currentAudio.value.src = note.music_preview_url;
-    currentAudio.value.volume = 0.5; // Set volume 50%
+    currentAudio.value.volume = 0.5;
+
+    // TAMBAHKAN INI AGAR LOOPING (MENGULANG TERUS)
+    currentAudio.value.loop = true;
+
     currentAudio.value.play().catch((e) => console.log("Gagal memutar audio:", e));
   }
 
@@ -120,7 +124,10 @@ const closeModalDetail = () => {
 
   // STOP MUSIK SAAT DITUTUP
   currentAudio.value.pause();
-  currentAudio.value.currentTime = 0; // Reset ke awal
+  currentAudio.value.currentTime = 0;
+
+  // RESET LOOP JADI FALSE (Optional, good practice)
+  currentAudio.value.loop = false;
 
   setTimeout(() => {
     showModal.value = false;
@@ -186,9 +193,8 @@ onBeforeMount(async () => {
           <div
             class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
             <p
-              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6">
-              "{{ note.content }}"
-            </p>
+              v-text="'&quot;' + note.content + '&quot;'"
+              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6"></p>
           </div>
 
           <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
@@ -201,7 +207,6 @@ onBeforeMount(async () => {
 
               <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
                 {{ formatTime(note.created_at) }}
-
                 <span
                   v-if="isEdited(note.created_at, note.updated_at)"
                   class="text-[#9a203e] italic ml-1 block sm:inline">
@@ -312,21 +317,37 @@ onBeforeMount(async () => {
             </p>
 
             <a
-              v-if="selectedNote?.music_preview_url"
-              :href="selectedNote?.music_preview_url"
+              v-if="selectedNote?.spotify_track_link || selectedNote?.music_track_id"
+              :href="selectedNote?.spotify_track_link || `https://www.deezer.com/track/${selectedNote?.music_track_id}`"
               target="_blank"
-              class="flex items-center gap-2 bg-[#1ed760] hover:bg-[#1db954] text-black px-6 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(30,215,96,0.2)] no-underline decoration-0">
+              class="flex items-center gap-3 bg-[#a238ff] hover:bg-[#8b21e0] text-white px-6 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(162,56,255,0.3)] no-underline decoration-0 group">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                class="text-black">
-                <path
-                  d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.4-1.02 15.96 1.74.539.3.66 1.022.359 1.561-.3.479-1.02.6-1.56.3z" />
+                class="text-white">
+                <path d="M10 20H6V4H10V20ZM16 20H12V8H16V20ZM22 20H18V12H22V20ZM4 20H0V12H4V20Z" />
               </svg>
-              <span>Putar di Spotify</span>
+
+              <span>Dengar di Deezer</span>
+
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="opacity-70 group-hover:translate-x-0.5 transition-transform">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
             </a>
           </div>
 

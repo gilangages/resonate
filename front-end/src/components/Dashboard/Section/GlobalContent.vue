@@ -6,6 +6,8 @@ import { formatTime, isEdited } from "../../../lib/dateFormatter";
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
+// 1. Tambah Audio Player State
+const currentAudio = ref(new Audio());
 
 // --- STATE PAGINATION ---
 const currentPage = ref(1);
@@ -70,9 +72,21 @@ const loadMore = async () => {
 };
 
 // --- MODAL LOGIC ---
-const openModal = (note) => {
+const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
+
+  // LOGIKA PEMUTAR MUSIK
+  if (note.music_preview_url) {
+    currentAudio.value.src = note.music_preview_url;
+    currentAudio.value.volume = 0.5;
+
+    // TAMBAHKAN INI AGAR LOOPING (MENGULANG TERUS)
+    currentAudio.value.loop = true;
+
+    currentAudio.value.play().catch((e) => console.log("Gagal memutar audio:", e));
+  }
+
   nextTick(() => {
     setTimeout(() => {
       isVinylSpinning.value = true;
@@ -80,8 +94,16 @@ const openModal = (note) => {
   });
 };
 
-const closeModal = () => {
+const closeModalDetail = () => {
   isVinylSpinning.value = false;
+
+  // STOP MUSIK SAAT DITUTUP
+  currentAudio.value.pause();
+  currentAudio.value.currentTime = 0;
+
+  // RESET LOOP JADI FALSE (Optional, good practice)
+  currentAudio.value.loop = false;
+
   setTimeout(() => {
     showModal.value = false;
     selectedNote.value = null;
@@ -115,7 +137,7 @@ onMounted(async () => {
         v-for="(note, index) in notes"
         :key="note.id || index"
         class="break-inside-avoid relative group/card cursor-pointer"
-        @click="openModal(note)">
+        @click="openModalDetail(note)">
         <div
           class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col h-full">
           <div
@@ -143,9 +165,8 @@ onMounted(async () => {
           <div
             class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
             <p
-              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6">
-              "{{ note.content }}"
-            </p>
+              v-text="'&quot;' + note.content + '&quot;'"
+              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6"></p>
           </div>
 
           <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
@@ -169,7 +190,7 @@ onMounted(async () => {
               class="w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
               <button
                 class="cursor-pointer w-full py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-widest hover:bg-[#9a203e] hover:text-white transition-all flex items-center justify-center gap-2">
-                Lihat Detail
+                BUKA
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="14"
@@ -219,12 +240,12 @@ onMounted(async () => {
       <div
         v-if="showModal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
-        @click.self="closeModal">
+        @click.self="closeModalDetail">
         <div
           class="bg-[#1c1516] w-full max-w-[420px] rounded-[24px] shadow-2xl border border-[#2c2021] flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
           :class="showModal ? 'scale-100' : 'scale-95'">
           <button
-            @click="closeModal"
+            @click="closeModalDetail"
             class="absolute top-4 right-4 z-50 bg-black/40 hover:bg-[#9a203e] text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -255,22 +276,38 @@ onMounted(async () => {
             <p class="text-[#9a203e] text-xs font-medium uppercase tracking-wide mb-4 mt-1">
               {{ selectedNote?.music_artist_name }}
             </p>
+
             <a
-              v-if="selectedNote?.music_preview_url"
-              :href="selectedNote?.music_preview_url"
+              v-if="selectedNote?.spotify_track_link || selectedNote?.music_track_id"
+              :href="selectedNote?.spotify_track_link || `https://www.deezer.com/track/${selectedNote?.music_track_id}`"
               target="_blank"
-              class="flex items-center gap-2 bg-[#1ed760] hover:bg-[#1db954] text-black px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(30,215,96,0.2)] mt-2 no-underline decoration-0">
+              class="flex items-center gap-3 bg-[#a238ff] hover:bg-[#8b21e0] text-white px-6 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(162,56,255,0.3)] mt-2 no-underline decoration-0 group">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
+                width="18"
+                height="18"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                class="text-black">
-                <path
-                  d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.4-1.02 15.96 1.74.539.3.66 1.022.359 1.561-.3.479-1.02.6-1.56.3z" />
+                class="text-white">
+                <path d="M10 20H6V4H10V20ZM16 20H12V8H16V20ZM22 20H18V12H22V20ZM4 20H0V12H4V20Z" />
               </svg>
-              <span>Dengar di Spotify</span>
+              <span>Dengar di Deezer</span>
+
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="opacity-70 group-hover:translate-x-0.5 transition-transform">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
             </a>
           </div>
 
@@ -286,11 +323,10 @@ onMounted(async () => {
                   <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
                 </div>
               </div>
-
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#555"
@@ -299,7 +335,6 @@ onMounted(async () => {
                 stroke-linejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
-
               <div class="text-right">
                 <p class="text-[10px] text-[#666] uppercase tracking-wide">UNTUK</p>
                 <p class="text-sm font-bold text-[#9a203e]">{{ selectedNote?.recipient }}</p>
@@ -327,7 +362,7 @@ onMounted(async () => {
             </div>
             <div class="mt-6">
               <button
-                @click="closeModal"
+                @click="closeModalDetail"
                 class="w-full py-3 rounded-[12px] border border-[#3f3233] text-[#888] font-bold text-xs uppercase tracking-widest hover:bg-[#2c2021] hover:text-white transition-all cursor-pointer">
                 Tutup Catatan
               </button>
