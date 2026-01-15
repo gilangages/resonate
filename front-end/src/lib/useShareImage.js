@@ -26,11 +26,36 @@ export function useShareImage() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const scrollableContent = node.querySelector(".overflow-y-auto");
+
+      // UPDATE PERBAIKAN: Hitung total tinggi SEMUA elemen yang di-exclude
+      // Bukan hanya satu elemen, tapi loop semua yang punya class 'exclude-from-capture'
+      let totalExcludedHeight = 0;
+      const excludedElements = node.querySelectorAll(".exclude-from-capture");
+
+      excludedElements.forEach((el) => {
+        const style = window.getComputedStyle(el);
+        // Abaikan elemen yang absolute (seperti tombol close di pojok kanan atas)
+        // karena elemen absolute tidak mempengaruhi tinggi layout container
+        if (style.position === "absolute" || style.display === "none") return;
+
+        const height = el.offsetHeight;
+        const marginTop = parseFloat(style.marginTop) || 0;
+        const marginBottom = parseFloat(style.marginBottom) || 0;
+
+        totalExcludedHeight += height + marginTop + marginBottom;
+      });
+
       let contentHeight = node.clientHeight;
 
       if (scrollableContent) {
+        // Hitung tinggi konten yang tersembunyi karena scroll
         const extraHeight = scrollableContent.scrollHeight - scrollableContent.clientHeight;
-        contentHeight = node.clientHeight + extraHeight - 30;
+
+        // Rumus: (Tinggi Tampil + Sisa Scroll) - Total Tinggi Elemen yang Dibuang
+        contentHeight = node.clientHeight + extraHeight - totalExcludedHeight;
+      } else {
+        // Jika tidak ada scroll, kurangi langsung dengan elemen yang dibuang
+        contentHeight = node.clientHeight - totalExcludedHeight;
       }
 
       // Generate Blob
@@ -40,7 +65,7 @@ export function useShareImage() {
         backgroundColor: null,
         height: contentHeight,
         skipAutoScale: true,
-        imageTimeout: 5000, // Perbesar timeout
+        imageTimeout: 5000,
         includeQueryParams: true,
         style: {
           height: `${contentHeight}px`,
@@ -54,13 +79,19 @@ export function useShareImage() {
             clonedNode.style.overflow = "visible";
             clonedNode.style.height = "auto";
             clonedNode.style.maxHeight = "none";
-            clonedNode.style.paddingBottom = "30px";
+
+            // Padding bawah kita set secukupnya (24px) agar teks tidak mepet border bawah
+            // Karena elemen footer asli sudah kita buang perhitungannya di atas
+            clonedNode.style.paddingBottom = "24px";
+
             clonedNode.style.flex = "1 1 auto";
             clonedNode.style.borderBottomLeftRadius = "24px";
             clonedNode.style.borderBottomRightRadius = "24px";
           }
-          const footer = clonedDoc.querySelector(".exclude-from-capture");
-          if (footer) footer.style.display = "none";
+
+          // Sembunyikan semua elemen exclude di hasil clone (Gambar)
+          const elementsToHide = clonedDoc.querySelectorAll(".exclude-from-capture");
+          elementsToHide.forEach((el) => (el.style.display = "none"));
         },
         filter: (child) => {
           if (child.classList && child.classList.contains("exclude-from-capture")) {
@@ -75,7 +106,6 @@ export function useShareImage() {
       return blobToFile(blob, `${fileName}.png`);
     } catch (error) {
       console.error("Error generate image:", error);
-      // Deteksi error gambar (429/CORS)
       if (error.target && error.target.tagName === "IMG") {
         await alertError("Gagal memuat gambar eksternal. Server menolak akses.");
       } else {
@@ -88,7 +118,6 @@ export function useShareImage() {
   };
 
   const triggerNativeShare = async (file, title = "Resonate Music Note") => {
-    // Cek dukungan browser
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
@@ -96,15 +125,15 @@ export function useShareImage() {
           title: title,
           text: "Cek profil musikku di Resonate!",
         });
-        return true; // Berhasil share
+        return true;
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error("Native share error:", err);
         }
-        return false; // Gagal atau dibatalkan
+        return false;
       }
     }
-    return false; // Browser tidak support
+    return false;
   };
 
   return {

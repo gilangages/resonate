@@ -320,7 +320,10 @@ const handleShare = async () => {
 const downloadManual = () => {
   if (!generatedFileUrl.value) return;
   const link = document.createElement("a");
-  link.download = `music-note-${Date.now()}.png`;
+
+  // UPDATE: Gunakan nama file dari tempFile jika ada, fallback ke timestamp jika null
+  link.download = tempFile.value?.name || `music-note-${Date.now()}.png`;
+
   link.href = generatedFileUrl.value;
   link.click();
   showShareOptions.value = false;
