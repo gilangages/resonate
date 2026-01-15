@@ -65,7 +65,7 @@ const submitContact = async () => {
       Swal.fire({
         icon: "success",
         title: "Terkirim!",
-        text: "Laporan Anda telah masuk ke email kami. Terima kasih!",
+        text: "Laporanmu telah masuk ke email kami. Terima kasih!",
         confirmButtonColor: "#9a203e",
       });
       // Reset form
