@@ -91,11 +91,11 @@ async function handleSubmit() {
     content: note.content,
     recipient: note.recipient,
     initial_name: finalInitialName,
-    spotify_track_id: selectedSong.value.id,
-    spotify_track_name: selectedSong.value.name,
-    spotify_artist: selectedSong.value.artists[0].name,
-    spotify_album_image: selectedSong.value.album.images[0]?.url || "",
-    spotify_preview_url: selectedSong.value.preview_url || null,
+    music_track_id: selectedSong.value.id,
+    music_track_name: selectedSong.value.name,
+    music_artist_name: selectedSong.value.artists[0].name,
+    music_album_image: selectedSong.value.album.images[0]?.url || "",
+    music_preview_url: selectedSong.value.preview_url || null,
   };
 
   const response = await noteCreate(token.value, payload);

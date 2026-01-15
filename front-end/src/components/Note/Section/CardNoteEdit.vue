@@ -24,11 +24,11 @@ const note = reactive({
   content: "",
   recipient: "",
   initial_name: null,
-  spotify_track_id: "",
-  spotify_track_name: "",
-  spotify_artist: "",
-  spotify_album_image: "",
-  spotify_preview_url: null,
+  music_track_id: "",
+  music_track_name: "",
+  music_artist_name: "",
+  music_album_image: "",
+  music_preview_url: null,
 });
 
 const queryLagu = ref("");

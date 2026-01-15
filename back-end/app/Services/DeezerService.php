@@ -9,30 +9,45 @@ class DeezerService implements MusicProvider
 {
     public function searchTrack(string $query): array
     {
-        // Deezer Public API Endpoint
         $response = Http::get('https://api.deezer.com/search', [
             'q' => $query,
             'limit' => 10,
         ]);
 
         if ($response->failed()) {
-            return [];
+            // Return struktur kosong yang sesuai format lama
+            return ['tracks' => ['items' => []]];
         }
 
         $data = $response->json();
 
-        // Mapping respons Deezer ke format standar aplikasi kita
-        // Struktur array ini harus konsisten digunakan di Frontend nantinya
-        return collect($data['data'] ?? [])->map(function ($track) {
+        $mappedTracks = collect($data['data'] ?? [])->map(function ($track) {
             return [
-                'id' => $track['id'],
+                'id' => (string) $track['id'],
                 'name' => $track['title'],
-                'artist' => $track['artist']['name'],
-                'image' => $track['album']['cover_medium'] ?? null, // cover_medium ukuran 250x250
-                'preview_url' => $track['preview'], // mp3 30 detik
-                'external_url' => $track['link'], // Link ke deezer
-                'provider' => 'deezer', // penanda opsional
+                // UBAH 1: Format Artist disamakan jadi array agar frontend tidak error
+                'artists' => [
+                    ['name' => $track['artist']['name']],
+                ],
+                // UBAH 2: Format Image disamakan (masuk ke album->images->url)
+                'album' => [
+                    'images' => [
+                        ['url' => $track['album']['cover_medium'] ?? ''],
+                    ],
+                ],
+                'preview_url' => $track['preview'],
+                // UBAH 3: External URL disamakan key-nya
+                'external_urls' => [
+                    'spotify' => $track['link'], // Kita pinjam key 'spotify' isinya link deezer
+                ],
             ];
         })->toArray();
+
+        // UBAH 4: Return dengan wrapper 'tracks' -> 'items'
+        return [
+            'tracks' => [
+                'items' => $mappedTracks,
+            ],
+        ];
     }
 }
