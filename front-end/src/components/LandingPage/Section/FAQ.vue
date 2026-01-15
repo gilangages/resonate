@@ -10,16 +10,20 @@ const faqs = ref([
   },
   {
     question: "Bagaimana cara membalas pesan yang saya suka?",
-    // Ganti **...** dengan <strong>...</strong>
     answer:
-      "Di sini musik adalah bahasa utamanya. Kamu bisa merespon curhatan dengan mengirimkan <strong>Lagu Balasan</strong> via Deezer yang mewakili perasaanmu, opsional dengan pesan teks singkat.",
+      "Di sini musik adalah bahasa utamanya. Kamu bisa merespon pesan dengan mengirimkan <strong>Lagu Balasan</strong> via Deezer yang mewakili perasaanmu, opsional dengan pesan teks singkat.",
+    open: false,
+  },
+  {
+    question: "Kenapa pesan saya tiba-tiba hilang?", // FAQ PENTING (Transparansi Admin)
+    answer:
+      "Demi kenyamanan bersama, Admin memoderasi konten secara aktif. Jika pesanmu hilang, silakan cek menu <strong>Notifikasi</strong>. Sistem kami pasti mengirimkan info alasan penghapusan pesan tersebut.",
     open: false,
   },
   {
     question: "Kenapa saya tidak bisa membalas 'reply' orang lain?",
-    // Ganti **...** dengan <strong>...</strong>
     answer:
-      "Music Note menerapkan konsep <strong>'One-Way Tribute'</strong>. Tujuannya agar interaksi tetap sederhana, fokus pada apresiasi lagu, dan menghindari debat panjang yang tidak perlu.",
+      "Kami menerapkan konsep <strong>'One-Way Tribute'</strong>. Tujuannya agar interaksi tetap sederhana, fokus pada apresiasi lagu, dan menghindari debat panjang yang tidak perlu.",
     open: false,
   },
   {
@@ -29,10 +33,9 @@ const faqs = ref([
     open: false,
   },
   {
-    question: "Bagaimana jika saya menemukan pesan yang tidak pantas?",
-    // Ganti **...** dengan <strong>...</strong>
+    question: "Akun saya dibatasi/banned, apa solusinya?", // FAQ PENTING (Fitur Appeal)
     answer:
-      "Sistem sudah memiliki filter kata otomatis. Namun jika masih ada yang lolos, kamu bisa melaporkannya melalui <strong>form Laporan Bug</strong> yang ada di menu <strong>'About'</strong>. Laporanmu akan segera ditinjau.",
+      "Kami menindak tegas pelanggaran komunitas. Namun jika kamu merasa sanksi ini keliru, kamu bisa mengajukan <strong>Banding (Appeal)</strong> langsung lewat aplikasi. Tim kami akan meninjau ulang status akunmu.",
     open: false,
   },
   {
@@ -44,7 +47,6 @@ const faqs = ref([
 ]);
 
 const toggleFaq = (index) => {
-  // Logic Accordion: Jika diklik, tutup yang lain
   faqs.value.forEach((item, i) => {
     if (i === index) {
       item.open = !item.open;
