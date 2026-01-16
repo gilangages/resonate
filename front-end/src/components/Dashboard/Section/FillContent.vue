@@ -1,7 +1,7 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
 import { myNoteList, noteDelete } from "../../../lib/api/NoteApi";
-import { onBeforeMount, ref, nextTick } from "vue";
+import { onBeforeMount, ref, nextTick, onMounted } from "vue";
 import { alertConfirm, alertError, alertSuccess } from "../../../lib/alert";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
 
@@ -162,7 +162,7 @@ const closePreview = () => {
   }, 300);
 };
 
-onBeforeMount(async () => {
+onMounted(async () => {
   await fetchNoteList(true);
 });
 </script>

@@ -22,6 +22,7 @@ async function handleSubmit() {
 
   if (response.ok) {
     token.value = responseBody.token;
+    sessionStorage.removeItem("last_anim_name");
     await router.push({
       path: "/dashboard/global",
     });

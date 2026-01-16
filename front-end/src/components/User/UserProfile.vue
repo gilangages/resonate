@@ -110,7 +110,7 @@ onBeforeMount(async () => {
   <div class="flex justify-center items-center min-h-screen text-[#e5e5e5] font-jakarta">
     <div
       class="bg-[#1c1516] rounded-[20px] w-full max-w-[420px] mx-[24px] p-[12px] flex flex-col sm:max-w-[600px] sm:m-[2em] sm:p-[2em]">
-      <h1 class="text-center mt-[4px] text-[#9a203e] font-bold text-3xl">Edit Profile</h1>
+      <h1 class="text-center mt-[4px] text-[#9a203e] font-bold text-3xl">Edit Profil</h1>
 
       <div class="flex flex-col items-center justify-center text-[#e5e5e5] py-6">
         <div class="relative group cursor-zoom-in" @click="openPreview">

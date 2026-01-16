@@ -106,7 +106,7 @@ async function handleAnimation(userName) {
 
   setTimeout(() => {
     showMenu.value = true;
-  }, 600);
+  }, 900);
 }
 
 onBeforeMount(async () => {
@@ -115,33 +115,33 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <Transition name="fade">
-    <div
-      v-if="showIntro"
-      class="pt-[1em] text-center text-[13px] text-white min-h-[100px] flex items-center justify-center px-6">
-      <Transition name="text-fade">
-        <p
-          v-if="isTextVisible"
-          v-html="displayDetail"
-          class="font-medium leading-relaxed max-w-[300px] italic text-white"></p>
-      </Transition>
-    </div>
-  </Transition>
+  <div class="relative min-h-[150px] flex flex-col justify-center items-center w-full">
+    <Transition name="fade">
+      <div v-if="showIntro" class="absolute top-4 text-center text-[13px] text-white px-6 w-full flex justify-center">
+        <Transition name="text-fade">
+          <p
+            v-if="isTextVisible"
+            v-html="displayDetail"
+            class="font-medium leading-relaxed max-w-[300px] italic text-white"></p>
+        </Transition>
+      </div>
+    </Transition>
 
-  <Transition :name="menuTransition">
-    <div v-if="showMenu" class="my-[2em] flex justify-center">
-      <RouterLink
-        to="/dashboard/global"
-        class="rounded-l-[10px] bg-[#9a203e] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#821c35] hover:text-[#cdcccc] transition-colors shadow-lg">
-        Jelajahi Pesan
-      </RouterLink>
-      <RouterLink
-        to="/dashboard"
-        class="rounded-r-[10px] bg-[#1c1516] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#130f0f] hover:text-[#cdcccc] transition-colors shadow-lg border-l border-[#2c2021]">
-        Pesan Saya
-      </RouterLink>
-    </div>
-  </Transition>
+    <Transition :name="menuTransition">
+      <div v-if="showMenu" class="my-[2em] flex justify-center relative z-10">
+        <RouterLink
+          to="/dashboard/global"
+          class="rounded-l-[10px] bg-[#9a203e] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#821c35] hover:text-[#cdcccc] transition-colors shadow-lg">
+          Jelajahi Pesan
+        </RouterLink>
+        <RouterLink
+          to="/dashboard"
+          class="rounded-r-[10px] bg-[#1c1516] p-[12px] text-[16px] font-semibold text-[#e5e5e5] hover:bg-[#130f0f] hover:text-[#cdcccc] transition-colors shadow-lg border-l border-[#2c2021]">
+          Pesan Saya
+        </RouterLink>
+      </div>
+    </Transition>
+  </div>
 </template>
 
 <style scoped>

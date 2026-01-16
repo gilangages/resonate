@@ -57,7 +57,7 @@ onBeforeMount(async () => {
           to="/dashboard/users/profile"
           class="block p-[6px] text-[#e5e5e5] font-medium rounded-[10px] hover:bg-[#4b1a1a]"
           @click="closeDropdown">
-          Edit Profile
+          Edit Profil
         </RouterLink>
 
         <hr class="border-[#4b1a1a] my-[4px]" />
