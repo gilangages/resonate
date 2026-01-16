@@ -58,6 +58,7 @@ async function fetchNoteList(reset = true) {
   try {
     const response = await noteList(token.value, currentPage.value, searchQuery.value, sortBy.value);
     const responseBody = await response.json();
+    console.log(responseBody);
     if (response.ok) {
       if (responseBody.meta) {
         lastPage.value = responseBody.meta.last_page;

@@ -119,7 +119,7 @@ onMounted(() => {
       class="bg-[#1c1516] rounded-[20px] w-full max-w-[420px] mx-[24px] p-[12px] flex flex-col sm:max-w-[600px] sm:m-[2em] sm:p-[2em] min-h-[600px] transition-all duration-300 relative">
       <RouterLink
         to="/dashboard"
-        class="absolute top-4 left-6 p-2 rounded-full text-[#8c8a8a] hover:text-[#9a203e] hover:bg-[#2b2122] transition-all duration-300 group z-20">
+        class="absolute top-4 md:top-8 left-6 p-2 rounded-full text-[#8c8a8a] hover:text-[#9a203e] hover:bg-[#2b2122] transition-all duration-300 group z-20">
         <div
           class="tooltip-container-top group-hover:-translate-x-1 transition-transform"
           data-title="Kembali ke Dashboard">
