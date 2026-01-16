@@ -30,7 +30,6 @@ let debounceTimer = null;
 async function fetchUser() {
   const response = await userDetail(token.value);
   const responseBody = await response.json();
-  console.log(responseBody);
   if (response.ok) {
     name.value = responseBody.data.name;
   } else {
@@ -178,23 +177,27 @@ onBeforeMount(async () => {
       <div class="text-[14px]">
         <label>Kirim Sebagai</label>
 
-        <div class="mt-[6px] mb-[20px] flex items-center gap-2">
+        <div class="mt-[6px] mb-[10px] flex items-center gap-2">
           <input type="radio" value="asli" v-model="kirimSebagai" class="cursor-pointer w-5 h-5 accent-[#9a203e]" />
-          <span class="mr-[2em]">{{ name }} (Asli)</span>
+          <span class="mr-[2em] cursor-pointer" @click="kirimSebagai = 'asli'">{{ name }} (Asli)</span>
 
           <input type="radio" value="samaran" v-model="kirimSebagai" class="cursor-pointer w-5 h-5 accent-[#9a203e]" />
-          <span>Nama Samaran</span>
+          <span class="cursor-pointer" @click="kirimSebagai = 'samaran'">Nama Samaran</span>
         </div>
 
-        <div v-if="kirimSebagai === 'samaran'">
-          <label class="text-[#9a203e]">Nama Samaran</label>
-          <input
-            type="text"
-            v-model="namaSamaran"
-            required
-            placeholder="Contoh: Secret Admirer..."
-            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
-        </div>
+        <Transition name="expand">
+          <div v-if="kirimSebagai === 'samaran'" class="overflow-hidden -mx-1 px-1">
+            <div class="mt-2">
+              <label class="text-[#9a203e] text-xs font-bold uppercase tracking-wider mb-1 block">Nama Samaran</label>
+              <input
+                type="text"
+                v-model="namaSamaran"
+                required
+                placeholder="Contoh: Secret Admirer..."
+                class="mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+            </div>
+          </div>
+        </Transition>
       </div>
 
       <div class="mt-[26px] flex gap-[10px]">
@@ -216,31 +219,40 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
-/* Class untuk Scrollbar Custom */
+/* Scrollbar */
 .custom-scrollbar {
-  /* Support untuk Firefox */
   scrollbar-width: thin;
   scrollbar-color: #3f3233 transparent;
 }
-
-/* Lebar Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
-
-/* Track (Jalur) - Transparan atau Gelap */
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-
-/* Handle (Batang) - Abu Gelap */
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #3f3233;
   border-radius: 20px;
 }
-
-/* Handle saat Hover - Merah Maroon */
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #9a203e;
+}
+
+/* --- ANIMASI EXPAND (SAMA DENGAN NOTEEDIT) --- */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease-in-out;
+  max-height: 100px;
+  opacity: 1;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 </style>

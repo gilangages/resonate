@@ -19,7 +19,6 @@ const kirimSebagai = ref("samaran");
 const namaSamaran = ref("");
 const name = ref("");
 
-// INI KUNCINYA: Semua data update akan masuk ke sini
 const note = reactive({
   content: "",
   recipient: "",
@@ -42,7 +41,6 @@ const populateForm = () => {
   const d = props.noteData;
   if (!d) return;
 
-  // 1. Isi object 'note' langsung
   Object.assign(note, {
     content: d.content,
     recipient: d.recipient,
@@ -54,7 +52,6 @@ const populateForm = () => {
     music_preview_url: d.music_preview_url,
   });
 
-  // 2. Isi UI Search
   selectedSong.value = {
     id: d.music_track_id,
     name: d.music_track_name,
@@ -74,7 +71,6 @@ const populateForm = () => {
 async function fetchUser() {
   const response = await userDetail(token.value);
   const responseBody = await response.json();
-  console.log(responseBody);
 
   if (response.ok) {
     name.value = responseBody.data.name;
@@ -114,7 +110,6 @@ const selectSong = (song) => {
   queryLagu.value = `${song.name} - ${song.artists[0].name}`;
   searchResults.value = [];
 
-  // PENTING: Update object 'note' saat lagu diganti
   note.music_track_id = song.id;
   note.music_track_name = song.name;
   note.music_artist_name = song.artists[0].name;
@@ -122,16 +117,13 @@ const selectSong = (song) => {
   note.music_preview_url = song.preview_url;
 };
 
-// --- BAGIAN YANG DIPERBAIKI ---
+// --- LOGIC UPDATE ---
 async function handleUpdate() {
-  // Validasi: Pastikan ada lagu yang terpilih
-  // (Entah dari populateForm atau selectSong, selectedSong.value harus ada)
   if (!selectedSong.value) {
     await alertError("Kamu belum memilih lagu!");
     return;
   }
 
-  // Update logic nama samaran ke dalam 'note'
   if (kirimSebagai.value === "samaran") {
     if (!namaSamaran.value) {
       await alertError("Nama samaran wajib diisi!");
@@ -139,12 +131,8 @@ async function handleUpdate() {
     }
     note.initial_name = namaSamaran.value;
   } else {
-    note.initial_name = null; // Reset
+    note.initial_name = null;
   }
-
-  // HAPUS kode "const payload = {...}" yang lama!
-  // GANTIKAN dengan mengirim object 'note' langsung.
-  // Karena 'note' sudah kita update di 'selectSong' & 'populateForm'.
 
   const response = await noteUpdate(token.value, props.noteData.id, note);
   const responseBody = await response.json();
@@ -159,7 +147,6 @@ async function handleUpdate() {
 }
 
 const handleKembali = () => {
-  console.log("Tombol Kembali Diklik");
   emit("go-back");
 };
 
@@ -227,23 +214,27 @@ onMounted(async () => {
       <div class="text-[14px]">
         <label>Kirim Sebagai</label>
 
-        <div class="mt-[6px] mb-[20px] flex items-center gap-2">
+        <div class="mt-[6px] mb-[10px] flex items-center gap-2">
           <input type="radio" value="asli" v-model="kirimSebagai" class="cursor-pointer w-5 h-5 accent-[#9a203e]" />
-          <span class="mr-[2em]">{{ name }} (Asli)</span>
+          <span class="mr-[2em] cursor-pointer" @click="kirimSebagai = 'asli'">{{ name }} (Asli)</span>
 
           <input type="radio" value="samaran" v-model="kirimSebagai" class="cursor-pointer w-5 h-5 accent-[#9a203e]" />
-          <span>Nama Samaran</span>
+          <span class="cursor-pointer" @click="kirimSebagai = 'samaran'">Nama Samaran</span>
         </div>
 
-        <div v-if="kirimSebagai === 'samaran'">
-          <label class="text-[#9a203e]">Nama Samaran</label>
-          <input
-            type="text"
-            v-model="namaSamaran"
-            required
-            placeholder="Contoh: Secret Admirer..."
-            class="mt-[6px] mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
-        </div>
+        <Transition name="expand">
+          <div v-if="kirimSebagai === 'samaran'" class="overflow-hidden -mx-1 px-1">
+            <div class="mt-2">
+              <label class="text-[#9a203e] text-xs font-bold uppercase tracking-wider mb-1 block">Nama Samaran</label>
+              <input
+                type="text"
+                v-model="namaSamaran"
+                required
+                placeholder="Contoh: Secret Admirer..."
+                class="mb-[20px] w-full rounded-[10px] bg-[#2b2122] p-4 text-[#e5e5e5] caret-[#e5e5e5] focus:outline focus:outline-2 focus:outline-[#9a203e]" />
+            </div>
+          </div>
+        </Transition>
       </div>
 
       <div class="mt-[26px] flex gap-[10px]">
@@ -265,9 +256,7 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Class untuk Scrollbar Custom */
 .custom-scrollbar {
-  /* Support untuk Firefox */
   scrollbar-width: thin;
   scrollbar-color: #3f3233 transparent;
 }
@@ -284,5 +273,23 @@ onMounted(async () => {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #9a203e;
+}
+
+/* --- ANIMASI EXPAND --- */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease-in-out;
+  max-height: 100px;
+  opacity: 1;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 </style>

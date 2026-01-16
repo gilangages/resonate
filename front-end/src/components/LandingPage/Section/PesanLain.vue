@@ -368,7 +368,7 @@ onMounted(async () => {
               <button
                 @click="closeModalDetail"
                 class="w-full py-3 rounded-[12px] border border-[#3f3233] text-[#888] font-bold text-xs uppercase tracking-widest hover:bg-[#2c2021] hover:text-white transition-all cursor-pointer">
-                Tutup Catatan
+                Tutup Pesan
               </button>
             </div>
           </div>

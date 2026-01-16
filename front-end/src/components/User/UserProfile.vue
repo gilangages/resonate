@@ -147,7 +147,7 @@ onMounted(() => {
             <div class="mt-4 h-4 w-24 bg-[#2b2122] rounded"></div>
           </div>
 
-          <div class="mt-0">
+          <div class="mt-4">
             <div class="h-6 w-32 bg-[#2b2122] rounded mb-4"></div>
             <div class="h-4 w-12 bg-[#2b2122] rounded mb-2"></div>
             <div class="h-[50px] w-full bg-[#2b2122] rounded-[15px] mb-6"></div>
