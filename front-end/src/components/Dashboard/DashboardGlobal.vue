@@ -1,12 +1,11 @@
 <script setup>
 import GlobalContent from "./Section/GlobalContent.vue";
-// import MenuGlobal from "./Section/MenuGlobal.vue"; // HAPUS INI
-import WelcomeOverlay from "./Section/WelcomeOverlay.vue"; // TAMBAH INI
+import WelcomeOverlay from "./Section/WelcomeOverlay.vue";
 </script>
 
 <template>
   <div>
     <WelcomeOverlay />
-    <div class="pt-6"><GlobalContent /></div>
+    <div><GlobalContent /></div>
   </div>
 </template>
