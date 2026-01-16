@@ -43,8 +43,14 @@ export const searchMusic = async (token, { query }) => {
   });
 };
 // Function khusus untuk ambil note milik sendiri (panggil endpoint /notes/my)
-export const myNoteList = async (token, page = 1) => {
-  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/my?page=${page}`, {
+export const myNoteList = async (token, page = 1, search = "", sort = "newest") => {
+  const query = new URLSearchParams({
+    page: page.toString(),
+    search: search,
+    sort: sort,
+  }).toString();
+
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/my?${query}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -107,8 +113,14 @@ export const noteUpdate = async (
   });
 };
 
-export const noteList = async (token, page = 1) => {
-  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes?page=${page}`, {
+export const noteList = async (token, page = 1, search = "", sort = "newest") => {
+  const query = new URLSearchParams({
+    page: page.toString(),
+    search: search,
+    sort: sort,
+  }).toString();
+
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes?${query}`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -123,5 +135,17 @@ export const noteListGlobal = async () => {
     headers: {
       Accept: "application/json",
     },
+  });
+};
+
+export const noteBulkDelete = async (token, ids) => {
+  return await customFetch(`${import.meta.env.VITE_APP_PATH}/notes/bulk-delete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ ids }),
   });
 };

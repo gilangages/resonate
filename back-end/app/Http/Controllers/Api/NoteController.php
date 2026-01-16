@@ -18,13 +18,36 @@ class NoteController extends Controller
      * GET /api/notes
      * Public: list semua note
      */
-    public function index()
+    private function applyFilters($query, Request $request)
     {
-        // Ambil notes terbaru beserta data user-nya
-        $notes = Note::with('user')->latest()->paginate(15);
+        // 1. Fitur Search
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('content', 'like', "%{$search}%")
+                    ->orWhere('recipient', 'like', "%{$search}%")
+                    ->orWhere('music_track_name', 'like', "%{$search}%")
+                    ->orWhere('music_artist_name', 'like', "%{$search}%");
+            });
+        }
 
-        // WRAPPING: Gunakan collection() karena datanya banyak (list)
-        return NoteResource::collection($notes);
+        // 2. Fitur Filter Sort (Newest / Oldest)
+        if ($request->has('sort') && $request->sort == 'oldest') {
+            $query->oldest();
+        } else {
+            $query->latest(); // Default Newest
+        }
+
+        return $query;
+    }
+    public function index(Request $request)
+    {
+        $query = Note::with('user');
+
+        // Terapkan filter
+        $query = $this->applyFilters($query, $request);
+
+        return NoteResource::collection($query->paginate(15));
     }
 
     /**
@@ -112,9 +135,29 @@ class NoteController extends Controller
      */
     public function myNotes(Request $request)
     {
-        // Ambil user dari token, lalu ambil notes-nya
-        $notes = $request->user()->notes()->with('user')->latest()->paginate(15);
+        // Query hanya note milik user yang login
+        $query = $request->user()->notes()->with('user');
 
-        return NoteResource::collection($notes);
+        // Terapkan filter
+        $query = $this->applyFilters($query, $request);
+
+        return NoteResource::collection($query->paginate(15));
     }
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:notes,id',
+        ]);
+
+        // Hapus note yang ID-nya ada di list DAN milik user yang login (Security)
+        $deletedCount = $request->user()->notes()
+            ->whereIn('id', $request->ids)
+            ->delete();
+
+        return response()->json([
+            'message' => "$deletedCount notes deleted successfully",
+        ]);
+    }
+
 }

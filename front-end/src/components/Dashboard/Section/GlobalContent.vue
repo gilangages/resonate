@@ -3,6 +3,7 @@ import { useLocalStorage } from "@vueuse/core";
 import { noteList } from "../../../lib/api/NoteApi";
 import { onMounted, ref, nextTick } from "vue";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
+import { useDebounceFn } from "@vueuse/core";
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
@@ -27,6 +28,8 @@ const isVinylSpinning = ref(false);
 // --- STATE IMAGE PREVIEW (AVATAR) ---
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
+const searchQuery = ref("");
+const sortBy = ref("newest");
 
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
@@ -53,7 +56,7 @@ async function fetchNoteList(reset = true) {
   }
 
   try {
-    const response = await noteList(token.value, currentPage.value);
+    const response = await noteList(token.value, currentPage.value, searchQuery.value, sortBy.value);
     const responseBody = await response.json();
     if (response.ok) {
       if (responseBody.meta) {
@@ -142,6 +145,9 @@ const closeImagePreview = () => {
   showImagePreview.value = false;
 };
 
+const handleSearch = useDebounceFn(() => fetchNoteList(true), 500);
+const handleSortChange = () => fetchNoteList(true);
+
 onMounted(async () => {
   await fetchNoteList(true);
 });
@@ -149,6 +155,40 @@ onMounted(async () => {
 
 <template>
   <div class="p-4 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
+    <div
+      class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-30 bg-[#0f0505]/95 backdrop-blur py-4 border-b border-[#2c2021]">
+      <div class="relative w-full md:w-96 group">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#666"
+          stroke-width="2"
+          class="absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:stroke-[#9a203e] transition-colors">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          v-model="searchQuery"
+          @input="handleSearch"
+          type="text"
+          placeholder="Jelajahi pesan dunia..."
+          class="w-full bg-[#1c1516] border border-[#2c2021] rounded-full py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-[#9a203e] transition-all placeholder-[#555]" />
+      </div>
+
+      <div>
+        <select
+          v-model="sortBy"
+          @change="handleSortChange"
+          class="bg-[#1c1516] text-[#e5e5e5] text-xs font-bold uppercase tracking-wider border border-[#2c2021] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#9a203e] cursor-pointer appearance-none">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+        </select>
+      </div>
+    </div>
+
     <div v-if="isLoading" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
       <div v-for="i in 6" :key="i" class="break-inside-avoid relative">
         <div class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] animate-pulse h-full flex flex-col">

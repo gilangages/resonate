@@ -1,9 +1,11 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
 import { myNoteList, noteDelete } from "../../../lib/api/NoteApi";
-import { onBeforeMount, ref, nextTick, onMounted } from "vue";
+import { ref, nextTick, onMounted } from "vue";
 import { alertConfirm, alertError, alertSuccess } from "../../../lib/alert";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
+import { useDebounceFn } from "@vueuse/core";
+import { noteBulkDelete } from "../../../lib/api/NoteApi";
 
 // Emit ke Parent
 const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
@@ -28,6 +30,11 @@ const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 
+const searchQuery = ref("");
+const sortBy = ref("newest"); // 'newest' | 'oldest'
+const isSelectionMode = ref(false); // Mode pilih aktif/tidak
+const selectedIds = ref([]); // ID note yang dipilih
+
 // --- FORMATTER ---
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
@@ -50,11 +57,14 @@ async function fetchNoteList(reset = true) {
   if (reset) {
     currentPage.value = 1;
     isLoading.value = true; // Mulai Loading
+    selectedIds.value = []; // Reset pilihan saat refresh
   }
 
   try {
-    const response = await myNoteList(token.value, currentPage.value);
+    // Panggil API dengan parameter baru
+    const response = await myNoteList(token.value, currentPage.value, searchQuery.value, sortBy.value);
     const responseBody = await response.json();
+    console.log(responseBody);
 
     if (response.ok) {
       if (responseBody.meta) {
@@ -76,6 +86,49 @@ async function fetchNoteList(reset = true) {
     isLoading.value = false; // Selesai Loading
   }
 }
+
+// --- DEBOUNCE SEARCH (Supaya tidak spam API saat ngetik) ---
+const handleSearch = useDebounceFn(() => {
+  fetchNoteList(true);
+}, 500);
+
+// --- HANDLER SORT ---
+const handleSortChange = () => {
+  fetchNoteList(true);
+};
+
+// --- LOGIC BULK DELETE ---
+const toggleSelectionMode = () => {
+  isSelectionMode.value = !isSelectionMode.value;
+  selectedIds.value = []; // Reset pilihan saat mode berubah
+};
+
+const toggleSelectAll = () => {
+  if (selectedIds.value.length === notes.value.length) {
+    selectedIds.value = []; // Uncheck all
+  } else {
+    selectedIds.value = notes.value.map((n) => n.id); // Check all visible
+  }
+};
+
+const handleBulkDelete = async () => {
+  if (selectedIds.value.length === 0) return;
+
+  if (!(await alertConfirm(`Hapus ${selectedIds.value.length} pesan terpilih?`))) return;
+
+  try {
+    const response = await noteBulkDelete(token.value, selectedIds.value);
+    if (response.ok) {
+      alertSuccess("Pesan terpilih berhasil dihapus.");
+      isSelectionMode.value = false;
+      await fetchNoteList(true); // Refresh data
+    } else {
+      await alertError("Gagal menghapus pesan.");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 // --- DELETE LOGIC ---
 async function handleDelete(id) {
@@ -176,6 +229,70 @@ onMounted(async () => {
 
 <template>
   <div class="p-4 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
+    <div
+      class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-30 bg-[#0f0505]/95 backdrop-blur py-4 border-b border-[#2c2021]">
+      <div class="relative w-full md:w-96 group">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#666"
+          stroke-width="2"
+          class="absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:stroke-[#9a203e] transition-colors">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input
+          v-model="searchQuery"
+          @input="handleSearch"
+          type="text"
+          placeholder="Cari pesan, lagu, atau artis..."
+          class="w-full bg-[#1c1516] border border-[#2c2021] rounded-full py-2.5 pl-10 pr-4 text-white text-sm focus:outline-none focus:border-[#9a203e] transition-all placeholder-[#555]" />
+      </div>
+
+      <div class="flex gap-3 w-full md:w-auto">
+        <select
+          v-model="sortBy"
+          @change="handleSortChange"
+          class="bg-[#1c1516] text-[#e5e5e5] text-xs font-bold uppercase tracking-wider border border-[#2c2021] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#9a203e] cursor-pointer appearance-none">
+          <option value="newest">Terbaru</option>
+          <option value="oldest">Terlama</option>
+        </select>
+
+        <button
+          @click="toggleSelectionMode"
+          class="px-4 py-2 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all"
+          :class="
+            isSelectionMode
+              ? 'bg-[#9a203e] border-[#9a203e] text-white'
+              : 'bg-transparent border-[#3f3233] text-[#8c8a8a] hover:border-[#9a203e]'
+          ">
+          {{ isSelectionMode ? "Batal" : "Pilih" }}
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-if="isSelectionMode"
+      class="mb-6 flex items-center justify-between bg-[#2c0f0f] border border-[#4b1a1a] p-4 rounded-xl animate-pulse">
+      <div class="flex items-center gap-3">
+        <input
+          type="checkbox"
+          :checked="selectedIds.length === notes.length && notes.length > 0"
+          @change="toggleSelectAll"
+          class="w-5 h-5 accent-[#9a203e] cursor-pointer rounded" />
+        <span class="text-sm text-white font-medium">{{ selectedIds.length }} Dipilih</span>
+      </div>
+      <button
+        @click="handleBulkDelete"
+        :disabled="selectedIds.length === 0"
+        class="bg-[#9a203e] text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#b02446] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        Hapus Terpilih
+      </button>
+    </div>
+
     <div v-if="isLoading" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
       <div v-for="i in 6" :key="i" class="break-inside-avoid relative">
         <div class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] animate-pulse h-full">
@@ -215,13 +332,19 @@ onMounted(async () => {
     </div>
 
     <div v-else class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
-      <div
-        v-for="(note, index) in notes"
-        :key="note.id || index"
-        class="break-inside-avoid relative group/card cursor-pointer"
-        @click="openModalDetail(note)">
+      <div v-for="(note, index) in notes" :key="note.id || index" class="break-inside-avoid relative group/card">
+        <div v-if="isSelectionMode" class="absolute top-4 right-4 z-30">
+          <input
+            type="checkbox"
+            :value="note.id"
+            v-model="selectedIds"
+            class="w-6 h-6 accent-[#9a203e] cursor-pointer rounded shadow-md border-2 border-white/20" />
+        </div>
+
         <div
-          class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col h-full">
+          @click="!isSelectionMode && openModalDetail(note)"
+          class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col h-full"
+          :class="isSelectionMode ? 'cursor-default' : 'cursor-pointer'">
           <div
             class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
@@ -270,7 +393,12 @@ onMounted(async () => {
             </div>
 
             <div
-              class="flex gap-2 w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
+              class="flex gap-2 w-full mt-2 transition-opacity duration-300"
+              :class="
+                isSelectionMode
+                  ? 'opacity-0 pointer-events-none'
+                  : 'opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100'
+              ">
               <button
                 @click.stop="$emit('edit-note', note)"
                 class="flex-1 py-2 rounded-lg border border-[#3f3233] text-[#8c8a8a] text-xs font-bold uppercase tracking-wider hover:bg-[#2c2021] hover:text-white hover:cursor-pointer transition-colors">
