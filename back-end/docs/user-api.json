@@ -2,13 +2,13 @@
     "openapi": "3.0.3",
     "info": {
         "title": "User API",
-        "description": "User authentication API for Notes Application",
-        "version": "1.0.1"
+        "description": "User authentication, profile management, and settings.",
+        "version": "1.1.0"
     },
     "servers": [
         {
             "url": "http://localhost:8000",
-            "description": "Local server"
+            "description": "Local Development Server"
         }
     ],
     "components": {
@@ -29,17 +29,30 @@
                     },
                     "name": {
                         "type": "string",
-                        "example": "Abdi"
+                        "example": "Gilang Ages"
                     },
                     "email": {
                         "type": "string",
                         "format": "email",
-                        "example": "abdi@mail.com"
+                        "example": "gilang@example.com"
                     },
-                    "email_verified_at": {
+                    "avatar": {
                         "type": "string",
-                        "format": "date-time",
-                        "nullable": true
+                        "nullable": true,
+                        "example": "http://localhost:8000/storage/avatars/user-1.jpg"
+                    },
+                    "card_theme": {
+                        "type": "string",
+                        "example": "blue-ocean",
+                        "description": "Tema kartu pilihan user"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "user",
+                            "admin"
+                        ],
+                        "example": "user"
                     },
                     "created_at": {
                         "type": "string",
@@ -50,14 +63,36 @@
                         "format": "date-time"
                     }
                 }
+            },
+            "ValidationError": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "The given data was invalid."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": {
+                            "email": [
+                                "The email has already been taken."
+                            ],
+                            "password": [
+                                "The password confirmation does not match."
+                            ]
+                        }
+                    }
+                }
             }
         }
     },
     "paths": {
         "/api/users": {
             "post": {
-                "summary": "Register new user",
-                "tags": ["User"],
+                "summary": "Register New User",
+                "tags": [
+                    "Auth"
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -73,22 +108,24 @@
                                 "properties": {
                                     "name": {
                                         "type": "string",
-                                        "example": "Abdi"
+                                        "maxLength": 255,
+                                        "example": "Gilang Ages"
                                     },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "abdi@mail.com"
+                                        "example": "gilang@example.com"
                                     },
                                     "password": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "secret123"
+                                        "minLength": 8,
+                                        "example": "password123"
                                     },
                                     "password_confirmation": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "secret123"
+                                        "example": "password123"
                                     }
                                 }
                             }
@@ -100,18 +137,14 @@
                         "description": "User registered successfully",
                         "content": {
                             "application/json": {
-                                "examples": {
-                                    "success": {
-                                        "summary": "Register success",
-                                        "value": {
-                                            "message": "User registered successfully",
-                                            "user": {
-                                                "id": 1,
-                                                "name": "Abdi",
-                                                "email": "abdi@mail.com",
-                                                "updated_at": "2026-01-12T10:00:00Z",
-                                                "created_at": "2026-01-12T10:00:00Z"
-                                            }
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "$ref": "#/components/schemas/User"
                                         }
                                     }
                                 }
@@ -119,32 +152,43 @@
                         }
                     },
                     "422": {
-                        "description": "Validation error"
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
         "/api/users/login": {
             "post": {
-                "summary": "Login user",
-                "tags": ["User"],
+                "summary": "Login User",
+                "tags": [
+                    "Auth"
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
-                                "required": ["email", "password"],
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
                                 "properties": {
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "abdi@mail.com"
+                                        "example": "gilang@example.com"
                                     },
                                     "password": {
                                         "type": "string",
-                                        "format": "password",
-                                        "example": "secret123"
+                                        "example": "password123"
                                     }
                                 }
                             }
@@ -153,39 +197,33 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Login successful",
+                        "description": "Login Successful",
                         "content": {
                             "application/json": {
-                                "examples": {
-                                    "success": {
-                                        "summary": "Login success",
-                                        "value": {
-                                            "token": "1|abcdef1234567890",
-                                            "token_type": "Bearer",
-                                            "user": {
-                                                "id": 1,
-                                                "name": "Abdi",
-                                                "email": "abdi@mail.com",
-                                                "email_verified_at": null,
-                                                "created_at": "2026-01-12T10:00:00Z",
-                                                "updated_at": "2026-01-12T10:00:00Z"
-                                            }
-                                        }
+                                "example": {
+                                    "message": "Login successful",
+                                    "token": "2|laravel_sanctum_token...",
+                                    "user": {
+                                        "id": 1,
+                                        "name": "Gilang",
+                                        "email": "gilang@example.com"
                                     }
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "Invalid credentials"
+                        "description": "Invalid Credentials"
                     }
                 }
             }
         },
         "/api/users/current": {
             "get": {
-                "summary": "Get current logged user",
-                "tags": ["User"],
+                "summary": "Get Current User Profile",
+                "tags": [
+                    "User Profile"
+                ],
                 "security": [
                     {
                         "bearerAuth": []
@@ -193,58 +231,59 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User details",
+                        "description": "User Data",
                         "content": {
                             "application/json": {
-                                "examples": {
-                                    "success": {
-                                        "summary": "User Profile Data",
-                                        "value": {
-                                            "data": {
-                                                "id": 1,
-                                                "name": "Abdi",
-                                                "email": "abdi@mail.com",
-                                                "created_at": "2026-01-12T10:00:00Z",
-                                                "updated_at": "2026-01-12T10:00:00Z"
-                                            }
-                                        }
-                                    }
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
                     }
                 }
             },
-            "patch": {
-                "summary": "Update current user profile",
-                "tags": ["User"],
+            "post": {
+                "summary": "Update Profile (Name, Password, Avatar, Theme)",
+                "description": "Gunakan Method POST dengan `_method: PATCH` jika terkendala multipart di beberapa client, atau langsung PATCH jika didukung. Endpoint ini mendukung upload file gambar.",
+                "tags": [
+                    "User Profile"
+                ],
                 "security": [
                     {
                         "bearerAuth": []
                     }
                 ],
                 "requestBody": {
-                    "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "_method": {
+                                        "type": "string",
+                                        "example": "PATCH",
+                                        "description": "Required for Laravel to process multipart PATCH"
+                                    },
                                     "name": {
                                         "type": "string",
-                                        "example": "Abdi Baru"
+                                        "maxLength": 255
+                                    },
+                                    "avatar": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "Max 2MB (jpg, png, jpeg)"
+                                    },
+                                    "card_theme": {
+                                        "type": "string",
+                                        "maxLength": 20
                                     },
                                     "password": {
                                         "type": "string",
-                                        "format": "password",
+                                        "minLength": 8,
                                         "description": "Isi hanya jika ingin ganti password"
                                     },
                                     "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password"
+                                        "type": "string"
                                     }
                                 }
                             }
@@ -253,40 +292,34 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "User updated successfully",
+                        "description": "Profile Updated",
                         "content": {
                             "application/json": {
-                                "examples": {
-                                    "success": {
-                                        "summary": "Update Success",
-                                        "value": {
-                                            "message": "Profile updated successfully",
-                                            "data": {
-                                                "id": 1,
-                                                "name": "Abdi Baru",
-                                                "email": "abdi@mail.com",
-                                                "created_at": "2026-01-12T10:00:00Z",
-                                                "updated_at": "2026-01-12T10:05:00Z"
-                                            }
-                                        }
-                                    }
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Validation error"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
         "/api/users/logout": {
             "delete": {
-                "summary": "Logout user",
-                "tags": ["User"],
+                "summary": "Logout",
+                "tags": [
+                    "Auth"
+                ],
                 "security": [
                     {
                         "bearerAuth": []
@@ -295,9 +328,6 @@
                 "responses": {
                     "204": {
                         "description": "Logged out successfully"
-                    },
-                    "401": {
-                        "description": "Unauthenticated"
                     }
                 }
             }
