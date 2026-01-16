@@ -93,11 +93,6 @@ const handleSearch = useDebounceFn(() => {
   fetchNoteList(true);
 }, 500);
 
-// --- HANDLER SORT ---
-const handleSortChange = () => {
-  fetchNoteList(true);
-};
-
 // --- LOGIC BULK DELETE ---
 const toggleSelectionMode = () => {
   isSelectionMode.value = !isSelectionMode.value;
@@ -231,8 +226,10 @@ const closePreview = () => {
 onMounted(async () => {
   await fetchNoteList(true);
 });
+defineExpose({
+  fetchNoteList,
+});
 </script>
-
 <template>
   <div class="p-4 md:pt-0 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
     <DashboardToolbar
@@ -254,7 +251,7 @@ onMounted(async () => {
       </template>
     </DashboardToolbar>
 
-    <div v-if="isLoading" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
+    <div v-if="isLoading" class="relative z-0 columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
       <div v-for="i in 6" :key="i" class="break-inside-avoid relative">
         <div class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] animate-pulse h-full">
           <div class="mb-5">
@@ -278,7 +275,6 @@ onMounted(async () => {
               <div class="h-3 w-20 bg-[#2b2122] rounded"></div>
               <div class="ml-auto h-3 w-16 bg-[#2b2122] rounded"></div>
             </div>
-
             <div class="flex gap-2 mt-2">
               <div class="flex-1 h-8 bg-[#2b2122] rounded-lg"></div>
               <div class="flex-1 h-8 bg-[#2b2122] rounded-lg"></div>
@@ -288,8 +284,27 @@ onMounted(async () => {
       </div>
     </div>
 
-    <div v-else-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
-      Belum ada pesan yang dibuat.
+    <div v-else-if="notes.length === 0" class="w-full flex flex-col items-center justify-center py-20 text-[#8c8a8a]">
+      <div class="mb-4 text-lg">Belum ada pesan yang dibuat.</div>
+
+      <button
+        @click="$emit('open-modal')"
+        class="hidden md:flex items-center gap-2 bg-[#9a203e] hover:bg-[#821c35] text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-[#9a203e]/20">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Buat Pesan Baru
+      </button>
     </div>
 
     <div v-else class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
@@ -405,6 +420,7 @@ onMounted(async () => {
         v-if="!isSelectionMode"
         @click="$emit('open-modal')"
         class="cursor-pointer fixed bottom-24 right-6 md:bottom-8 md:right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#9a203e] text-white shadow-[0_0_30px_rgba(154,32,62,0.4)] transition-all duration-300 hover:scale-110 hover:bg-[#821c35] active:scale-95 focus:outline-none sm:bottom-12 sm:right-12 sm:h-16 sm:w-16 group"
+        :class="{ 'md:hidden': notes.length === 0 }"
         title="Buat Cerita Baru">
         <svg
           xmlns="http://www.w3.org/2000/svg"

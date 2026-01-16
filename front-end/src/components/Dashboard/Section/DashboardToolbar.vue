@@ -40,7 +40,7 @@ const handleSelectSort = (value) => {
 
 <template>
   <div
-    class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between sticky top-[60px] md:top-[64px] z-30 bg-[#0f0505]/95 backdrop-blur py-4 border-b border-[#2c2021]">
+    class="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between sticky top-[60px] md:top-[64px] z-40 bg-[#0f0505]/95 backdrop-blur py-4 border-b border-[#2c2021]">
     <div class="relative w-full md:w-96 group">
       <svg
         xmlns="http://www.w3.org/2000/svg"
