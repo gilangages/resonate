@@ -29,4 +29,9 @@ onBeforeMount(async () => {
   await handleLogout();
 });
 </script>
-<template></template>
+<template>
+  <div class="flex flex-col items-center justify-center min-h-[60vh] text-white">
+    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#9a203e] mb-4"></div>
+    <p class="text-lg font-medium italic">Sedang mengeluarkan akun...</p>
+  </div>
+</template>

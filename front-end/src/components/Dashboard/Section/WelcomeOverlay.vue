@@ -1,15 +1,18 @@
 <script setup>
-import { onBeforeMount, ref } from "vue";
+// 1. Tambahkan 'watch' di import
+import { onBeforeMount, ref, watch } from "vue";
 import { userState } from "../../../lib/store";
 
-// Emit event ketika animasi selesai agar konten utama bisa ditampilkan (opsional, tergantung kebutuhan)
 const emit = defineEmits(["animation-complete"]);
 
 const displayDetail = ref("");
 const isTextVisible = ref(false);
 const showIntro = ref(false);
 
+// ... (kode typeWriter dan wait biarkan sama) ...
+
 const typeWriter = async (text, speed = 50) => {
+  // ... (kode sama)
   displayDetail.value = "";
   let i = 0;
   while (i < text.length) {
@@ -33,11 +36,12 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function checkAnimationRequirement() {
   const currentNameInMemory = userState.value?.name;
-  if (!currentNameInMemory) return; // Tunggu data user ada
+
+  // Jika nama belum ada, jangan lakukan apa-apa (tunggu watcher)
+  if (!currentNameInMemory) return;
 
   const storedAnimName = sessionStorage.getItem("last_anim_name");
 
-  // Jika nama user berbeda dengan yg di session storage, jalankan animasi
   if (storedAnimName !== currentNameInMemory) {
     await handleAnimation(currentNameInMemory);
   } else {
@@ -46,6 +50,7 @@ async function checkAnimationRequirement() {
   }
 }
 
+// ... (kode handleAnimation biarkan sama) ...
 async function handleAnimation(userName) {
   showIntro.value = true;
   isTextVisible.value = true;
@@ -69,14 +74,24 @@ async function handleAnimation(userName) {
   isTextVisible.value = false;
   await wait(500);
 
-  showIntro.value = false; // Sembunyikan overlay
+  showIntro.value = false;
   sessionStorage.setItem("last_anim_name", userName);
   emit("animation-complete");
 }
 
+// 2. Tambahkan Watcher ini
+// Ini berfungsi: "Hei Vue, pantau terus userState.name. Kalau nilainya berubah (misal dari kosong jadi 'Gilang'), jalankan checkAnimationRequirement lagi."
+watch(
+  () => userState.value.name,
+  (newVal) => {
+    if (newVal) {
+      checkAnimationRequirement();
+    }
+  }
+);
+
 onBeforeMount(() => {
-  // Kita asumsikan userState sudah di-fetch oleh Navbar atau DashboardLayout
-  // Namun untuk aman, kita watch atau cek langsung
+  // Cek awal (berjaga-jaga jika data sudah ada di cache/store)
   checkAnimationRequirement();
 });
 </script>

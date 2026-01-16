@@ -243,7 +243,7 @@ defineExpose({
           class="px-4 py-2 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all"
           :class="
             isSelectionMode
-              ? 'bg-[#2c2021] border-[#3f3233] text-white'
+              ? 'bg-[#2c2021] border-[#3f3233] text-white hover:border-[#9a203e]'
               : 'bg-transparent border-[#3f3233] text-[#8c8a8a] hover:border-[#9a203e]'
           ">
           {{ isSelectionMode ? "Batal" : "Pilih" }}
@@ -624,9 +624,24 @@ defineExpose({
       <Transition name="fade">
         <div
           v-if="showImagePreview"
-          class="fixed inset-0 z-[112] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
+          class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
           @click="closePreview">
           <div class="relative flex flex-col items-center w-full max-w-[90vw] max-h-[90vh] cursor-default">
+            <button
+              @click.stop="closePreview"
+              class="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors p-2 z-50">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
             <img
               :src="previewImageUrl"
               class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"

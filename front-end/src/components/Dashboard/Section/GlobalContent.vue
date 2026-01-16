@@ -137,13 +137,13 @@ const closeModalDetail = () => {
 };
 
 // --- IMAGE PREVIEW LOGIC ---
-const openImagePreview = (url) => {
+const openPreview = (url) => {
   if (!url) return;
   previewImageUrl.value = url;
   showImagePreview.value = true;
 };
 
-const closeImagePreview = () => {
+const closePreview = () => {
   showImagePreview.value = false;
 };
 
@@ -309,7 +309,7 @@ onMounted(async () => {
       <Transition name="fade">
         <div
           v-if="showModal"
-          class="fixed inset-0 z-111 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+          class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
           @click.self="closeModalDetail">
           <div
             class="bg-[#1c1516] w-full max-w-[420px] rounded-[24px] shadow-2xl border border-[#2c2021] flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
@@ -377,7 +377,7 @@ onMounted(async () => {
               <div class="flex justify-between items-center mb-6 pb-4 border-b border-[#2c2021]">
                 <div class="flex items-center gap-3">
                   <img
-                    @click="openImagePreview(selectedNote?.author_avatar)"
+                    @click="openPreview(selectedNote?.author_avatar)"
                     :src="selectedNote?.author_avatar"
                     class="w-10 h-10 rounded-full border border-[#3f3233] object-cover cursor-zoom-in hover:scale-110 transition-transform" />
                   <div>
@@ -439,9 +439,24 @@ onMounted(async () => {
       <Transition name="fade">
         <div
           v-if="showImagePreview"
-          class="fixed inset-0 z-[112] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
-          @click="closeImagePreview">
+          class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
+          @click="closePreview">
           <div class="relative flex flex-col items-center w-full max-w-[90vw] max-h-[90vh] cursor-default">
+            <button
+              @click.stop="closePreview"
+              class="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors p-2 z-50">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
             <img
               :src="previewImageUrl"
               class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"

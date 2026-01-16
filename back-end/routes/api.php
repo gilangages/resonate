@@ -48,7 +48,3 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/current', [UserController::class, 'show']);
     Route::patch('/users/current', [UserController::class, 'update']);
 });
-
-// 🌍 PUBLIC ROUTES (List & Detail)
-// ⚠️ WAJIB TARUH DI PALING BAWAH
-// Agar '/notes/my' tidak tertangkap oleh '/notes/{id}'
