@@ -18,12 +18,11 @@ const showImageModal = ref(false);
 // --- STATE LOADING ---
 const isLoading = ref(true);
 
+// ... (SEMUA FUNCTION FETCH, UPDATE, DLL TETAP SAMA, TIDAK ADA YANG DIUBAH DI LOGIC SINI) ...
+
 async function fetchUser() {
   isLoading.value = true;
   try {
-    // Simulasi delay sedikit biar skeleton kelihatan (opsional, bisa dihapus nanti)
-    // await new Promise(r => setTimeout(r, 800));
-
     const response = await userDetail(token.value);
     const responseBody = await response.json();
 
@@ -70,6 +69,7 @@ async function handleFileChange(event) {
 async function handleChangeName() {
   const response = await userUpdateProfile(token.value, { name: name.value });
   const responseBody = await response.json();
+  console.log(responseBody);
   if (response.ok) {
     await alertSuccess("Nama berhasil diubah.");
     userState.value.name = name.value;
@@ -89,6 +89,8 @@ async function handleChangePassword() {
     password_confirmation: password_confirmation.value,
   });
   const responseBody = await response.json();
+  console.log(responseBody);
+
   if (response.ok) {
     password.value = "";
     password_confirmation.value = "";
@@ -112,19 +114,40 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex justify-center items-start sm:items-center min-h-screen text-[#e5e5e5] font-jakarta pt-10 sm:pt-0">
+  <div class="flex justify-center items-start min-h-screen text-[#e5e5e5] font-jakarta pt-10 sm:pt-0">
     <div
-      class="bg-[#1c1516] rounded-[20px] w-full max-w-[420px] mx-[24px] p-[12px] flex flex-col sm:max-w-[600px] sm:m-[2em] sm:p-[2em] min-h-[600px] transition-all duration-300">
+      class="bg-[#1c1516] rounded-[20px] w-full max-w-[420px] mx-[24px] p-[12px] flex flex-col sm:max-w-[600px] sm:m-[2em] sm:p-[2em] min-h-[600px] transition-all duration-300 relative">
+      <RouterLink
+        to="/dashboard"
+        class="absolute top-4 left-6 p-2 rounded-full text-[#8c8a8a] hover:text-[#9a203e] hover:bg-[#2b2122] transition-all duration-300 group z-20">
+        <div
+          class="tooltip-container-top group-hover:-translate-x-1 transition-transform"
+          data-title="Kembali ke Dashboard">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </div>
+      </RouterLink>
       <h1 class="text-center mt-[4px] text-[#9a203e] font-bold text-3xl">Edit Profil</h1>
 
       <Transition name="fade" mode="out-in">
         <div v-if="isLoading" key="skeleton" class="animate-pulse w-full">
-          <div class="flex flex-col items-center justify-center py-6">
+          <div class="flex flex-col items-center justify-center py-2 sm:py-6">
             <div class="w-[102px] h-[102px] rounded-full bg-[#2b2122]"></div>
             <div class="mt-4 h-4 w-24 bg-[#2b2122] rounded"></div>
           </div>
 
-          <div class="mt-4">
+          <div class="mt-0">
             <div class="h-6 w-32 bg-[#2b2122] rounded mb-4"></div>
             <div class="h-4 w-12 bg-[#2b2122] rounded mb-2"></div>
             <div class="h-[50px] w-full bg-[#2b2122] rounded-[15px] mb-6"></div>
@@ -141,7 +164,6 @@ onMounted(() => {
               <div class="h-4 w-24 bg-[#2b2122] rounded mb-2"></div>
               <div class="h-[50px] w-full bg-[#2b2122] rounded-[15px]"></div>
             </div>
-
             <div class="h-[40px] w-40 bg-[#2b2122] rounded-[8px] mt-4"></div>
           </div>
         </div>

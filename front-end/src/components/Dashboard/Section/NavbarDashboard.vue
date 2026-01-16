@@ -11,7 +11,6 @@ const showDropdown = ref(false);
 async function fetchUser() {
   const response = await userDetail(token.value);
   const responseBody = await response.json();
-  console.log(responseBody);
 
   if (response.ok) {
     userState.value = responseBody.data;
@@ -35,24 +34,19 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <!-- NAVBAR -->
   <div class="bg-[#180808] p-[12px] flex items-center justify-between relative sticky z-50 top-0">
-    <!-- LOGO -->
-    <RouterLink to="/dashboard">
+    <RouterLink to="/dashboard" data-title="Resonate" class="tooltip-container no-underline">
       <h1 class="text-[#9a203e] text-[16px] ml-[1em] font-bold sm:text-[24px]">Resonate</h1>
     </RouterLink>
 
-    <!-- AVATAR + DROPDOWN -->
     <div class="relative mr-[1em]">
-      <!-- AVATAR -->
-      <img
-        :src="getAvatarUrl(userState.avatar)"
-        alt="me"
-        class="w-[40px] h-[40px] rounded-full object-cover block cursor-pointer"
-        @click="toggleDropdown" />
+      <div class="tooltip-container cursor-pointer rounded-full" :data-title="userState.name" @click="toggleDropdown">
+        <img :src="getAvatarUrl(userState.avatar)" alt="me" class="w-[40px] h-[40px] rounded-full object-cover block" />
+      </div>
 
-      <!-- DROPDOWN -->
-      <div v-if="showDropdown" class="absolute right-0 mt-[12px] w-[200px] rounded-[10px] bg-[#2c0f0f] p-[4px] z-50">
+      <div
+        v-if="showDropdown"
+        class="absolute right-0 mt-[12px] w-[200px] rounded-[10px] bg-[#2c0f0f] p-[4px] z-50 shadow-xl border border-[#4b1a1a]">
         <RouterLink
           to="/dashboard/users/profile"
           class="block p-[6px] text-[#e5e5e5] font-medium rounded-[10px] hover:bg-[#4b1a1a]"
@@ -71,3 +65,5 @@ onBeforeMount(async () => {
     </div>
   </div>
 </template>
+
+<style scoped></style>

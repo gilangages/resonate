@@ -1,6 +1,8 @@
 import { ref } from "vue";
 
 export const userState = ref({
+  name: "",
+  email: "",
   avatar: null,
   photo_url: "",
 });
