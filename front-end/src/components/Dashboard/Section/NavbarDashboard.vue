@@ -68,7 +68,10 @@ onBeforeMount(async () => {
 
     <div class="relative mr-[1em]">
       <div class="tooltip-container cursor-pointer rounded-full" :data-title="userState.name" @click="toggleDropdown">
-        <img :src="getAvatarUrl(userState.avatar)" alt="me" class="w-[40px] h-[40px] rounded-full object-cover block" />
+        <img
+          :src="getAvatarUrl(userState.avatar) || getAvatarUrl(userState.photo_url)"
+          alt="me"
+          class="w-[40px] h-[40px] rounded-full object-cover block" />
       </div>
 
       <div

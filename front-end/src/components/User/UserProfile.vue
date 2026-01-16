@@ -191,7 +191,7 @@ onMounted(() => {
           <div class="flex flex-col items-center justify-center text-[#e5e5e5] py-6">
             <div class="relative group cursor-zoom-in" @click="openPreview">
               <img
-                :src="getAvatarUrl(userState.avatar)"
+                :src="getAvatarUrl(userState.avatar) || getAvatarUrl(userState.photo_url)"
                 alt="profile"
                 class="w-[102px] h-[102px] rounded-full object-cover block border-2 border-transparent group-hover:border-[#9a203e]/50 transition-all" />
 
