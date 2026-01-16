@@ -80,10 +80,10 @@ onMounted(() => {
 <template>
   <div class="relative min-h-screen bg-[#0f0505]">
     <Navbar />
-    <Hero />
-    <Fitur />
+    <Hero id="home" />
+    <Fitur id="fitur" />
     <PesanLain />
-    <FAQ />
+    <FAQ id="faq" />
     <Ajakan />
     <Footer />
 
