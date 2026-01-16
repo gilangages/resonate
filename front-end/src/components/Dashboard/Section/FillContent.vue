@@ -64,7 +64,6 @@ async function fetchNoteList(reset = true) {
     // Panggil API dengan parameter baru
     const response = await myNoteList(token.value, currentPage.value, searchQuery.value, sortBy.value);
     const responseBody = await response.json();
-    console.log(responseBody);
 
     if (response.ok) {
       if (responseBody.meta) {
@@ -101,6 +100,11 @@ const handleSortChange = () => {
 const toggleSelectionMode = () => {
   isSelectionMode.value = !isSelectionMode.value;
   selectedIds.value = []; // Reset pilihan saat mode berubah
+};
+
+const cancelSelectionMode = () => {
+  isSelectionMode.value = false;
+  selectedIds.value = [];
 };
 
 const toggleSelectAll = () => {
@@ -266,31 +270,12 @@ onMounted(async () => {
           class="px-4 py-2 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all"
           :class="
             isSelectionMode
-              ? 'bg-[#9a203e] border-[#9a203e] text-white'
+              ? 'bg-[#2c2021] border-[#3f3233] text-white'
               : 'bg-transparent border-[#3f3233] text-[#8c8a8a] hover:border-[#9a203e]'
           ">
           {{ isSelectionMode ? "Batal" : "Pilih" }}
         </button>
       </div>
-    </div>
-
-    <div
-      v-if="isSelectionMode"
-      class="mb-6 flex items-center justify-between bg-[#2c0f0f] border border-[#4b1a1a] p-4 rounded-xl animate-pulse">
-      <div class="flex items-center gap-3">
-        <input
-          type="checkbox"
-          :checked="selectedIds.length === notes.length && notes.length > 0"
-          @change="toggleSelectAll"
-          class="w-5 h-5 accent-[#9a203e] cursor-pointer rounded" />
-        <span class="text-sm text-white font-medium">{{ selectedIds.length }} Dipilih</span>
-      </div>
-      <button
-        @click="handleBulkDelete"
-        :disabled="selectedIds.length === 0"
-        class="bg-[#9a203e] text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-[#b02446] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-        Hapus Terpilih
-      </button>
     </div>
 
     <div v-if="isLoading" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
@@ -439,20 +424,71 @@ onMounted(async () => {
       </svg>
     </div>
 
-    <button
-      @click="$emit('open-modal')"
-      class="cursor-pointer fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#9a203e] text-white shadow-[0_0_30px_rgba(154,32,62,0.4)] transition-all duration-300 hover:scale-110 hover:bg-[#821c35] active:scale-95 focus:outline-none sm:bottom-12 sm:right-12 sm:h-16 sm:w-16 group"
-      title="Buat Cerita Baru">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="2.5"
-        stroke="currentColor"
-        class="h-8 w-8 sm:h-9 sm:w-9 transition-transform group-hover:rotate-90">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-    </button>
+    <Transition name="fade">
+      <button
+        v-if="!isSelectionMode"
+        @click="$emit('open-modal')"
+        class="cursor-pointer fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#9a203e] text-white shadow-[0_0_30px_rgba(154,32,62,0.4)] transition-all duration-300 hover:scale-110 hover:bg-[#821c35] active:scale-95 focus:outline-none sm:bottom-12 sm:right-12 sm:h-16 sm:w-16 group"
+        title="Buat Cerita Baru">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2.5"
+          stroke="currentColor"
+          class="h-8 w-8 sm:h-9 sm:w-9 transition-transform group-hover:rotate-90">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </button>
+    </Transition>
+
+    <Transition name="slide-up">
+      <div
+        v-if="isSelectionMode"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1c1516] border border-[#2c2021] text-white pl-6 pr-4 py-3 rounded-full shadow-2xl flex items-center gap-4 w-[90%] max-w-md justify-between sm:justify-center">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              :checked="selectedIds.length === notes.length && notes.length > 0"
+              @change="toggleSelectAll"
+              class="w-4 h-4 accent-[#9a203e] cursor-pointer" />
+            <span class="text-sm font-medium whitespace-nowrap">{{ selectedIds.length }} Terpilih</span>
+          </div>
+        </div>
+
+        <div class="h-6 w-[1px] bg-[#2c2021] hidden sm:block"></div>
+
+        <div class="flex items-center gap-2">
+          <button
+            @click="handleBulkDelete"
+            :disabled="selectedIds.length === 0"
+            class="text-[#9a203e] text-sm font-bold hover:text-[#b92b4a] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+            </svg>
+            <span class="hidden sm:inline">Hapus</span>
+          </button>
+
+          <button
+            @click="cancelSelectionMode"
+            class="text-gray-400 hover:text-white text-sm font-medium px-2 py-1 ml-1">
+            Batal
+          </button>
+        </div>
+      </div>
+    </Transition>
 
     <Transition name="fade">
       <div
@@ -642,12 +678,23 @@ onMounted(async () => {
   animation: spin 8s linear infinite;
 }
 
+/* Animations */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
 }
 .fade-enter-from,
 .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translate(-50%, 100%);
   opacity: 0;
 }
 </style>
