@@ -21,7 +21,6 @@ const isDropdownOpen = ref(false);
 const dropdownOptions = [
   { value: "Bug Report", label: "🐛 Melaporkan Bug / Error" },
   { value: "Feature Request", label: "💡 Saran Fitur Baru" },
-  // Opsi Baru Ditambahkan Disini:
   { value: "Report Content", label: "🚨 Lapor Konten Tidak Pantas" },
   { value: "General Question", label: "👋 Pertanyaan Umum" },
   { value: "Other", label: "Lainnya" },
@@ -330,7 +329,29 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="mt-20 text-center relative z-10 animate-fade-in-up" style="animation-delay: 0.7s">
+      <div class="mt-12 w-full max-w-2xl text-center animate-fade-in-up relative z-10" style="animation-delay: 0.6s">
+        <div class="flex flex-col items-center gap-4">
+          <p class="text-gray-400 text-sm max-w-lg mx-auto leading-relaxed">
+            Resonate dikembangkan secara independen (Solo Dev). Jika kamu merasa aplikasi ini bermanfaat, kamu bisa
+            memberikan dukungan untuk developer agar selalu semangat dalam berkarya! ☕
+          </p>
+
+          <a
+            href="https://saweria.co/qbdian"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-3 px-8 py-3 bg-[#eeb424] hover:bg-[#d4a01e] text-[#0f0505] font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_-5px_rgba(238,180,36,0.4)]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fill-rule="evenodd"
+                d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                clip-rule="evenodd" />
+            </svg>
+            Dukung via Saweria
+          </a>
+        </div>
+      </div>
+      <div class="mt-16 text-center relative z-10 animate-fade-in-up" style="animation-delay: 0.7s">
         <p class="text-[10px] text-gray-500 uppercase tracking-[0.3em] mb-4">Developed Solo By</p>
 
         <div
@@ -348,7 +369,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Animasi Muncul ke Atas */
+/* Style tetap sama seperti sebelumnya */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -360,7 +381,7 @@ onMounted(() => {
   }
 }
 .animate-fade-in-up {
-  opacity: 0; /* Awal tersembunyi */
+  opacity: 0;
   animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -378,7 +399,6 @@ onMounted(() => {
   animation: fadeInFast 0.2s ease-out forwards;
 }
 
-/* Animasi Glow untuk Card Abdian */
 @keyframes abdian-pulse {
   0%,
   100% {
