@@ -5,6 +5,9 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  esbuild: {
+    pure: mode === "production" ? ["console.log", "console.debug"] : [],
+  },
   test: {
     environment: "jsdom", // Penting agar bisa test komponen/DOM
     globals: true, // Opsional: agar tidak perlu import describe/it manual terus menerus
