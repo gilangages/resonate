@@ -11,17 +11,20 @@ describe("FAQ.vue", () => {
   it("toggles answer visibility when question clicked", async () => {
     const wrapper = mount(FAQ);
 
-    // Ambil item pertama
-    const firstQuestion = wrapper.findAll(".cursor-pointer")[0];
+    // Ambil tombol pertanyaan pertama
+    const firstButton = wrapper.findAll(".cursor-pointer")[0];
 
-    // Cek awal (tertutup) - logicnya class opacity-0
-    expect(firstQuestion.classes()).not.toContain("border-[#9a203e]/50");
+    // Ambil span teks di dalamnya
+    const questionText = firstButton.find("span");
 
-    // Klik
-    await firstQuestion.trigger("click");
+    // Cek awal (tertutup) - seharusnya tidak ada class text active
+    expect(questionText.classes()).not.toContain("text-[#9a203e]");
 
-    // Cek setelah klik (harus terbuka/aktif)
-    expect(firstQuestion.classes()).toContain("border-[#9a203e]/50");
+    // Klik tombol
+    await firstButton.trigger("click");
+
+    // Cek setelah klik (harus terbuka/aktif) - warna teks berubah
+    expect(questionText.classes()).toContain("text-[#9a203e]");
   });
 
   it("contains relevant content about Deezer", () => {
