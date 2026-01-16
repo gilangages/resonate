@@ -24,3 +24,22 @@
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Tambahkan di Hero.vue bagian style */
+img {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px); /* Bergerak ke atas sedikit */
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+</style>

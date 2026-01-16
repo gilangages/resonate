@@ -11,6 +11,7 @@ import UserProfile from "./components/User/UserProfile.vue";
 import UserLogout from "./components/User/UserLogout.vue";
 import DashboardUser from "./components/Dashboard/DashboardUser.vue";
 import DashboardGlobal from "./components/Dashboard/DashboardGlobal.vue";
+import NotFound from "./components/NotFound.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -55,6 +56,10 @@ const router = createRouter({
           component: UserLogout,
         },
       ],
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      component: NotFound,
     },
   ],
 });

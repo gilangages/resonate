@@ -7,19 +7,19 @@ const features = [
   {
     title: "Mode Anonim",
     desc: "Ingin curhat atau mengungkapkan perasaan dengan rahasia? Gunakan nama inisial agar identitasmu tetap terjaga.",
-    img: "../../src/assets/img/samaran.svg", // Pastikan file ini ada
+    img: "../../src/assets/img/samaran.svg",
     isGeneric: false,
   },
   {
-    title: "Pustaka Musik", // Dulu "Integrasi Deezer", sekarang jadi umum
+    title: "Pustaka Musik",
     desc: "Cari dan sematkan jutaan lagu favoritmu. Preview 30 detik otomatis tersedia untuk menghidupkan pesanmu.",
-    img: musicIconSvg, // Pakai icon musik umum
+    img: musicIconSvg,
     isGeneric: true,
   },
   {
     title: "Personal Space",
     desc: "Kelola pesanmu sendiri. Edit kesalahan ketik atau hapus pesan kapan saja kamu mau.",
-    img: "../../src/assets/img/personal.svg", // Pastikan file ini ada
+    img: "../../src/assets/img/personal.svg",
     isGeneric: false,
   },
 ];
@@ -27,14 +27,15 @@ const features = [
 
 <template>
   <div class="p-[2em]">
-    <h2 class="text-[#e5e5e5] text-[20px] font-semibold sm:text-left">Fitur Utama</h2>
+    <h2 class="text-[#e5e5e5] text-[20px] font-semibold sm:text-left mb-6">Fitur Utama</h2>
 
     <div class="flex flex-col sm:flex-row gap-6">
       <div
         v-for="(item, index) in features"
         :key="index"
-        class="flex-1 flex flex-col items-center justify-start mt-[2em] text-center text-[#e5e5e5]">
-        <div class="w-[100px] h-[100px] flex items-center justify-center transition-transform hover:scale-105">
+        class="group flex-1 flex flex-col items-center justify-start p-6 rounded-2xl transition-all duration-300 hover:bg-white/5 hover:-translate-y-2 border border-transparent hover:border-white/10 text-center text-[#e5e5e5] cursor-default">
+        <div
+          class="w-[100px] h-[100px] flex items-center justify-center transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
           <img
             :src="item.img"
             class="w-full h-full object-contain"
@@ -44,8 +45,11 @@ const features = [
             }" />
         </div>
 
-        <h3 class="mt-4 mb-3 font-bold text-lg">{{ item.title }}</h3>
-        <p class="text-[#8c8a8a] text-[15px] px-[1em] leading-relaxed">
+        <h3 class="mt-4 mb-3 font-bold text-lg transition-colors group-hover:text-[#9a203e]">
+          {{ item.title }}
+        </h3>
+
+        <p class="text-[#8c8a8a] text-[15px] px-[1em] leading-relaxed transition-colors group-hover:text-gray-300">
           {{ item.desc }}
         </p>
       </div>

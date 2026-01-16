@@ -401,7 +401,7 @@ onMounted(async () => {
             :src="previewImageUrl"
             class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-default"
             @click.stop />
-          <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4">Foto Profil</p>
+          <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
         </div>
       </div>
     </Transition>

@@ -325,7 +325,7 @@ defineExpose({
             class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
           <div class="mb-5 relative z-10">
-            <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">KEPADA</p>
+            <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">UNTUK</p>
             <h2
               class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors break-words leading-tight">
               {{ note.recipient }}
@@ -434,59 +434,61 @@ defineExpose({
       </button>
     </Transition>
 
-    <Transition name="slide-up">
-      <div
-        v-if="isSelectionMode"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1c1516] border border-[#2c2021] text-white pl-6 pr-4 py-3 rounded-full shadow-2xl flex items-center gap-4 w-[90%] max-w-md justify-between sm:justify-center">
-        <div class="flex items-center gap-3">
+    <Teleport to="body">
+      <Transition name="slide-up">
+        <div
+          v-if="isSelectionMode"
+          class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] bg-[#1c1516] border border-[#2c2021] text-white pl-6 pr-4 py-3 rounded-full shadow-2xl flex items-center gap-4 w-[90%] max-w-md justify-between sm:justify-center">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <input
+                type="checkbox"
+                :checked="selectedIds.length === notes.length && notes.length > 0"
+                @change="toggleSelectAll"
+                class="w-4 h-4 accent-[#9a203e] cursor-pointer" />
+              <span class="text-sm font-medium whitespace-nowrap">{{ selectedIds.length }} Terpilih</span>
+            </div>
+          </div>
+
+          <div class="h-6 w-[1px] bg-[#2c2021] hidden sm:block"></div>
+
           <div class="flex items-center gap-2">
-            <input
-              type="checkbox"
-              :checked="selectedIds.length === notes.length && notes.length > 0"
-              @change="toggleSelectAll"
-              class="w-4 h-4 accent-[#9a203e] cursor-pointer" />
-            <span class="text-sm font-medium whitespace-nowrap">{{ selectedIds.length }} Terpilih</span>
+            <button
+              @click="handleBulkDelete"
+              :disabled="selectedIds.length === 0"
+              class="text-[#9a203e] text-sm font-bold hover:text-[#b92b4a] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+              </svg>
+              <span class="hidden sm:inline">Hapus</span>
+            </button>
+
+            <button
+              @click="cancelSelectionMode"
+              class="text-gray-400 hover:text-white text-sm font-medium px-2 py-1 ml-1">
+              Batal
+            </button>
           </div>
         </div>
-
-        <div class="h-6 w-[1px] bg-[#2c2021] hidden sm:block"></div>
-
-        <div class="flex items-center gap-2">
-          <button
-            @click="handleBulkDelete"
-            :disabled="selectedIds.length === 0"
-            class="text-[#9a203e] text-sm font-bold hover:text-[#b92b4a] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round">
-              <path d="M3 6h18"></path>
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-            </svg>
-            <span class="hidden sm:inline">Hapus</span>
-          </button>
-
-          <button
-            @click="cancelSelectionMode"
-            class="text-gray-400 hover:text-white text-sm font-medium px-2 py-1 ml-1">
-            Batal
-          </button>
-        </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
 
     <Teleport to="body">
       <Transition name="fade">
         <div
           v-if="showModal"
-          class="fixed inset-0 z-111 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+          class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
           @click.self="closeModalDetail">
           <div
             class="bg-[#1c1516] w-full max-w-[480px] rounded-[32px] shadow-2xl border border-[#2c2021] flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
