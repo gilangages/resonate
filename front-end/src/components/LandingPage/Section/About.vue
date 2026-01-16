@@ -331,23 +331,26 @@ onMounted(() => {
 
       <div class="mt-12 w-full max-w-2xl text-center animate-fade-in-up relative z-10" style="animation-delay: 0.6s">
         <div class="flex flex-col items-center gap-4">
+          <h3 class="text-white font-bold text-lg">Dukungan Untuk Developer ☕</h3>
+
           <p class="text-gray-400 text-sm max-w-lg mx-auto leading-relaxed">
-            Resonate dikembangkan secara independen (Solo Dev). Jika kamu merasa aplikasi ini bermanfaat, kamu bisa
-            memberikan dukungan untuk developer agar selalu semangat dalam berkarya! ☕
+            Resonate dikembangkan dan dikelola seorang diri (Solo Dev) dengan sumber daya mandiri. Jika tempat ini
+            bermakna untukmu, dukungan darimu akan menjadi bahan bakar semangat bagi developer untuk terus merawat,
+            memperbaiki, dan menjaga Resonate agar tetap ada.
           </p>
 
           <a
             href="https://saweria.co/qbdian"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-3 px-8 py-3 bg-[#eeb424] hover:bg-[#d4a01e] text-[#0f0505] font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_-5px_rgba(238,180,36,0.4)]">
+            class="inline-flex items-center gap-3 px-8 py-3 bg-[#eeb424] hover:bg-[#d4a01e] text-[#0f0505] font-bold rounded-full transition-all transform hover:scale-105 shadow-[0_0_20px_-5px_rgba(238,180,36,0.4)] mt-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fill-rule="evenodd"
                 d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
                 clip-rule="evenodd" />
             </svg>
-            Dukung via Saweria
+            Traktir Kopi / Dukung
           </a>
         </div>
       </div>
