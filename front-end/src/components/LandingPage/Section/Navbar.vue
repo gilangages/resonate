@@ -83,7 +83,7 @@ const scrollToSection = async (sectionId) => {
 
         <div @click="scrollToSection('home')" class="cursor-pointer flex items-center gap-2 select-none">
           <h1
-            class="text-[16px] sm:text-[24px] text-[#9a203e] m-0 sm:ml-[1em] font-bold hover:text-[#b92b4a] transition-colors">
+            class="text-[24px] sm:text-[24px] text-[#9a203e] m-0 sm:ml-[1em] font-bold hover:text-[#b92b4a] transition-colors">
             Resonate
           </h1>
         </div>

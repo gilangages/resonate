@@ -2,8 +2,8 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Admin API",
-        "description": "Moderation tools for Admin.",
-        "version": "1.0.0"
+        "description": "Moderation tools for Admin (User Management & Content Moderation).",
+        "version": "1.1.0"
     },
     "servers": [
         {
@@ -23,12 +23,30 @@
         "/api/admin/users": {
             "get": {
                 "summary": "List All Users",
+                "description": "Get paginated list of users with optional search.",
                 "tags": [
                     "Admin User"
                 ],
                 "security": [
                     {
                         "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Search by name or email"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -42,12 +60,14 @@
                                             "id": 1,
                                             "name": "User A",
                                             "email": "a@mail.com",
+                                            "role": "user",
                                             "is_banned": false
                                         },
                                         {
                                             "id": 2,
                                             "name": "User B",
                                             "email": "b@mail.com",
+                                            "role": "user",
                                             "is_banned": true
                                         }
                                     ],
@@ -65,7 +85,7 @@
         "/api/admin/users/{id}": {
             "delete": {
                 "summary": "Ban User",
-                "description": "Soft delete user (Ban functionality).",
+                "description": "Soft ban user (set is_banned = true) and revoke tokens.",
                 "tags": [
                     "Admin User"
                 ],
@@ -87,15 +107,19 @@
                 "responses": {
                     "200": {
                         "description": "User Banned successfully"
+                    },
+                    "403": {
+                        "description": "Cannot ban admin"
                     }
                 }
             }
         },
-        "/api/admin/notes/{id}": {
-            "delete": {
-                "summary": "Delete Note (Moderation)",
+        "/api/admin/users/{id}/restore": {
+            "patch": {
+                "summary": "Restore / Unban User",
+                "description": "Set is_banned = false.",
                 "tags": [
-                    "Admin Note"
+                    "Admin User"
                 ],
                 "security": [
                     {
@@ -114,7 +138,126 @@
                 ],
                 "responses": {
                     "200": {
+                        "description": "Akun user berhasil dipulihkan."
+                    }
+                }
+            }
+        },
+        "/api/admin/notes": {
+            "get": {
+                "summary": "List All Notes (Moderation)",
+                "description": "Get all notes to monitor content.",
+                "tags": [
+                    "Admin Note"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search content",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of notes"
+                    }
+                }
+            }
+        },
+        "/api/admin/notes/{id}": {
+            "delete": {
+                "summary": "Delete Note & Notify User",
+                "tags": [
+                    "Admin Note"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Melanggar Pedoman Komunitas"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
                         "description": "Note deleted by Admin"
+                    }
+                }
+            }
+        },
+        "/api/admin/ban-by-note/{noteId}": {
+            "post": {
+                "summary": "Ban User by Note ID",
+                "description": "Ban a user directly from their note ID (useful for quick moderation).",
+                "tags": [
+                    "Admin Note"
+                ],
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "noteId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Spam content"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Penulis pesan ini telah berhasil diblokir."
+                    },
+                    "403": {
+                        "description": "Cannot ban admin"
                     }
                 }
             }
