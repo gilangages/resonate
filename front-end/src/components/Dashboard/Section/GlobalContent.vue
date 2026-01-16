@@ -1,7 +1,7 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
 import { noteList } from "../../../lib/api/NoteApi";
-import { onMounted, ref, nextTick, Teleport } from "vue";
+import { onMounted, ref, nextTick, Teleport, computed } from "vue";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
 import { useDebounceFn } from "@vueuse/core";
 import DashboardToolbar from "./DashboardToolbar.vue";
@@ -13,7 +13,7 @@ const notes = ref([]);
 const currentAudio = ref(new Audio());
 const currentTime = ref(0);
 
-// --- STATE LOADING (BARU) ---
+// --- STATE LOADING ---
 const isLoading = ref(true);
 
 // --- STATE PAGINATION ---
@@ -41,7 +41,6 @@ const formatDateDetail = (dateString) => {
   return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
 };
 
-// FUNGSI FORMAT WAKTU (Ubah detik jadi 0:00)
 const formatTimeMusic = (time) => {
   if (!time || isNaN(time)) return "0:00";
   const minutes = Math.floor(time / 60);
@@ -53,25 +52,25 @@ const formatTimeMusic = (time) => {
 async function fetchNoteList(reset = true) {
   if (reset) {
     currentPage.value = 1;
-    isLoading.value = true; // Mulai Loading
+    isLoading.value = true;
   }
 
   try {
     const response = await noteList(token.value, currentPage.value, searchQuery.value, sortBy.value);
     const responseBody = await response.json();
-    console.log(responseBody);
     if (response.ok) {
+      if (reset) notes.value = responseBody.data;
+      else notes.value.push(...responseBody.data);
+
       if (responseBody.meta) {
         lastPage.value = responseBody.meta.last_page;
         currentPage.value = responseBody.meta.current_page;
       }
-      if (reset) notes.value = responseBody.data;
-      else notes.value.push(...responseBody.data);
     }
   } catch (error) {
     console.error("Fetch error:", error);
   } finally {
-    isLoading.value = false; // Selesai Loading
+    isLoading.value = false;
   }
 }
 
@@ -89,9 +88,8 @@ const loadMore = async () => {
 const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
-  currentTime.value = 0; // Reset waktu UI
+  currentTime.value = 0;
 
-  // Tentukan URL Lagu
   let streamUrl = null;
   if (note.music_track_id) {
     streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
@@ -102,17 +100,11 @@ const openModalDetail = (note) => {
   if (streamUrl) {
     currentAudio.value.src = streamUrl;
     currentAudio.value.volume = 0.5;
-
     currentAudio.value.loop = true;
-
-    // --- UPDATE LOGIC: Event Listener untuk Waktu ---
     currentAudio.value.ontimeupdate = () => {
       currentTime.value = currentAudio.value.currentTime;
     };
-
-    currentAudio.value.play().catch((e) => {
-      console.error("Gagal play audio:", e);
-    });
+    currentAudio.value.play().catch((e) => console.error("Gagal play audio:", e));
   }
 
   nextTick(() => {
@@ -124,19 +116,15 @@ const openModalDetail = (note) => {
 
 const closeModalDetail = () => {
   isVinylSpinning.value = false;
-
-  // STOP MUSIK SAAT DITUTUP
   currentAudio.value.pause();
   currentAudio.value.currentTime = 0;
-  currentTime.value = 0; // Reset UI Timer
-
+  currentTime.value = 0;
   setTimeout(() => {
     showModal.value = false;
     selectedNote.value = null;
   }, 100);
 };
 
-// --- IMAGE PREVIEW LOGIC ---
 const openPreview = (url) => {
   if (!url) return;
   previewImageUrl.value = url;
@@ -148,7 +136,15 @@ const closePreview = () => {
 };
 
 const handleSearch = useDebounceFn(() => fetchNoteList(true), 500);
-const handleSortChange = () => fetchNoteList(true);
+
+// Fungsi pembagi kolom untuk Masonry (Sama dengan FillContent)
+const columns = computed(() => {
+  const cols = [[], [], []];
+  notes.value.forEach((note, index) => {
+    cols[index % 3].push(note);
+  });
+  return cols;
+});
 
 onMounted(async () => {
   await fetchNoteList(true);
@@ -163,14 +159,13 @@ onMounted(async () => {
       @search="handleSearch"
       placeholder="Jelajahi pesan dunia..." />
 
-    <div v-if="isLoading" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
-      <div v-for="i in 6" :key="i" class="break-inside-avoid relative">
-        <div class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] animate-pulse h-full flex flex-col">
+    <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+      <div v-for="i in 6" :key="i" class="relative">
+        <div class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] animate-pulse h-80 flex flex-col">
           <div class="mb-5">
             <div class="h-3 w-10 bg-[#2b2122] rounded mb-2"></div>
             <div class="h-8 w-3/4 bg-[#2b2122] rounded-[8px]"></div>
           </div>
-
           <div class="flex gap-4 items-center mb-5">
             <div class="w-14 h-14 bg-[#2b2122] rounded-[12px]"></div>
             <div class="flex-1 space-y-2">
@@ -178,19 +173,12 @@ onMounted(async () => {
               <div class="h-3 w-1/3 bg-[#2b2122] rounded"></div>
             </div>
           </div>
-
           <div class="h-24 bg-[#2b2122] rounded-[16px] mb-4 w-full"></div>
-
           <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] mt-auto">
             <div class="flex items-center gap-2">
               <div class="w-6 h-6 rounded-full bg-[#2b2122]"></div>
-              <div class="flex flex-col gap-1">
-                <div class="h-2 w-8 bg-[#2b2122] rounded"></div>
-                <div class="h-3 w-20 bg-[#2b2122] rounded"></div>
-              </div>
-              <div class="ml-auto h-3 w-16 bg-[#2b2122] rounded"></div>
+              <div class="h-3 w-20 bg-[#2b2122] rounded"></div>
             </div>
-
             <div class="w-full mt-2 h-9 bg-[#2b2122] rounded-lg"></div>
           </div>
         </div>
@@ -201,78 +189,80 @@ onMounted(async () => {
       Belum ada pesan yang dibuat.
     </div>
 
-    <div v-else class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
-      <div
-        v-for="(note, index) in notes"
-        :key="note.id || index"
-        class="break-inside-avoid relative group/card cursor-pointer"
-        @click="openModalDetail(note)">
+    <div v-else class="flex flex-col md:flex-row gap-6 mb-10 items-start w-full">
+      <div v-for="(col, colIdx) in columns" :key="colIdx" class="flex-1 min-w-0 flex flex-col gap-6 w-full md:w-1/3">
         <div
-          class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col h-full">
+          v-for="note in col"
+          :key="note.id"
+          class="group/card flex flex-col h-auto relative w-full cursor-pointer"
+          @click="openModalDetail(note)">
           <div
-            class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
-
-          <div class="mb-5 relative z-10">
-            <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">UNTUK</p>
-            <h2
-              class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors break-words leading-tight">
-              {{ note.recipient }}
-            </h2>
-          </div>
-
-          <div class="flex gap-4 items-center relative z-10 mb-5">
+            class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col w-full">
             <div
-              class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
-              <img :src="note.music_album_image" class="w-full h-full object-cover" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
-              <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
-            </div>
-          </div>
+              class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
-          <div
-            class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
-            <p
-              v-text="'&quot;' + note.content + '&quot;'"
-              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6"></p>
-          </div>
+            <div class="mb-5 relative z-10">
+              <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">UNTUK</p>
+              <h2
+                class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors break-words leading-tight">
+                {{ note.recipient }}
+              </h2>
+            </div>
 
-          <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
-            <div class="flex items-center gap-2">
-              <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
-              <div class="flex flex-col">
-                <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
-                <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
+            <div class="flex gap-4 items-center relative z-10 mb-5">
+              <div
+                class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
+                <img :src="note.music_album_image" class="w-full h-full object-cover" />
               </div>
-              <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
-                {{ formatTime(note.created_at) }}
-                <span
-                  v-if="isEdited(note.created_at, note.updated_at)"
-                  class="text-[#9a203e] italic ml-1 block sm:inline">
-                  (diedit)
-                </span>
-              </span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
+                <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
+              </div>
             </div>
 
             <div
-              class="w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
-              <button
-                class="cursor-pointer w-full py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-widest hover:bg-[#9a203e] hover:text-white transition-all flex items-center justify-center gap-2">
-                BUKA
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </button>
+              class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
+              <p
+                v-text="'&quot;' + note.content + '&quot;'"
+                class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6"></p>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
+              <div class="flex items-center gap-2">
+                <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
+                  <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
+                </div>
+                <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
+                  {{ formatTime(note.created_at) }}
+                  <span
+                    v-if="isEdited(note.created_at, note.updated_at)"
+                    class="text-[#9a203e] italic ml-1 block sm:inline">
+                    (diedit)
+                  </span>
+                </span>
+              </div>
+
+              <div
+                class="w-full mt-2 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 transition-opacity duration-300">
+                <button
+                  class="w-full py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-widest hover:bg-[#9a203e] hover:text-white transition-all flex items-center justify-center gap-2">
+                  BUKA
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -329,7 +319,6 @@ onMounted(async () => {
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
             </button>
-
             <div
               class="bg-gradient-to-b from-[#251a1c] to-[#1c1516] p-6 pt-10 border-b border-[#2c2021] flex flex-col items-center shrink-0">
               <div
@@ -341,14 +330,12 @@ onMounted(async () => {
                   :src="selectedNote?.music_album_image"
                   class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
               </div>
-
               <h2 class="text-xl font-bold text-white text-center leading-tight px-4">
                 {{ selectedNote?.music_track_name }}
               </h2>
               <p class="text-[#9a203e] text-xs font-medium uppercase tracking-wide mb-3 mt-1">
                 {{ selectedNote?.music_artist_name }}
               </p>
-
               <div class="w-full max-w-[200px] mb-5 mt-2">
                 <div class="h-1 bg-[#2b2122] rounded-full overflow-hidden w-full">
                   <div
@@ -360,7 +347,6 @@ onMounted(async () => {
                   <span>0:30</span>
                 </div>
               </div>
-
               <a
                 v-if="selectedNote?.music_track_id"
                 :href="`https://www.deezer.com/track/${selectedNote?.music_track_id}`"
@@ -372,7 +358,6 @@ onMounted(async () => {
                 <span>Putar Lagu Penuh</span>
               </a>
             </div>
-
             <div class="flex-1 bg-[#161213] p-6 overflow-y-auto custom-scrollbar">
               <div class="flex justify-between items-center mb-6 pb-4 border-b border-[#2c2021]">
                 <div class="flex items-center gap-3">

@@ -1,7 +1,7 @@
 <script setup>
 import { useLocalStorage } from "@vueuse/core";
 import { myNoteList, noteDelete } from "../../../lib/api/NoteApi";
-import { ref, nextTick, onMounted, Teleport } from "vue";
+import { ref, nextTick, onMounted, Teleport, computed } from "vue";
 import { alertConfirm, alertError, alertSuccess } from "../../../lib/alert";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
 import { useDebounceFn } from "@vueuse/core";
@@ -223,6 +223,15 @@ const closePreview = () => {
   }, 300);
 };
 
+// Fungsi untuk membagi notes menjadi 3 kolom agar urutannya menyamping
+const columns = computed(() => {
+  const cols = [[], [], []]; // Untuk 3 kolom (lg)
+  notes.value.forEach((note, index) => {
+    cols[index % 3].push(note); // Note 1 ke Kolom 1, Note 2 ke Kolom 2, dst
+  });
+  return cols;
+});
+
 onMounted(async () => {
   await fetchNoteList(true);
 });
@@ -307,84 +316,80 @@ defineExpose({
       </button>
     </div>
 
-    <div v-else class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
-      <div v-for="(note, index) in notes" :key="note.id || index" class="break-inside-avoid relative group/card">
-        <div v-if="isSelectionMode" class="absolute top-4 right-4 z-30">
-          <input
-            type="checkbox"
-            :value="note.id"
-            v-model="selectedIds"
-            class="w-6 h-6 accent-[#9a203e] cursor-pointer rounded shadow-md border-2 border-white/20" />
-        </div>
-
-        <div
-          @click="!isSelectionMode && openModalDetail(note)"
-          class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col h-full"
-          :class="isSelectionMode ? 'cursor-default' : 'cursor-pointer'">
-          <div
-            class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
-
-          <div class="mb-5 relative z-10">
-            <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">UNTUK</p>
-            <h2
-              class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors break-words leading-tight">
-              {{ note.recipient }}
-            </h2>
+    <div v-else class="flex flex-col md:flex-row gap-6 mb-10 items-start w-full">
+      <div v-for="(col, colIdx) in columns" :key="colIdx" class="flex-1 min-w-0 flex flex-col gap-6 w-full md:w-1/3">
+        <div v-for="note in col" :key="note.id" class="group/card flex flex-col h-auto relative w-full">
+          <div v-if="isSelectionMode" class="absolute top-4 right-4 z-30">
+            <input
+              type="checkbox"
+              :value="note.id"
+              v-model="selectedIds"
+              class="w-6 h-6 accent-[#9a203e] cursor-pointer rounded shadow-md border-2 border-white/20" />
           </div>
 
-          <div class="flex gap-4 items-center relative z-10 mb-5">
+          <div
+            @click="!isSelectionMode && openModalDetail(note)"
+            class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden flex flex-col w-full"
+            :class="isSelectionMode ? 'cursor-default' : 'cursor-pointer'">
             <div
-              class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
-              <img :src="note.music_album_image" class="w-full h-full object-cover" />
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
-              <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
-            </div>
-          </div>
+              class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
-          <div
-            class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
-            <p
-              v-text="'&quot;' + note.content + '&quot;'"
-              class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6"></p>
-          </div>
+            <div class="mb-5 relative z-10">
+              <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">UNTUK</p>
+              <h2
+                class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors break-words leading-tight">
+                {{ note.recipient }}
+              </h2>
+            </div>
 
-          <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
-            <div class="flex items-center gap-2">
-              <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
-              <div class="flex flex-col">
-                <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
-                <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
+            <div class="flex gap-4 items-center relative z-10 mb-5">
+              <div
+                class="w-14 h-14 rounded-[12px] overflow-hidden shrink-0 border border-[#333] shadow-md group-hover/card:scale-105 transition-transform bg-black">
+                <img :src="note.music_album_image" class="w-full h-full object-cover" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
+                <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
+              </div>
+            </div>
+
+            <div
+              class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
+              <p
+                v-text="'&quot;' + note.content + '&quot;'"
+                class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap break-words line-clamp-6"></p>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
+              <div class="flex items-center gap-2">
+                <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
+                <div class="flex flex-col">
+                  <span class="text-[10px] text-[#666] uppercase font-bold">Dari</span>
+                  <span class="text-xs text-[#999] font-medium leading-none">{{ note.author }}</span>
+                </div>
+                <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
+                  {{ formatTime(note.created_at) }}
+                </span>
               </div>
 
-              <span class="text-[10px] text-[#555] font-mono ml-auto text-right">
-                {{ formatTime(note.created_at) }}
-                <span
-                  v-if="isEdited(note.created_at, note.updated_at)"
-                  class="text-[#9a203e] italic ml-1 block sm:inline">
-                  (diedit)
-                </span>
-              </span>
-            </div>
-
-            <div
-              class="flex gap-2 w-full mt-2 transition-opacity duration-300"
-              :class="
-                isSelectionMode
-                  ? 'opacity-0 pointer-events-none'
-                  : 'opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100'
-              ">
-              <button
-                @click.stop="$emit('edit-note', note)"
-                class="flex-1 py-2 rounded-lg border border-[#3f3233] text-[#8c8a8a] text-xs font-bold uppercase tracking-wider hover:bg-[#2c2021] hover:text-white hover:cursor-pointer transition-colors">
-                Edit
-              </button>
-              <button
-                @click.stop="handleDelete(note.id)"
-                class="flex-1 py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-wider hover:bg-[#9a203e] hover:text-white hover:cursor-pointer transition-colors">
-                Hapus
-              </button>
+              <div
+                class="flex gap-2 w-full mt-2 transition-opacity duration-300"
+                :class="
+                  isSelectionMode
+                    ? 'opacity-0 pointer-events-none'
+                    : 'opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100'
+                ">
+                <button
+                  @click.stop="$emit('edit-note', note)"
+                  class="flex-1 py-2 rounded-lg border border-[#3f3233] text-[#8c8a8a] text-xs font-bold uppercase tracking-wider hover:bg-[#2c2021] hover:text-white transition-colors">
+                  Edit
+                </button>
+                <button
+                  @click.stop="handleDelete(note.id)"
+                  class="flex-1 py-2 rounded-lg bg-[#9a203e]/10 border border-[#9a203e]/30 text-[#9a203e] text-xs font-bold uppercase tracking-wider hover:bg-[#9a203e] hover:text-white transition-colors">
+                  Hapus
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -611,7 +616,7 @@ defineExpose({
                     closeModalDetail();
                   "
                   class="flex-1 py-3 rounded-[14px] bg-[#333] text-white font-bold text-xs uppercase tracking-widest hover:bg-[#444] transition-all cursor-pointer">
-                  Edit Note
+                  Edit Pesan
                 </button>
               </div>
             </div>
