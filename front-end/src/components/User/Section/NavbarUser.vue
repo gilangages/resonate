@@ -10,6 +10,10 @@
         Resonate
       </h1>
     </RouterLink>
+
+    <div class="flex items-center gap-[10px] pr-[10px] justify-center invisible select-none">
+      <span class="text-[14px] font-semibold px-[16px] py-[8px] border border-transparent">Masuk</span>
+    </div>
   </div>
 </template>
 
