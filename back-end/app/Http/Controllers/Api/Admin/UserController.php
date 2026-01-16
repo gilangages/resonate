@@ -22,7 +22,8 @@ class UserController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('id', $search);
             });
         }
         // Paginate 10 item per halaman
@@ -36,18 +37,48 @@ class UserController extends Controller
      */
     public function indexNotes(Request $request): JsonResponse
     {
-        $query = Note::with('user:id,name,email,avatar');
+        $query = Note::whereHas('user', function ($q) {
+            $q->where('is_banned', false);
+        });
 
         if ($search = $request->input('search')) {
-            $query->where('content', 'like', "%{$search}%")
-                ->orWhereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                });
+            $query->where('content', 'like', "%{$search}%");
         }
 
         $notes = $query->latest()->paginate(10);
 
         return response()->json($notes);
+    }
+
+    /**
+     * BARU: Eksekusi Banned Tanpa Tahu Orangnya
+     * Frontend mengirim Note ID -> Backend cari Usernya -> Backend Banned.
+     */
+    public function banUserByNoteId(Request $request, $noteId): JsonResponse
+    {
+        // 1. Cari Note
+        $note = Note::with('user')->findOrFail($noteId);
+        $user = $note->user;
+
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan (mungkin akun sudah dihapus).'], 404);
+        }
+
+        // 2. Cek apakah Admin (Anti-Senjata Makan Tuan)
+        if ($user->role === 'admin') {
+            return response()->json(['message' => 'Tidak bisa memblokir sesama admin.'], 403);
+        }
+
+        // 3. Eksekusi Banned
+        $user->update([
+            'is_banned' => true,
+            'ban_reason' => $request->input('reason', 'Melanggar aturan komunitas (via Konten).'),
+        ]);
+
+        // 4. Tendang User (Logout paksa)
+        $user->tokens()->delete();
+
+        return response()->json(['message' => 'Penulis pesan ini telah berhasil diblokir oleh sistem.']);
     }
 
     /**

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { useLocalStorage, useDebounceFn } from "@vueuse/core";
-import { getAdminUsers, deleteUserByAdmin, restoreUserByAdmin } from "../../lib/api/UserApi";
+import { getAdminUsers, deleteUserByAdmin, restoreUserByAdmin, banUserByNoteIdApi } from "../../lib/api/UserApi";
 import { getAdminNotes, deleteNoteByAdmin } from "../../lib/api/NoteApi";
 import { alertConfirm, alertSuccess } from "../../lib/alert";
 import { getAvatarUrl } from "../../lib/store";
@@ -11,7 +11,7 @@ const token = useLocalStorage("token", "");
 const activeTab = ref("users"); // 'users' atau 'notes'
 
 // Data & Meta Pagination
-const items = ref([]); // Bisa user, bisa note
+const items = ref([]);
 const currentPage = ref(1);
 const lastPage = ref(1);
 const totalData = ref(0);
@@ -33,7 +33,7 @@ const fetchData = async () => {
 
     const json = await res.json();
     if (res.ok) {
-      items.value = json.data; // Data array
+      items.value = json.data;
       currentPage.value = json.current_page;
       lastPage.value = json.last_page;
       totalData.value = json.total;
@@ -45,7 +45,6 @@ const fetchData = async () => {
   }
 };
 
-// Debounce Search
 const debouncedSearch = useDebounceFn(() => {
   currentPage.value = 1;
   fetchData();
@@ -86,6 +85,41 @@ const restoreUser = async (id) => {
   }
 };
 
+const banUserFromNote = async (noteId) => {
+  // ... (bagian Swal konfirmasi tetap sama) ...
+  const { value: reason, isConfirmed } = await Swal.fire({
+    // ... konfig swal ...
+    title: "Blokir Penulis Ini?",
+    text: "Sistem akan melacak dan memblokir penulis pesan ini. Identitas penulis tetap disembunyikan dari Anda.",
+    icon: "warning",
+    input: "text",
+    inputPlaceholder: "Alasan pemblokiran (Opsional)",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    confirmButtonText: "Ya, Hukum User",
+  });
+
+  if (!isConfirmed) return;
+
+  try {
+    const res = await banUserByNoteIdApi(token.value, noteId, reason);
+    const json = await res.json();
+
+    if (res.ok) {
+      alertSuccess(json.message || "User berhasil diblokir.");
+
+      // --- TAMBAHKAN BARIS INI ---
+      // Menghapus note dari tampilan tabel secara langsung (Client-side update)
+      items.value = items.value.filter((n) => n.id !== noteId);
+    } else {
+      Swal.fire("Gagal", json.message || "Terjadi kesalahan", "error");
+    }
+  } catch (err) {
+    console.error(err);
+    Swal.fire("Error", "Gagal menghubungi server", "error");
+  }
+};
+
 const deleteUser = async (id) => {
   if (!(await alertConfirm("Yakin ingin memblokir user ini?"))) return;
   try {
@@ -120,6 +154,21 @@ const deleteNote = async (id) => {
   }
 };
 
+// Helper: Copy ID untuk investigasi lebih lanjut di tab Users
+const copyUserId = (id) => {
+  navigator.clipboard.writeText(id);
+  Swal.fire({
+    toast: true,
+    position: "top-end",
+    icon: "success",
+    title: "ID User disalin",
+    showConfirmButton: false,
+    timer: 1500,
+    background: "#1c1516",
+    color: "#fff",
+  });
+};
+
 onMounted(fetchData);
 </script>
 
@@ -138,7 +187,7 @@ onMounted(fetchData);
           </h1>
           <p class="text-gray-400 text-sm mt-2 flex items-center gap-2">
             <span class="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse"></span>
-            Manage users & content moderation
+            Community Safety & Content Moderation
           </p>
         </div>
 
@@ -182,7 +231,7 @@ onMounted(fetchData);
               : 'text-gray-500 hover:text-gray-200 hover:bg-white/5'
           "
           class="pb-3 px-4 font-medium transition-all rounded-t-lg text-sm tracking-wide whitespace-nowrap">
-          Notes Moderation
+          Content Moderation
         </button>
       </div>
 
@@ -210,7 +259,6 @@ onMounted(fetchData);
           </svg>
         </div>
         <p class="text-gray-400 font-medium">Tidak ada data ditemukan.</p>
-        <p class="text-gray-600 text-xs mt-1">Coba kata kunci lain atau ubah filter.</p>
       </div>
 
       <div
@@ -222,13 +270,13 @@ onMounted(fetchData);
               <tr>
                 <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300">User Profile</th>
                 <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300">Account Status</th>
-                <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 w-64 min-w-[250px]">
-                  Author Info
-                </th>
+
+                <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 w-32">Date</th>
                 <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 min-w-[300px]">
-                  Note Content
+                  Message Content (Anonymous)
                 </th>
-                <th class="p-4 md:p-5 text-center font-semibold text-gray-300 w-32">Actions</th>
+
+                <th class="p-4 md:p-5 text-center font-semibold text-gray-300 w-48">Actions</th>
               </tr>
             </thead>
 
@@ -245,46 +293,40 @@ onMounted(fetchData);
                           v-if="item.role === 'admin'"
                           class="absolute -top-1 -right-1 bg-blue-500 w-3 h-3 rounded-full border-2 border-[#160f10]"></div>
                       </div>
-
                       <div class="min-w-0">
                         <div class="font-medium text-white text-base break-words">{{ item.name }}</div>
                         <div class="text-xs text-gray-500 font-mono break-all">{{ item.email }}</div>
                       </div>
                     </div>
                   </td>
-
                   <td class="p-4 md:p-5">
                     <span
                       v-if="item.role === 'admin'"
-                      class="inline-flex items-center px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
-                      <span class="w-1.5 h-1.5 rounded-full bg-blue-400 mr-2"></span>
+                      class="inline-flex items-center px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">
                       Admin
                     </span>
                     <span
                       v-else-if="item.is_banned"
-                      class="inline-flex items-center px-2.5 py-1 rounded-md bg-red-500/10 text-red-400 text-xs font-medium border border-red-500/20 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
-                      <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-2"></span>
+                      class="inline-flex items-center px-2.5 py-1 rounded-md bg-red-500/10 text-red-400 text-xs font-medium border border-red-500/20">
                       Banned
                     </span>
                     <span
                       v-else
-                      class="inline-flex items-center px-2.5 py-1 rounded-md bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
-                      <span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-2"></span>
+                      class="inline-flex items-center px-2.5 py-1 rounded-md bg-green-500/10 text-green-400 text-xs font-medium border border-green-500/20">
                       Active
                     </span>
                   </td>
-
                   <td class="p-4 md:p-5 text-center">
                     <button
                       v-if="item.role !== 'admin' && !item.is_banned"
                       @click="deleteUser(item.id)"
-                      class="group/btn relative text-gray-400 hover:text-red-400 transition-all px-4 py-1.5 text-xs border border-gray-700 rounded-lg hover:border-red-500/50 hover:bg-red-500/10 active:scale-95 whitespace-nowrap">
+                      class="text-gray-400 hover:text-red-400 px-4 py-1.5 text-xs border border-gray-700 rounded-lg hover:border-red-500/50">
                       Ban User
                     </button>
                     <button
                       v-if="item.is_banned"
                       @click="restoreUser(item.id)"
-                      class="text-green-400 hover:text-white bg-green-500/10 hover:bg-green-500 transition-all px-4 py-1.5 text-xs border border-green-500/30 rounded-lg active:scale-95 shadow-[0_0_10px_rgba(34,197,94,0.1)] hover:shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                      class="text-green-400 bg-green-500/10 px-4 py-1.5 text-xs border border-green-500/30 rounded-lg">
                       Restore
                     </button>
                   </td>
@@ -292,34 +334,15 @@ onMounted(fetchData);
 
                 <template v-if="activeTab === 'notes'">
                   <td class="p-4 md:p-5 align-top">
-                    <div class="flex items-start gap-3 md:gap-4">
-                      <div class="relative shrink-0">
-                        <img
-                          :src="getAvatarUrl(item.user.avatar || item.user.photo_url)"
-                          class="w-10 h-10 rounded-full object-cover bg-gray-800 ring-2 ring-white/10" />
-                      </div>
-
-                      <div class="min-w-0 flex-1">
-                        <div
-                          tabindex="0"
-                          class="font-medium text-white text-sm md:text-base truncate block max-w-[140px] md:max-w-[200px] cursor-pointer focus:whitespace-normal focus:max-w-full focus:overflow-visible outline-none transition-all duration-200"
-                          :title="item.user?.name || 'Unknown'">
-                          {{ item.user?.name || "Unknown" }}
-                        </div>
-
-                        <div class="text-[11px] text-gray-500 mt-0.5 flex items-center gap-1">
-                          <span class="w-1.5 h-1.5 bg-gray-600 rounded-full shrink-0"></span>
-                          <span class="truncate max-w-[120px]">
-                            {{
-                              new Date(item.created_at).toLocaleDateString("id-ID", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                              })
-                            }}
-                          </span>
-                        </div>
-                      </div>
+                    <div class="text-xs text-gray-500 font-mono">
+                      {{
+                        new Date(item.created_at).toLocaleDateString("id-ID", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      }}
                     </div>
                   </td>
 
@@ -331,24 +354,44 @@ onMounted(fetchData);
                   </td>
 
                   <td class="p-4 md:p-5 text-center align-top">
-                    <button
-                      @click="deleteNote(item.id)"
-                      title="Hapus Konten Permanen"
-                      class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 border border-red-500/20 px-4 py-2 rounded-lg text-xs transition-all flex items-center gap-2 mx-auto active:scale-95 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] whitespace-nowrap">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="w-3.5 h-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Hapus
-                    </button>
+                    <div class="flex flex-col gap-2 items-center">
+                      <button
+                        @click="deleteNote(item.id)"
+                        class="text-red-400 hover:text-white bg-red-500/10 hover:bg-red-600 border border-red-500/20 px-3 py-1.5 rounded-lg text-xs transition-all w-32 flex justify-center items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="w-3.5 h-3.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Hapus Pesan
+                      </button>
+
+                      <button
+                        @click="banUserFromNote(item.id)"
+                        title="Blokir User (Tanpa melihat identitas)"
+                        class="text-amber-500 hover:text-white bg-amber-500/10 hover:bg-amber-600 border border-amber-500/20 px-3 py-1.5 rounded-lg text-xs transition-all w-32 flex justify-center items-center gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="w-3.5 h-3.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                        </svg>
+                        Ban Sender
+                      </button>
+                    </div>
                   </td>
                 </template>
               </tr>
@@ -366,7 +409,7 @@ onMounted(fetchData);
             <button
               @click="changePage(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="px-4 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-400 hover:bg-white/5 hover:text-white hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              class="px-4 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-400 hover:bg-white/5 disabled:opacity-30">
               Previous
             </button>
             <span class="text-xs font-mono text-gray-400 bg-black/30 px-3 py-1 rounded border border-white/5">
@@ -375,7 +418,7 @@ onMounted(fetchData);
             <button
               @click="changePage(currentPage + 1)"
               :disabled="currentPage === lastPage"
-              class="px-4 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-400 hover:bg-white/5 hover:text-white hover:border-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+              class="px-4 py-1.5 text-xs rounded-lg border border-gray-700 text-gray-400 hover:bg-white/5 disabled:opacity-30">
               Next
             </button>
           </div>

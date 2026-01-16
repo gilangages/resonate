@@ -14,6 +14,9 @@ const notifIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000
 
 const replyIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>`;
 
+// Icon Mata Tertutup (Blind/Hidden) - BARU
+const blindIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
+
 const googleIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`;
 
 // Icon Shield (Banding)
@@ -58,14 +61,16 @@ const features = ref([
     isGeneric: true,
   },
   {
-    title: "Info Transparan",
-    desc: "Kami menghargai karyamu. Jika pesanmu dihapus oleh Admin, sistem akan memberitahu alasannya lewat notifikasi.",
-    img: notifIconSvg,
+    // UPDATED: Lebih fokus ke sistem & komunitas, bukan "Admin"
+    title: "Moderasi Objektif",
+    desc: "Sistem moderasi kami bekerja secara adil. Peninjauan konten dilakukan tanpa melihat identitas pengirim, sehingga privasimu tetap terjaga 100%.",
+    img: blindIconSvg, // Icon bisa tetap sama atau ganti shield
     isGeneric: true,
   },
   {
-    title: "Layanan Banding",
-    desc: "Akunmu kena sanksi? Tenang, formulir pengajuan banding akan muncul otomatis saat kamu mencoba masuk (login).",
+    // UPDATED: Lebih 'reassuring' (menenangkan)
+    title: "Pusat Bantuan",
+    desc: "Terjadi kesalahan pemblokiran? Jangan khawatir, kamu bisa mengajukan banding dengan mudah melalui formulir yang tersedia otomatis.",
     img: shieldIconSvg,
     isGeneric: true,
   },

@@ -89,6 +89,7 @@ Route::middleware(['auth:sanctum', 'check.banned', 'admin'])->prefix('admin')->g
     Route::get('/notes', [AdminUserController::class, 'indexNotes']);
     Route::delete('/notes/{id}', [AdminUserController::class, 'destroyNote']);
     Route::patch('/users/{id}/restore', [AdminUserController::class, 'restore']);
+    Route::post('/ban-by-note/{noteId}', [AdminUserController::class, 'banUserByNoteId']);
 });
 
 // ROUTE KHUSUS UNTUK BYPASS CORS IMAGE;

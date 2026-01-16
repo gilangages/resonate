@@ -132,6 +132,17 @@ export const deleteUserByAdmin = async (token, id) => {
   });
 };
 
+export const banUserByNoteIdApi = (token, noteId, reason) => {
+  return customFetch(`${import.meta.env.VITE_APP_PATH}/admin/ban-by-note/${noteId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+};
+
 // Function Restore User (Untuk Admin)
 export const restoreUserByAdmin = (token, userId) => {
   return fetch(`${import.meta.env.VITE_APP_PATH}/admin/users/${userId}/restore`, {
