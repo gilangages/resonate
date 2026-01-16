@@ -2,19 +2,19 @@ import { describe, it, expect, vi } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import GlobalContent from "../GlobalContent.vue";
 import { userDetail } from "../../../../lib/api/UserApi";
-import { deleteReplyApi } from "../../../../lib/api/NoteApi";
+// Import fungsi aslinya untuk kita manipulasi mock-nya di dalam test
+import { deleteReplyApi, noteDetail, noteList } from "../../../../lib/api/NoteApi";
 
-// PERBAIKAN: Definisikan mock function di luar agar bisa di-spy dengan mudah
-const deleteReplyApiMock = vi.fn().mockResolvedValue({ ok: true });
-
+// Setup Mock Modul
 vi.mock("../../../../lib/api/NoteApi", () => ({
-  noteList: vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: [] }) }),
+  // Definisikan semua fungsi yang diimport component
+  noteList: vi.fn(),
   searchMusic: vi.fn(),
   noteDetail: vi.fn(),
+  noteCreate: vi.fn(),
   noteDelete: vi.fn(),
   createReply: vi.fn(),
-  // PERBAIKAN: Gunakan mock yang sudah didefinisikan dengan default value
-  deleteReplyApi: deleteReplyApiMock,
+  deleteReplyApi: vi.fn(),
 }));
 
 vi.mock("../../../../lib/api/UserApi", () => ({
@@ -38,6 +38,28 @@ vi.mock("../../../../lib/alert", () => ({
 
 describe("GlobalContent Reply Logic", () => {
   it("shows delete button for own reply and calls delete API", async () => {
+    // 1. Setup Return Value Mock
+    // Pastikan deleteReplyApi mengembalikan object { ok: true }
+    vi.mocked(deleteReplyApi).mockResolvedValue({ ok: true });
+
+    // Mock data user
+    vi.mocked(userDetail).mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { id: 100, role: "user" } }),
+    });
+
+    // Mock noteList agar tidak error saat mounted
+    vi.mocked(noteList).mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    // Mock noteDetail (dipanggil setelah delete sukses)
+    vi.mocked(noteDetail).mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { id: 1, replies: [] } }),
+    });
+
     const wrapper = mount(GlobalContent, {
       global: {
         stubs: {
@@ -45,12 +67,6 @@ describe("GlobalContent Reply Logic", () => {
           Transition: true,
         },
       },
-    });
-
-    // 1. Mock Current User
-    userDetail.mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: { id: 100, role: "user" } }),
     });
 
     wrapper.vm.token = "mock-token";
@@ -68,7 +84,7 @@ describe("GlobalContent Reply Logic", () => {
     wrapper.vm.showModal = true;
     await wrapper.vm.$nextTick();
 
-    // 3. Cari tombol hapus
+    // 3. Cari tombol hapus (untuk user_id 100)
     const deleteBtns = wrapper.findAll('button[title="Hapus Balasan"]');
     expect(deleteBtns.length).toBe(1);
 
@@ -78,7 +94,7 @@ describe("GlobalContent Reply Logic", () => {
     // Tunggu async process selesai
     await flushPromises();
 
-    // 5. Pastikan API terpanggil
-    expect(deleteReplyApiMock).toHaveBeenCalledWith(expect.anything(), 501);
+    // 5. Pastikan API terpanggil dengan argumen yang benar
+    expect(deleteReplyApi).toHaveBeenCalledWith("mock-token", 501);
   });
 });

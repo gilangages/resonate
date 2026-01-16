@@ -1,23 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import GlobalContent from "../GlobalContent.vue";
+
+// 1. Mock URL global karena JSDOM tidak memilikinya
+global.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+global.URL.revokeObjectURL = vi.fn();
 
 // Mocking global navigator
 const shareMock = vi.fn().mockResolvedValue(true);
 global.navigator.share = shareMock;
 global.navigator.canShare = vi.fn().mockReturnValue(true);
 
-// PERBAIKAN: Buat variable mock untuk useShareImage agar bisa dicek expect-nya
-const generateImageFileMock = vi.fn().mockResolvedValue(new File(["content"], "test.png", { type: "image/png" }));
-const triggerNativeShareMock = vi.fn().mockResolvedValue(true);
+// 2. Gunakan vi.hoisted agar mock function bisa diakses di dalam vi.mock
+const shareMocks = vi.hoisted(() => ({
+  generateImageFile: vi.fn(),
+  triggerNativeShare: vi.fn(),
+}));
 
 vi.mock("../../../../lib/useShareImage", () => ({
   useShareImage: () => ({
     captureRef: { value: null },
-    // Gunakan mock variable di sini
-    generateImageFile: generateImageFileMock,
+    generateImageFile: shareMocks.generateImageFile,
     isDownloading: { value: false },
-    triggerNativeShare: triggerNativeShareMock,
+    triggerNativeShare: shareMocks.triggerNativeShare,
   }),
 }));
 
@@ -42,6 +47,7 @@ vi.mock("../../../../lib/api/NoteApi", () => ({
   }),
   searchMusic: vi.fn(),
   noteDetail: vi.fn(),
+  noteCreate: vi.fn(),
   noteDelete: vi.fn(),
   createReply: vi.fn(),
   deleteReplyApi: vi.fn(),
@@ -53,13 +59,26 @@ vi.mock("../../../../lib/api/UserApi", () => ({
 
 describe("GlobalContent Share Logic", () => {
   beforeEach(() => {
+    // 3. Aktifkan Fake Timers sebelum setiap test
+    vi.useFakeTimers();
+
     vi.stubGlobal("navigator", {
       share: undefined,
       canShare: undefined,
     });
-    // Reset call count setiap test
-    triggerNativeShareMock.mockClear();
-    generateImageFileMock.mockClear();
+
+    // Reset mocks
+    shareMocks.triggerNativeShare.mockReset();
+    shareMocks.generateImageFile.mockReset();
+
+    // Setup default values
+    shareMocks.generateImageFile.mockResolvedValue(new File(["content"], "test.png", { type: "image/png" }));
+    shareMocks.triggerNativeShare.mockResolvedValue(true);
+  });
+
+  afterEach(() => {
+    // 4. Kembalikan ke timer asli setelah test selesai
+    vi.useRealTimers();
   });
 
   it("harus menampilkan Modal Kustom Share jika browser tidak mendukung navigator.share", async () => {
@@ -75,21 +94,24 @@ describe("GlobalContent Share Logic", () => {
     const card = wrapper.find(".group\\/card");
     expect(card.exists()).toBe(true);
 
-    // Cari tombol quick share di pojok kanan atas card
     const shareBtn = card.find(".group\\/btn");
     expect(shareBtn.exists()).toBe(true);
 
-    // Klik tombol
+    // Trigger click
     await shareBtn.trigger("click");
 
-    // Tunggu proses async handleShare (generateImageFile)
+    // 5. PENYEBAB UTAMA FIX:
+    // Majukan waktu 100ms untuk melewati setTimeout(80ms) di handleQuickShare
+    vi.advanceTimersByTime(100);
+
+    // 6. Flush promises untuk menyelesaikan async function setelah timer selesai
     await flushPromises();
+    await wrapper.vm.$nextTick();
 
     expect(wrapper.vm.showShareOptions).toBe(true);
   });
 
   it("harus menggunakan Native Share jika didukung oleh perangkat (HP)", async () => {
-    // Setup environment HP (support share)
     const shareMock = vi.fn().mockResolvedValue(true);
     const canShareMock = vi.fn().mockReturnValue(true);
     vi.stubGlobal("navigator", {
@@ -106,7 +128,6 @@ describe("GlobalContent Share Logic", () => {
     await flushPromises();
     await vi.waitUntil(() => !wrapper.vm.isLoading);
 
-    // Setup state
     wrapper.vm.selectedNote = {
       id: 1,
       author_name: "Test User",
@@ -114,15 +135,10 @@ describe("GlobalContent Share Logic", () => {
       music_track_name: "Test Track",
     };
 
-    // Mock tempFile agar onNativeShare bisa jalan
     wrapper.vm.tempFile = new File(["dummy"], "test.png", { type: "image/png" });
 
-    // Panggil method share native
     await wrapper.vm.onNativeShare();
 
-    // PERBAIKAN ASSERTION:
-    // Karena useShareImage di-mock, kita TIDAK mengecek navigator.share (shareMock).
-    // Kita mengecek apakah wrapper memanggil fungsi triggerNativeShare dari composable.
-    expect(triggerNativeShareMock).toHaveBeenCalled();
+    expect(shareMocks.triggerNativeShare).toHaveBeenCalled();
   });
 });
