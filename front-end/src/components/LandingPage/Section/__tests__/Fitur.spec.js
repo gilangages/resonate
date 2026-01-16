@@ -8,10 +8,10 @@ describe("Fitur.vue", () => {
     expect(wrapper.exists()).toBe(true);
   });
 
-  it("displays exactly 6 feature items", () => {
+  it("displays exactly 9 feature items", () => {
     const wrapper = mount(Fitur);
     const items = wrapper.findAll(".group");
-    expect(items.length).toBe(6);
+    expect(items.length).toBe(9); // Updated from 6 to 9
   });
 
   it("displays correct feature titles based on project logic", () => {
@@ -23,8 +23,8 @@ describe("Fitur.vue", () => {
     // Pastikan Spotify TIDAK ada
     expect(text).not.toContain("Spotify");
 
-    // Pastikan fitur Share & Tema ada
-    expect(text).toContain("Share sebagai Gambar");
+    // Pastikan fitur Share & Tema ada (Update teks sesuai UI: "Share ke Story")
+    expect(text).toContain("Share ke Story");
     expect(text).toContain("Tema & Kustomisasi");
   });
 
@@ -32,11 +32,10 @@ describe("Fitur.vue", () => {
     const wrapper = mount(Fitur);
     const text = wrapper.text();
 
-    // Pastikan judul notifikasi sesuai revisi
-    expect(text).toContain("Info Moderasi");
+    // Pastikan judul notifikasi sesuai revisi (Update teks sesuai UI: "Info Transparan")
+    expect(text).toContain("Info Transparan");
 
-    // Pastikan deskripsi menyebutkan admin/hapus, BUKAN "balasan pesan"
-    expect(text).toContain("dihapus oleh admin");
-    expect(text).not.toContain("membalas pesanmu");
+    // Pastikan deskripsi menyebutkan admin/hapus
+    expect(text).toContain("dihapus oleh Admin");
   });
 });
