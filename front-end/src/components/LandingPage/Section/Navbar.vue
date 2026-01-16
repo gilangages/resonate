@@ -25,7 +25,6 @@ const handleScroll = (sectionId) => {
   }
 };
 
-// LOGIKA PERBAIKAN DI SINI (Tetap dipertahankan)
 const scrollToSection = async (sectionId) => {
   isMobileMenuOpen.value = false;
 
@@ -33,25 +32,23 @@ const scrollToSection = async (sectionId) => {
     // 1. Pindah ke Home
     await router.push("/");
 
-    // 2. Cek elemen secara berulang (Polling)
+    // 2. Polling cek elemen
     let attempts = 0;
     const checkExist = setInterval(() => {
       const element = document.getElementById(sectionId);
 
       if (element) {
-        // Jika ketemu, langsung scroll dan hentikan pengecekan
         handleScroll(sectionId);
         clearInterval(checkExist);
       }
 
       attempts++;
-      // Jika sudah 20x cek (2 detik) tidak ketemu juga, menyerah (stop)
       if (attempts >= 20) {
         clearInterval(checkExist);
       }
     }, 100);
   } else {
-    // Jika sudah di Home, langsung scroll
+    // Jika sudah di Home
     handleScroll(sectionId);
   }
 };
@@ -86,7 +83,7 @@ const scrollToSection = async (sectionId) => {
 
         <div @click="scrollToSection('home')" class="cursor-pointer flex items-center gap-2 select-none">
           <h1
-            class="text-[24px] sm:text-[24px] text-[#9a203e] m-0 sm:ml-[1em] font-bold hover:text-[#b92b4a] transition-colors">
+            class="text-[16px] sm:text-[24px] text-[#9a203e] m-0 sm:ml-[1em] font-bold hover:text-[#b92b4a] transition-colors">
             Resonate
           </h1>
         </div>
@@ -96,12 +93,16 @@ const scrollToSection = async (sectionId) => {
         <button @click="scrollToSection('fitur')" class="hover:text-white transition-colors hover:scale-105 transform">
           Fitur
         </button>
+
+        <button
+          @click="scrollToSection('pesan-lain')"
+          class="hover:text-white transition-colors hover:scale-105 transform">
+          Eksplorasi
+        </button>
+
         <button @click="scrollToSection('faq')" class="hover:text-white transition-colors hover:scale-105 transform">
           FAQ
         </button>
-        <RouterLink to="/about" class="hover:text-white transition-colors hover:scale-105 transform">
-          Tentang & Laporan
-        </RouterLink>
       </div>
 
       <div class="flex items-center gap-[10px]">
@@ -134,17 +135,18 @@ const scrollToSection = async (sectionId) => {
             class="text-left hover:text-[#9a203e] py-2 border-b border-white/5 transition-colors">
             Fitur
           </button>
+
+          <button
+            @click="scrollToSection('pesan-lain')"
+            class="text-left hover:text-[#9a203e] py-2 border-b border-white/5 transition-colors">
+            Eksplorasi
+          </button>
+
           <button
             @click="scrollToSection('faq')"
             class="text-left hover:text-[#9a203e] py-2 border-b border-white/5 transition-colors">
             FAQ
           </button>
-          <RouterLink
-            to="/about"
-            @click="isMobileMenuOpen = false"
-            class="block hover:text-[#9a203e] py-2 border-b border-white/5 transition-colors">
-            Tentang & Laporan
-          </RouterLink>
 
           <div class="pt-2">
             <RouterLink

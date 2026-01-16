@@ -82,7 +82,7 @@ onMounted(() => {
     <Navbar />
     <Hero id="home" />
     <Fitur id="fitur" />
-    <PesanLain />
+    <PesanLain id="pesan-lain" />
     <FAQ id="faq" />
     <Ajakan />
     <Footer />
