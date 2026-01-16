@@ -11,6 +11,10 @@ const emit = defineEmits(["open-modal", "is-empty", "edit-note"]);
 const token = useLocalStorage("token", "");
 const notes = ref([]);
 const currentAudio = ref(new Audio());
+const currentTime = ref(0);
+
+// --- STATE LOADING (BARU) ---
+const isLoading = ref(true);
 
 // --- STATE PAGINATION ---
 const currentPage = ref(1);
@@ -24,7 +28,7 @@ const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 
-// --- FORMATTER LAMA ---
+// --- FORMATTER ---
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -34,10 +38,18 @@ const formatDateDetail = (dateString) => {
   return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
 };
 
+const formatTimeMusic = (time) => {
+  if (!time || isNaN(time)) return "0:00";
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+};
+
 // --- FETCH DATA ---
 async function fetchNoteList(reset = true) {
   if (reset) {
     currentPage.value = 1;
+    isLoading.value = true; // Mulai Loading
   }
 
   try {
@@ -60,6 +72,8 @@ async function fetchNoteList(reset = true) {
     }
   } catch (error) {
     console.error("Gagal fetch:", error);
+  } finally {
+    isLoading.value = false; // Selesai Loading
   }
 }
 
@@ -100,29 +114,27 @@ const loadMore = async () => {
 const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
+  currentTime.value = 0;
 
-  // LOGIKA BARU: Gunakan Proxy URL dari Backend kita sendiri
-  // Pastikan note punya ID lagu
+  let streamUrl = null;
   if (note.music_track_id) {
-    // Atau note.spotify_track_id sesuaikan namamu
+    streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
+  } else if (note.music_preview_url) {
+    streamUrl = note.music_preview_url;
+  }
 
-    // URL Backend Laravel
-    // Sesuaikan base URL API kamu, misal: http://localhost:8000/api/stream/
-    const streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
-
-    console.log("Memutar via Proxy:", streamUrl);
-
+  if (streamUrl) {
     currentAudio.value.src = streamUrl;
     currentAudio.value.volume = 0.5;
     currentAudio.value.loop = true;
 
+    currentAudio.value.ontimeupdate = () => {
+      currentTime.value = currentAudio.value.currentTime;
+    };
+
     currentAudio.value.play().catch((e) => {
       console.error("Gagal play audio:", e);
     });
-  } else if (note.music_preview_url) {
-    // Fallback: Kalau data lama banget yg gapunya ID tapi punya URL (meski mungkin basi)
-    currentAudio.value.src = note.music_preview_url;
-    currentAudio.value.play().catch((e) => console.log(e));
   }
 
   nextTick(() => {
@@ -134,13 +146,9 @@ const openModalDetail = (note) => {
 
 const closeModalDetail = () => {
   isVinylSpinning.value = false;
-
-  // STOP MUSIK SAAT DITUTUP
   currentAudio.value.pause();
   currentAudio.value.currentTime = 0;
-
-  // RESET LOOP JADI FALSE (Optional, good practice)
-  currentAudio.value.loop = false;
+  currentTime.value = 0;
 
   setTimeout(() => {
     showModal.value = false;
@@ -148,7 +156,6 @@ const closeModalDetail = () => {
   }, 100);
 };
 
-// --- PREVIEW IMAGE ---
 const openPreview = (url) => {
   if (!url) return;
   previewImageUrl.value = url;
@@ -169,7 +176,41 @@ onMounted(async () => {
 
 <template>
   <div class="p-4 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
-    <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
+    <div v-if="isLoading" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
+      <div v-for="i in 6" :key="i" class="break-inside-avoid relative">
+        <div class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] animate-pulse h-full">
+          <div class="mb-5">
+            <div class="h-3 w-10 bg-[#2b2122] rounded mb-2"></div>
+            <div class="h-8 w-3/4 bg-[#2b2122] rounded-[8px]"></div>
+          </div>
+
+          <div class="flex gap-4 items-center mb-5">
+            <div class="w-14 h-14 bg-[#2b2122] rounded-[12px]"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 w-1/2 bg-[#2b2122] rounded"></div>
+              <div class="h-3 w-1/3 bg-[#2b2122] rounded"></div>
+            </div>
+          </div>
+
+          <div class="h-24 bg-[#2b2122] rounded-[16px] mb-4 w-full"></div>
+
+          <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] mt-auto">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-[#2b2122]"></div>
+              <div class="h-3 w-20 bg-[#2b2122] rounded"></div>
+              <div class="ml-auto h-3 w-16 bg-[#2b2122] rounded"></div>
+            </div>
+
+            <div class="flex gap-2 mt-2">
+              <div class="flex-1 h-8 bg-[#2b2122] rounded-lg"></div>
+              <div class="flex-1 h-8 bg-[#2b2122] rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
       Belum ada pesan yang dibuat.
     </div>
 
@@ -247,7 +288,7 @@ onMounted(async () => {
     </div>
 
     <div
-      v-if="currentPage < lastPage"
+      v-if="!isLoading && currentPage < lastPage"
       class="mb-[5em] flex justify-center py-6 text-[#e5e5e5] gap-1.5 hover:opacity-80">
       <button
         @click="loadMore"
@@ -257,7 +298,6 @@ onMounted(async () => {
       </button>
       <svg
         v-if="!isLoadingMore"
-        @click="loadMore"
         xmlns="http://www.w3.org/2000/svg"
         width="14"
         height="14"
@@ -266,8 +306,7 @@ onMounted(async () => {
         stroke="currentColor"
         stroke-width="2"
         stroke-linecap="round"
-        stroke-linejoin="round"
-        class="cursor-pointer">
+        stroke-linejoin="round">
         <path d="M6 9l6 6 6-6" />
       </svg>
     </div>
@@ -310,7 +349,6 @@ onMounted(async () => {
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
-
           <div
             class="bg-gradient-to-b from-[#251a1c] to-[#1c1516] p-6 pt-10 border-b border-[#2c2021] flex flex-col items-center shrink-0">
             <div
@@ -321,14 +359,23 @@ onMounted(async () => {
                 :src="selectedNote?.music_album_image"
                 class="w-[60px] h-[60px] rounded-full object-cover border-2 border-[#111] relative z-10" />
             </div>
-
             <h2 class="text-2xl font-bold text-white text-center leading-tight px-4">
               {{ selectedNote?.music_track_name }}
             </h2>
-            <p class="text-[#9a203e] text-sm font-medium uppercase tracking-wide mb-5 mt-1">
+            <p class="text-[#9a203e] text-sm font-medium uppercase tracking-wide mb-3 mt-1">
               {{ selectedNote?.music_artist_name }}
             </p>
-
+            <div class="w-full max-w-[200px] mb-5 mt-2">
+              <div class="h-1 bg-[#2b2122] rounded-full overflow-hidden w-full">
+                <div
+                  class="h-full bg-[#9a203e] transition-all duration-100 ease-linear"
+                  :style="{ width: `${(currentTime / 30) * 100}%` }"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-[#8c8a8a] mt-1 font-mono">
+                <span>Preview: {{ formatTimeMusic(currentTime) }}</span>
+                <span>0:30</span>
+              </div>
+            </div>
             <a
               v-if="selectedNote?.music_track_id"
               :href="`https://www.deezer.com/track/${selectedNote?.music_track_id}`"
@@ -340,7 +387,6 @@ onMounted(async () => {
               <span>Putar Lagu Penuh</span>
             </a>
           </div>
-
           <div class="flex-1 bg-[#161213] p-6 overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center mb-6 pb-6 border-b border-[#2c2021]">
               <div class="flex items-center gap-3">
@@ -373,13 +419,11 @@ onMounted(async () => {
                 <p class="text-base font-bold text-[#9a203e]">{{ selectedNote?.recipient }}</p>
               </div>
             </div>
-
             <div class="mb-8">
               <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide break-words">
                 "{{ selectedNote?.content }}"
               </p>
             </div>
-
             <div
               class="flex items-center gap-2 text-[11px] text-[#555] font-mono bg-[#1c1a1b] p-3 rounded-lg border border-[#2c2021] mb-6">
               <svg
@@ -395,7 +439,6 @@ onMounted(async () => {
               </svg>
               <span>Dikirim: {{ formatDateDetail(selectedNote?.created_at) }}</span>
             </div>
-
             <div class="flex gap-3">
               <button
                 @click="closeModalDetail"
@@ -426,7 +469,6 @@ onMounted(async () => {
             :src="previewImageUrl"
             class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
             @click.stop />
-
           <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
         </div>
       </div>

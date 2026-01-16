@@ -2,44 +2,60 @@
 import { useLocalStorage } from "@vueuse/core";
 import { userDetail } from "../../../lib/api/UserApi";
 import { onBeforeMount, ref } from "vue";
+// TAMBAHAN: Import userState untuk cek data realtime di memory
+import { userState } from "../../../lib/store";
 
 const token = useLocalStorage("token", "");
 const name = ref("");
 
-// State Tampilan
-const showIntro = ref(false);
-const showMenu = ref(false);
+// --- PERBAIKAN LOGIC ---
 
-// State untuk teks dan pengontrol transisi kalimat
+// 1. Ambil data history dari Storage & data terbaru dari Memory (Store)
+const storedAnimName = sessionStorage.getItem("last_anim_name");
+const currentNameInMemory = userState.value?.name;
+
+// 2. Tentukan apakah menu boleh langsung muncul?
+let initialMenuState = false;
+
+if (storedAnimName) {
+  // Jika ada history di storage...
+  if (currentNameInMemory && currentNameInMemory !== storedAnimName) {
+    // TAPI data di memory beda (artinya baru edit profil),
+    // MAKA sembunyikan menu (False) biar animasi bisa jalan mulus.
+    initialMenuState = false;
+  } else {
+    // Jika data sama atau belum ada di memory (refresh page),
+    // Tampilkan menu (True) biar tidak kedip.
+    initialMenuState = true;
+  }
+} else {
+  // Login pertama kali
+  initialMenuState = false;
+}
+
+const showMenu = ref(initialMenuState);
+const showIntro = ref(false);
+const menuTransition = ref(initialMenuState ? "" : "slide-up");
+
+// State teks
 const displayDetail = ref("");
 const isTextVisible = ref(false);
-const menuTransition = ref("slide-up");
 
-/**
- * Helper: Efek Mengetik yang Pintar (Mendukung HTML)
- * Fungsi ini akan mendeteksi jika ada tag <...>, maka akan langsung dimasukkan
- * tanpa diketik karakter demi karakter.
- */
 const typeWriter = async (text, speed = 50) => {
   displayDetail.value = "";
   let i = 0;
   while (i < text.length) {
-    // Jika menemukan karakter '<', berarti itu awal tag HTML
     if (text[i] === "<") {
       const closingBracket = text.indexOf(">", i);
       if (closingBracket !== -1) {
-        // Masukkan seluruh tag (misal <span>) secara instan
         displayDetail.value += text.substring(i, closingBracket + 1);
         i = closingBracket + 1;
-        continue; // Lanjut ke isi setelah tag
+        continue;
       }
     }
-
     displayDetail.value += text[i];
-
     let currentSpeed = speed;
     if ([",", ".", "?", "^"].includes(text[i])) currentSpeed = speed * 4;
-
     await new Promise((resolve) => setTimeout(resolve, currentSpeed));
     i++;
   }
@@ -54,17 +70,22 @@ async function fetchUser() {
 
     if (response.ok) {
       const userData = responseBody.data;
+      // Update global store biar sinkron
+      userState.value = userData;
+
       const newName = userData.name;
       const lastAnimName = sessionStorage.getItem("last_anim_name");
 
-      if (lastAnimName === newName) {
+      // Jika nama berbeda, jalankan animasi
+      if (lastAnimName !== newName) {
         name.value = newName;
-        showIntro.value = false;
-        menuTransition.value = "";
-        showMenu.value = true;
-      } else {
-        name.value = newName;
+        // Pastikan menu sembunyi dulu (meskipun sudah false dari awal, kita pastikan lagi)
+        showMenu.value = false;
         await handleAnimation(newName);
+      } else {
+        // Jika nama sama, pastikan menu tampil
+        name.value = newName;
+        showMenu.value = true;
       }
     } else {
       showMenu.value = true;
@@ -80,23 +101,22 @@ async function handleAnimation(userName) {
   showIntro.value = true;
   menuTransition.value = "slide-up";
 
-  // --- TAHAP 1: Selamat Datang ---
+  // --- TAHAP 1 ---
   isTextVisible.value = true;
-  // Kita bungkus userName dengan span yang memiliki warna #9a203e
   const welcomeText = `Selamat Datang, <span style="color: #9a203e; font-weight: bold; font-style: normal;">${userName}</span>`;
   await typeWriter(welcomeText, 50);
   await wait(400);
   isTextVisible.value = false;
   await wait(300);
 
-  // --- TAHAP 2: Apa kabar ---
+  // --- TAHAP 2 ---
   isTextVisible.value = true;
   await typeWriter("Apa kabarmu hari ini?", 50);
   await wait(400);
   isTextVisible.value = false;
   await wait(300);
 
-  // --- TAHAP 3: Instruksi ---
+  // --- TAHAP 3 ---
   isTextVisible.value = true;
   await typeWriter("Mulailah menulis pesan dan jangan lupa sisipkan lagu ya ^_^", 40);
   await wait(300);
@@ -117,7 +137,7 @@ onBeforeMount(async () => {
 <template>
   <div class="relative min-h-[150px] flex flex-col justify-center items-center w-full">
     <Transition name="fade">
-      <div v-if="showIntro" class="absolute top-4 text-center text-[13px] text-white px-6 w-full flex justify-center">
+      <div v-if="showIntro" class="absolute top-8 text-center text-[13px] text-white px-6 w-full flex justify-center">
         <Transition name="text-fade">
           <p
             v-if="isTextVisible"
@@ -145,7 +165,7 @@ onBeforeMount(async () => {
 </template>
 
 <style scoped>
-/* Transisi Utama */
+/* STYLE SAMA PERSIS */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.8s ease;
@@ -155,7 +175,6 @@ onBeforeMount(async () => {
   opacity: 0;
 }
 
-/* Transisi Teks */
 .text-fade-enter-active,
 .text-fade-leave-active {
   transition: opacity 0.5s ease;
@@ -165,7 +184,6 @@ onBeforeMount(async () => {
   opacity: 0;
 }
 
-/* Slide Up untuk Menu */
 .slide-up-enter-active {
   transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }

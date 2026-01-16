@@ -6,8 +6,13 @@ import { formatTime, isEdited } from "../../../lib/dateFormatter";
 
 const token = useLocalStorage("token", "");
 const notes = ref([]);
-// 1. Tambah Audio Player State
+
+// --- AUDIO PLAYER STATE ---
 const currentAudio = ref(new Audio());
+const currentTime = ref(0);
+
+// --- STATE LOADING (BARU) ---
+const isLoading = ref(true);
 
 // --- STATE PAGINATION ---
 const currentPage = ref(1);
@@ -23,16 +28,6 @@ const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
 
-// --- FORMATTER ---
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
-
 const formatDateDetail = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -42,9 +37,21 @@ const formatDateDetail = (dateString) => {
   return `${date.toLocaleDateString("id-ID", optionsDate)} • ${hours}:${minutes} WIB`;
 };
 
+// FUNGSI FORMAT WAKTU (Ubah detik jadi 0:00)
+const formatTimeMusic = (time) => {
+  if (!time || isNaN(time)) return "0:00";
+  const minutes = Math.floor(time / 60);
+  const seconds = Math.floor(time % 60);
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+};
+
 // --- FETCH DATA ---
 async function fetchNoteList(reset = true) {
-  if (reset) currentPage.value = 1;
+  if (reset) {
+    currentPage.value = 1;
+    isLoading.value = true; // Mulai Loading
+  }
+
   try {
     const response = await noteList(token.value, currentPage.value);
     const responseBody = await response.json();
@@ -58,6 +65,8 @@ async function fetchNoteList(reset = true) {
     }
   } catch (error) {
     console.error("Fetch error:", error);
+  } finally {
+    isLoading.value = false; // Selesai Loading
   }
 }
 
@@ -75,27 +84,30 @@ const loadMore = async () => {
 const openModalDetail = (note) => {
   selectedNote.value = note;
   showModal.value = true;
+  currentTime.value = 0; // Reset waktu UI
 
-  // LOGIKA BARU: Gunakan Proxy URL dari Backend kita sendiri
-  // Pastikan note punya ID lagu
+  // Tentukan URL Lagu
+  let streamUrl = null;
   if (note.music_track_id) {
-    // URL Backend Laravel
-    // Sesuaikan base URL API kamu, misal: http://localhost:8000/api/stream/
-    const streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
+    streamUrl = `${import.meta.env.VITE_APP_PATH || "http://localhost:8000/api"}/stream/${note.music_track_id}`;
+  } else if (note.music_preview_url) {
+    streamUrl = note.music_preview_url;
+  }
 
-    console.log("Memutar via Proxy:", streamUrl);
-
+  if (streamUrl) {
     currentAudio.value.src = streamUrl;
     currentAudio.value.volume = 0.5;
+
     currentAudio.value.loop = true;
+
+    // --- UPDATE LOGIC: Event Listener untuk Waktu ---
+    currentAudio.value.ontimeupdate = () => {
+      currentTime.value = currentAudio.value.currentTime;
+    };
 
     currentAudio.value.play().catch((e) => {
       console.error("Gagal play audio:", e);
     });
-  } else if (note.music_preview_url) {
-    // Fallback: Kalau data lama banget yg gapunya ID tapi punya URL (meski mungkin basi)
-    currentAudio.value.src = note.music_preview_url;
-    currentAudio.value.play().catch((e) => console.log(e));
   }
 
   nextTick(() => {
@@ -111,9 +123,7 @@ const closeModalDetail = () => {
   // STOP MUSIK SAAT DITUTUP
   currentAudio.value.pause();
   currentAudio.value.currentTime = 0;
-
-  // RESET LOOP JADI FALSE (Optional, good practice)
-  currentAudio.value.loop = false;
+  currentTime.value = 0; // Reset UI Timer
 
   setTimeout(() => {
     showModal.value = false;
@@ -139,7 +149,41 @@ onMounted(async () => {
 
 <template>
   <div class="p-4 md:p-8 relative min-h-screen font-jakarta bg-[#0f0505]">
-    <div v-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
+    <div v-if="isLoading" class="columns-1 md:columns-2 lg:columns-3 gap-6 mb-10 space-y-6">
+      <div v-for="i in 6" :key="i" class="break-inside-avoid relative">
+        <div class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] animate-pulse h-full flex flex-col">
+          <div class="mb-5">
+            <div class="h-3 w-10 bg-[#2b2122] rounded mb-2"></div>
+            <div class="h-8 w-3/4 bg-[#2b2122] rounded-[8px]"></div>
+          </div>
+
+          <div class="flex gap-4 items-center mb-5">
+            <div class="w-14 h-14 bg-[#2b2122] rounded-[12px]"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 w-1/2 bg-[#2b2122] rounded"></div>
+              <div class="h-3 w-1/3 bg-[#2b2122] rounded"></div>
+            </div>
+          </div>
+
+          <div class="h-24 bg-[#2b2122] rounded-[16px] mb-4 w-full"></div>
+
+          <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] mt-auto">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-[#2b2122]"></div>
+              <div class="flex flex-col gap-1">
+                <div class="h-2 w-8 bg-[#2b2122] rounded"></div>
+                <div class="h-3 w-20 bg-[#2b2122] rounded"></div>
+              </div>
+              <div class="ml-auto h-3 w-16 bg-[#2b2122] rounded"></div>
+            </div>
+
+            <div class="w-full mt-2 h-9 bg-[#2b2122] rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="notes.length === 0" class="w-full text-center text-[#8c8a8a] py-20 text-lg">
       Belum ada pesan yang dibuat.
     </div>
 
@@ -222,7 +266,7 @@ onMounted(async () => {
     </div>
 
     <div
-      v-if="currentPage < lastPage"
+      v-if="!isLoading && currentPage < lastPage"
       class="mb-[5em] flex justify-center py-6 text-[#e5e5e5] gap-1.5 hover:opacity-80">
       <button
         @click="loadMore"
@@ -281,12 +325,25 @@ onMounted(async () => {
                 :src="selectedNote?.music_album_image"
                 class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
             </div>
+
             <h2 class="text-xl font-bold text-white text-center leading-tight px-4">
               {{ selectedNote?.music_track_name }}
             </h2>
-            <p class="text-[#9a203e] text-xs font-medium uppercase tracking-wide mb-4 mt-1">
+            <p class="text-[#9a203e] text-xs font-medium uppercase tracking-wide mb-3 mt-1">
               {{ selectedNote?.music_artist_name }}
             </p>
+
+            <div class="w-full max-w-[200px] mb-5 mt-2">
+              <div class="h-1 bg-[#2b2122] rounded-full overflow-hidden w-full">
+                <div
+                  class="h-full bg-[#9a203e] transition-all duration-100 ease-linear"
+                  :style="{ width: `${(currentTime / 30) * 100}%` }"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-[#8c8a8a] mt-1 font-mono">
+                <span>Preview: {{ formatTimeMusic(currentTime) }}</span>
+                <span>0:30</span>
+              </div>
+            </div>
 
             <a
               v-if="selectedNote?.music_track_id"
