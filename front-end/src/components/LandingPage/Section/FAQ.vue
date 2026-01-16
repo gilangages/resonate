@@ -15,6 +15,18 @@ const faqs = ref([
     open: false,
   },
   {
+    question: "Apakah Admin bisa melihat siapa pengirim pesan?",
+    answer:
+      "<strong>Tidak.</strong> Kami menerapkan sistem <em>Blind Moderation</em>. Saat meninjau pesan, identitas pengirim disembunyikan dari moderator. Kami hanya menilai isi konten, bukan orangnya.",
+    open: false,
+  },
+  {
+    question: "Bagaimana jika saya menemukan pesan tidak pantas?",
+    answer:
+      "Kami menerapkan <strong>Filter Kata Otomatis</strong> saat pembuatan pesan. Namun jika masih ada konten negatif yang lolos, kamu bisa melaporkannya lewat formulir di menu <strong>About</strong> (Footer). Pilih kategori <strong>'Lapor Konten'</strong> dan tim kami akan segera menindaklanjutinya.",
+    open: false,
+  },
+  {
     question: "Kenapa pesan saya tiba-tiba hilang?", // FAQ PENTING (Transparansi Admin)
     answer:
       "Demi kenyamanan bersama, Admin memoderasi konten secara aktif. Jika pesanmu hilang, silakan cek menu <strong>Notifikasi</strong>. Sistem kami pasti mengirimkan info alasan penghapusan pesan tersebut.",

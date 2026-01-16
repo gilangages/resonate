@@ -21,6 +21,8 @@ const isDropdownOpen = ref(false);
 const dropdownOptions = [
   { value: "Bug Report", label: "🐛 Melaporkan Bug / Error" },
   { value: "Feature Request", label: "💡 Saran Fitur Baru" },
+  // Opsi Baru Ditambahkan Disini:
+  { value: "Report Content", label: "🚨 Lapor Konten Tidak Pantas" },
   { value: "General Question", label: "👋 Pertanyaan Umum" },
   { value: "Other", label: "Lainnya" },
 ];
@@ -207,9 +209,9 @@ onMounted(() => {
         <div
           class="bg-[#1c1516] border border-[#9a203e]/30 rounded-[2rem] p-8 md:p-12 shadow-[0_0_40px_-10px_rgba(154,32,62,0.1)] relative overflow-hidden group hover:border-[#9a203e] transition-colors duration-300">
           <div class="text-center mb-10 relative z-10">
-            <h2 class="text-3xl font-bold text-white mb-3 tracking-tight">Saran & Laporan Bug</h2>
+            <h2 class="text-3xl font-bold text-white mb-3 tracking-tight">Kirim Laporan & Masukan</h2>
             <p class="text-gray-400 text-sm md:text-base max-w-lg mx-auto">
-              Menemukan error atau punya ide fitur? Kirim pesan di bawah.
+              Menemukan error, konten tidak pantas, atau punya ide fitur? Kirim pesan di bawah.
               <br />
               <span
                 class="text-[#ff4d6d] font-semibold text-xs mt-2 inline-block bg-[#0f0505] px-3 py-1 rounded-full border border-[#9a203e]/20">
