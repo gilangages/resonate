@@ -19,6 +19,7 @@ const showNavigation = computed(() => {
 async function fetchUser() {
   const response = await userDetail(token.value);
   const responseBody = await response.json();
+  console.log(responseBody);
 
   if (response.ok) {
     userState.value = responseBody.data;

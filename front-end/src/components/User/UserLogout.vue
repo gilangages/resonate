@@ -4,6 +4,7 @@ import { userLogout } from "../../lib/api/UserApi";
 import { useRouter } from "vue-router";
 import { onBeforeMount } from "vue";
 import { alertError } from "../../lib/alert";
+import { resetUserState } from "../../lib/store";
 
 const token = useLocalStorage("token", "");
 const router = useRouter();
@@ -16,6 +17,7 @@ async function handleLogout() {
   if (response.ok) {
     token.value = "";
     sessionStorage.clear(); // Ini akan menghapus semua status animasi
+    resetUserState();
     await router.push({
       path: "/login",
     });

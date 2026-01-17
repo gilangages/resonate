@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,11 +15,9 @@ class UserController extends Controller
     /**
      * Get current logged in user.
      */
-    public function show(Request $request): JsonResponse
+    public function show(Request $request)
     {
-        return response()->json([
-            'data' => $request->user(),
-        ]);
+        return new UserResource($request->user());
     }
 
     /**
@@ -55,7 +54,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Profile updated successfully',
-            'data' => $user,
+            'data' => new UserResource($user),
         ]);
     }
 }
