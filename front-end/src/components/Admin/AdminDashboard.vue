@@ -212,7 +212,7 @@ onMounted(fetchData);
         </div>
       </div>
 
-      <div class="flex gap-4 md:gap-8 mb-6 border-b border-white/10 relative overflow-x-auto">
+      <div class="flex gap-4 md:gap-8 mb-6 border-b border-white/10 relative overflow-x-auto no-scrollbar">
         <button
           @click="switchTab('users')"
           :class="
@@ -268,8 +268,10 @@ onMounted(fetchData);
           <table class="w-full text-left border-collapse">
             <thead class="bg-[#1c1516] text-gray-400 text-xs uppercase tracking-wider sticky top-0 z-20 shadow-sm">
               <tr>
-                <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300">User Profile</th>
-                <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300">Account Status</th>
+                <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300 min-w-[200px]">
+                  User Profile
+                </th>
+                <th v-if="activeTab === 'users'" class="p-4 md:p-5 font-semibold text-gray-300">Status</th>
 
                 <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 w-32">Date</th>
                 <th v-if="activeTab === 'notes'" class="p-4 md:p-5 font-semibold text-gray-300 min-w-[300px]">
@@ -284,7 +286,7 @@ onMounted(fetchData);
               <tr v-for="item in items" :key="item.id" class="hover:bg-white/[0.03] transition-colors group">
                 <template v-if="activeTab === 'users'">
                   <td class="p-4 md:p-5">
-                    <div class="flex items-center gap-3 md:gap-4">
+                    <div class="flex items-center gap-3">
                       <div class="relative shrink-0">
                         <img
                           :src="getAvatarUrl(item.avatar || item.photo_url)"
@@ -293,12 +295,18 @@ onMounted(fetchData);
                           v-if="item.role === 'admin'"
                           class="absolute -top-1 -right-1 bg-blue-500 w-3 h-3 rounded-full border-2 border-[#160f10]"></div>
                       </div>
-                      <div class="min-w-0">
-                        <div class="font-medium text-white text-base break-words">{{ item.name }}</div>
-                        <div class="text-xs text-gray-500 font-mono break-all">{{ item.email }}</div>
+
+                      <div class="min-w-0 flex-1 max-w-[140px] sm:max-w-[200px] md:max-w-none">
+                        <div class="font-medium text-white text-base truncate" :title="item.name">
+                          {{ item.name }}
+                        </div>
+                        <div class="text-xs text-gray-500 font-mono truncate" :title="item.email">
+                          {{ item.email }}
+                        </div>
                       </div>
                     </div>
                   </td>
+
                   <td class="p-4 md:p-5">
                     <span
                       v-if="item.role === 'admin'"
@@ -316,25 +324,28 @@ onMounted(fetchData);
                       Active
                     </span>
                   </td>
+
                   <td class="p-4 md:p-5 text-center">
-                    <button
-                      v-if="item.role !== 'admin' && !item.is_banned"
-                      @click="deleteUser(item.id)"
-                      class="text-gray-400 hover:text-red-400 px-4 py-1.5 text-xs border border-gray-700 rounded-lg hover:border-red-500/50">
-                      Ban User
-                    </button>
-                    <button
-                      v-if="item.is_banned"
-                      @click="restoreUser(item.id)"
-                      class="text-green-400 bg-green-500/10 px-4 py-1.5 text-xs border border-green-500/30 rounded-lg">
-                      Restore
-                    </button>
+                    <div class="flex justify-center">
+                      <button
+                        v-if="item.role !== 'admin' && !item.is_banned"
+                        @click="deleteUser(item.id)"
+                        class="text-gray-400 hover:text-red-400 px-3 py-1.5 text-xs border border-gray-700 rounded-lg hover:border-red-500/50 whitespace-nowrap transition-colors">
+                        Ban User
+                      </button>
+                      <button
+                        v-if="item.is_banned"
+                        @click="restoreUser(item.id)"
+                        class="text-green-400 bg-green-500/10 px-3 py-1.5 text-xs border border-green-500/30 rounded-lg whitespace-nowrap hover:bg-green-500/20 transition-colors">
+                        Restore
+                      </button>
+                    </div>
                   </td>
                 </template>
 
                 <template v-if="activeTab === 'notes'">
                   <td class="p-4 md:p-5 align-top">
-                    <div class="text-xs text-gray-500 font-mono">
+                    <div class="text-xs text-gray-500 font-mono whitespace-nowrap">
                       {{
                         new Date(item.created_at).toLocaleDateString("id-ID", {
                           day: "numeric",
@@ -348,7 +359,7 @@ onMounted(fetchData);
 
                   <td class="p-4 md:p-5 align-top">
                     <div
-                      class="text-gray-300 text-sm leading-relaxed break-words min-w-[250px] md:min-w-[350px] max-w-[600px] p-3 md:p-4 rounded-xl border border-white/5 bg-black/20 shadow-inner">
+                      class="text-gray-300 text-sm leading-relaxed break-words min-w-[200px] md:min-w-[350px] max-w-[600px] p-3 md:p-4 rounded-xl border border-white/5 bg-black/20 shadow-inner">
                       "{{ item.content }}"
                     </div>
                   </td>
