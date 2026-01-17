@@ -86,6 +86,11 @@ const loadMore = async () => {
 
 // --- MODAL LOGIC ---
 const openModalDetail = (note) => {
+  if (!localStorage.getItem("token")) {
+    window.location.href = "/login";
+    return;
+  }
+
   selectedNote.value = note;
   showModal.value = true;
   currentTime.value = 0;
