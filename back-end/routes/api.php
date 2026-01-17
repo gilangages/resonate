@@ -54,6 +54,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/users/current', [UserController::class, 'update']);
 });
 
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // Kelola User
+    Route::get('/users', [UserController::class, 'index']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+    // Nanti bisa tambah: Route::delete('/notes/{id}', ...) untuk hapus pesan kasar
+});
+
 // ROUTE KHUSUS UNTUK BYPASS CORS IMAGE;
 Route::get('/image-proxy', function (Request $request) {
     $url = $request->query('url');

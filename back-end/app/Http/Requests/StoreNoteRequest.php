@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\NoBadWords;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreNoteRequest extends FormRequest
@@ -15,7 +16,7 @@ class StoreNoteRequest extends FormRequest
     {
         return [
             // 1. CONTENT (Pesan): Wajib
-            'content' => 'required|string|max:1000',
+            'content' => ['required|string|max:1000', new NoBadWords()],
 
             // 2. RECIPIENT (Kepada): Wajib (Sesuai UI kamu)
             'recipient' => 'required|string|max:50',
