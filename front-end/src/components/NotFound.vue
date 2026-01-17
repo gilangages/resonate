@@ -48,7 +48,7 @@ function goBack() {
 
     <button
       v-on:click="goBack"
-      class="bg-[#9a203e] text-[#e5e5e5] px-8 py-3 rounded-[12px] font-semibold tracking-wide transition-all duration-300 hover:bg-[#b92b4f] hover:scale-105 shadow-[0_0_20px_rgba(154,32,62,0.4)]">
+      class="cursor-pointer bg-[#9a203e] text-[#e5e5e5] px-8 py-3 rounded-[12px] font-semibold tracking-wide transition-all duration-300 hover:bg-[#b92b4f] hover:scale-105 shadow-[0_0_20px_rgba(154,32,62,0.4)]">
       Kembali ke Beranda
     </button>
   </div>
