@@ -235,7 +235,7 @@ onMounted(() => {
                 <input
                   v-model="form.email"
                   type="email"
-                  placeholder="email@kamu.com"
+                  placeholder="emailkamu@gmail.com"
                   class="w-full bg-[#0f0505] border border-gray-700/50 rounded-xl px-4 py-4 text-white placeholder:text-gray-600 focus:border-[#9a203e] focus:outline-none focus:ring-1 focus:ring-[#9a203e] transition-all" />
               </div>
             </div>
