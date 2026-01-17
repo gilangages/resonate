@@ -62,7 +62,10 @@ class UserController extends Controller
 
             } catch (\Exception $e) {
                 // Opsional: Jika upload gagal, kembalikan error (atau biarkan null)
-                return response()->json(['message' => 'Upload failed'], 500);
+                return response()->json([
+                    'message' => 'Upload failed',
+                    'debug_error' => $e->getMessage(), // <--- INI KUNCINYA
+                ], 500);
             }
         }
 
