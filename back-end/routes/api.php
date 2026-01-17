@@ -18,12 +18,13 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/debug-cloudinary', function () {
+Route::get('/debug-config', function () {
     return [
-        'config_exists' => !empty(config('cloudinary')),
-        'cloud_url_set' => !empty(config('cloudinary.cloud_url')),
-        // Jangan tampilkan full URL biar aman, cukup cek ada/tidak
-        'env_set' => !empty(env('CLOUDINARY_URL')),
+        '1_env_cloudinary_url' => env('CLOUDINARY_URL'), // Kalau ini muncul isinya, berarti BELUM KEHAPUS di Render
+        '2_config_cloud_url' => config('cloudinary.cloud_url'), // Harusnya null
+        '3_cloud_name' => config('cloudinary.client.cloud_name'), // Harusnya nama cloud kamu (resonate-app?)
+        '4_api_key_check' => empty(config('cloudinary.client.api_key')) ? 'KOSONG' : 'ADA',
+        '5_cloudinary_disk' => config('filesystems.disks.cloudinary') ? 'ADA' : 'TIDAK ADA',
     ];
 });
 
