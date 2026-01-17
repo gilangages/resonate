@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary; // IMPORT PENTING 1
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -49,22 +48,42 @@ class UserController extends Controller
         // 4. LOGIKA BARU: Update Avatar ke Cloudinary ☁️
         if ($request->hasFile('avatar')) {
             try {
-                // Upload ke Cloudinary (Folder: resonate/avatars)
-                $uploadedFile = Cloudinary::upload($request->file('avatar')->getRealPath(), [
-                    'folder' => 'resonate/avatars',
+                // 1. Konfigurasi Manual (BYPASS FILE CONFIG)
+                // Kita ambil langsung dari env, jadi tidak peduli config cache error/nggak.
+                Configuration::instance([
+                    'cloud' => [
+                        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                        'api_key' => env('CLOUDINARY_API_KEY'),
+                        'api_secret' => env('CLOUDINARY_API_SECRET'),
+                    ],
+                    'url' => [
+                        'secure' => true,
+                    ],
                 ]);
 
-                // Ambil URL Aman (HTTPS) dari hasil upload
-                $url = $uploadedFile->getSecurePath();
+                // 2. Upload Pakai SDK Asli
+                $file = $request->file('avatar')->getRealPath();
+                $upload = (new UploadApi())->upload($file, [
+                    'folder' => 'avatars', // Nama folder di cloudinary
+                    'transformation' => [ // Opsional: Langsung crop jadi kotak
+                        'width' => 400,
+                        'height' => 400,
+                        'crop' => 'fill',
+                    ],
+                ]);
 
-                // Simpan URL tersebut ke database user
-                $user->avatar = $url;
+                // 3. Ambil URL Hasil Upload
+                $secureUrl = $upload['secure_url'];
+
+                // 4. Update Database
+                $user->avatar = $secureUrl;
 
             } catch (\Exception $e) {
-                // Opsional: Jika upload gagal, kembalikan error (atau biarkan null)
+                // Tampilkan error asli jika masih gagal
                 return response()->json([
-                    'message' => 'Upload failed',
-                    'debug_error' => $e->getMessage(), // <--- INI KUNCINYA
+                    'message' => 'Upload failed via Native SDK',
+                    'debug_error' => $e->getMessage(),
+                    'line' => $e->getLine(),
                 ], 500);
             }
         }
