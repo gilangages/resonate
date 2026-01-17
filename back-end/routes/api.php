@@ -28,26 +28,14 @@ Route::get('/debug-config', function () {
     ];
 });
 
-// === ROUTE KHUSUS PING / HEALTH CHECK ===
-// Diakses oleh UptimeRobot / Cron-job agar server tidak tidur
+// === ROUTE KHUSUS healt (SANGAT RINGAN) ===
+// Cukup return text/json statis.
+// Tujuannya HANYA memberi sinyal "Aku ada traffic" ke Render.
 Route::get('/health', function () {
-    try {
-        // Coba koneksi ke database (ringan)
-        DB::connection()->getPdo();
-
-        return response()->json([
-            'status' => 'ok',
-            'server' => 'alive',
-            'database' => 'connected',
-            'timestamp' => now(),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Database connection failed',
-            'error' => $e->getMessage(),
-        ], 500);
-    }
+    return response()->json([
+        'status' => 'alive',
+        'timestamp' => now()->toDateTimeString(),
+    ]);
 });
 
 Route::get('/test', function () {
