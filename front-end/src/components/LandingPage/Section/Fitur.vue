@@ -3,6 +3,15 @@ import { ref } from "vue";
 
 // --- ICON ASSETS (SVG Strings) ---
 
+// --- NEW ICONS ---
+
+// Pengganti samaran.svg: Topeng Anonim (Mask) - Melambangkan anonimitas dan kerahasiaan
+const anonimIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+
+// Pengganti personal.svg: Folder Terkunci/Terlindungi - Melambangkan ruang kontrol pribadi yang aman
+const personalSpaceIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" /></svg>`;
+
+// --- EXISTING ICONS (TIDAK DIUBAH) ---
 const deezerIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>`;
 
 const shareIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`;
@@ -11,12 +20,10 @@ const themeIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000
 
 const replyIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>`;
 
-// Icon Mata Tertutup (Blind/Hidden) - BARU
 const blindIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>`;
 
 const googleIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>`;
 
-// Icon Shield (Banding)
 const shieldIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>`;
 
 // --- DATA FEATURES (Total 9 Item) ---
@@ -24,7 +31,7 @@ const features = ref([
   {
     title: "Mode Anonim",
     desc: "Ingin menyampaikan perasaan kepada seseorang tapi tak ingin identitasmu diketahui? Gunakan mode anonim (inisial) agar kamu bisa bebas bercerita tanpa rasa khawatir.",
-    img: "../../../../public/note.svg",
+    img: anonimIconSvg, // MENGGUNAKAN ICON BARU
     isGeneric: true,
   },
   {
@@ -42,7 +49,7 @@ const features = ref([
   {
     title: "Ruang Personal",
     desc: "Kontrol penuh di tanganmu. Edit kesalahan ketik atau hapus pesan kapan saja kamu mau.",
-    img: "../../../../public/personal.svg",
+    img: personalSpaceIconSvg, // MENGGUNAKAN ICON BARU
     isGeneric: false,
   },
   {
@@ -58,14 +65,12 @@ const features = ref([
     isGeneric: true,
   },
   {
-    // UPDATED: Lebih fokus ke sistem & komunitas, bukan "Admin"
     title: "Moderasi Objektif",
     desc: "Sistem moderasi kami bekerja secara adil. Peninjauan konten dilakukan tanpa melihat identitas pengirim, sehingga privasimu tetap terjaga 100%.",
-    img: blindIconSvg, // Icon bisa tetap sama atau ganti shield
+    img: blindIconSvg,
     isGeneric: true,
   },
   {
-    // UPDATED: Lebih 'reassuring' (menenangkan)
     title: "Pusat Bantuan",
     desc: "Terjadi kesalahan pemblokiran? Jangan khawatir, kamu bisa mengajukan banding dengan mudah melalui formulir yang tersedia otomatis.",
     img: shieldIconSvg,
