@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { anonimMode } from "../../../../public/samaran.svg";
 
 // --- ICON ASSETS (SVG Strings) ---
 
@@ -8,9 +9,6 @@ const deezerIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/200
 const shareIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>`;
 
 const themeIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>`;
-
-// Icon Notifikasi (Lonceng)
-const notifIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>`;
 
 const replyIconSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>`;
 
@@ -27,7 +25,7 @@ const features = ref([
   {
     title: "Mode Anonim",
     desc: "Ingin menyampaikan perasaan kepada seseorang tapi tak ingin identitasmu diketahui? Gunakan mode anonim (inisial) agar kamu bisa bebas bercerita tanpa rasa khawatir.",
-    img: "./../../../public/samaran.svg",
+    img: anonimMode,
     isGeneric: false,
   },
   {
