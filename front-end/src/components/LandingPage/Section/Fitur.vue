@@ -1,6 +1,5 @@
 <script setup>
 import { ref } from "vue";
-import { anonimMode } from "../../../../public/samaran.svg";
 
 // --- ICON ASSETS (SVG Strings) ---
 
@@ -25,7 +24,7 @@ const features = ref([
   {
     title: "Mode Anonim",
     desc: "Ingin menyampaikan perasaan kepada seseorang tapi tak ingin identitasmu diketahui? Gunakan mode anonim (inisial) agar kamu bisa bebas bercerita tanpa rasa khawatir.",
-    img: anonimMode,
+    img: "./../../../public/personal.svg",
     isGeneric: false,
   },
   {
