@@ -3,7 +3,10 @@ import { onMounted, ref, nextTick } from "vue";
 import { noteListGlobal } from "../../../lib/api/NoteApi";
 import { alertError } from "../../../lib/alert";
 import { formatTime, isEdited } from "../../../lib/dateFormatter";
+import { useCardTheme } from "../../../lib/useCardTheme";
 
+//useTheme
+const { getTheme, getSelectedTheme } = useCardTheme();
 // --- STATE ---
 const notes = ref([]);
 const scrollContainer = ref(null);
@@ -15,6 +18,7 @@ const selectedNote = ref(null);
 const isVinylSpinning = ref(false);
 const showImagePreview = ref(false);
 const previewImageUrl = ref("");
+const selectedTheme = getSelectedTheme(selectedNote);
 
 // --- FETCH DATA ---
 async function fetchNoteGlobal() {
@@ -157,15 +161,19 @@ onMounted(async () => {
           v-for="(note, index) in notes"
           :key="note.id || index"
           @click="openModalDetail(note)"
-          class="min-w-[85vw] sm:min-w-[450px] snap-center group/card cursor-pointer">
+          class="min-w-[85vw] sm:min-w-[450px] snap-center group/card cursor-pointer flex flex-col h-full">
           <div
-            class="bg-[#1c1516] rounded-[24px] p-6 border border-[#2c2021] shadow-lg transition-all duration-300 hover:-translate-y-2 hover:border-[#9a203e]/50 hover:shadow-[0_15px_40px_-10px_rgba(154,32,62,0.3)] relative overflow-hidden h-full flex flex-col">
+            :class="[getTheme(note.id).bg, getTheme(note.id).border, getTheme(note.id).hover]"
+            class="rounded-[24px] p-6 border shadow-lg transition-all duration-300 hover:-translate-y-2 relative overflow-hidden h-full flex flex-col">
             <div
-              class="absolute inset-0 bg-gradient-to-b from-[#9a203e]/10 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
+              :class="`bg-gradient-to-b ${getTheme(note.id).gradient} to-transparent`"
+              class="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
 
             <div class="mb-5 relative z-10">
               <p class="text-[11px] text-[#666] font-bold uppercase tracking-wider mb-1">KEPADA</p>
-              <h2 class="text-2xl font-bold text-white group-hover/card:text-[#9a203e] transition-colors truncate">
+              <h2
+                :class="getTheme(note.id).text_hover"
+                class="text-2xl font-bold text-white transition-colors truncate">
                 {{ note.recipient }}
               </h2>
             </div>
@@ -176,21 +184,20 @@ onMounted(async () => {
                 <img :src="note.music_album_image" class="w-full h-full object-cover" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-bold text-white truncate">
-                  {{ note.music_track_name }}
-                </p>
+                <p class="text-sm font-bold text-white truncate">{{ note.music_track_name }}</p>
                 <p class="text-xs text-[#888] truncate">{{ note.music_artist_name }}</p>
               </div>
             </div>
 
             <div
-              class="bg-[#121011] rounded-[16px] p-4 border border-[#2c2021] mb-4 group-hover/card:border-[#9a203e]/30 transition-colors relative z-10">
+              :class="[getTheme(note.id).border, `group-hover/card:border-${getTheme(note.id).id}-500/50`]"
+              class="bg-black/20 rounded-[16px] p-4 border mb-4 transition-colors relative z-10">
               <p
                 v-text="'&quot;' + note.content + '&quot;'"
                 class="text-[15px] text-[#ccc] italic font-hand leading-relaxed whitespace-pre-wrap line-clamp-3 break-words"></p>
             </div>
 
-            <div class="flex flex-col gap-3 pt-4 border-t border-[#2c2021] relative z-10 mt-auto">
+            <div :class="getTheme(note.id).border" class="flex flex-col gap-3 pt-4 border-t relative z-10 mt-auto">
               <div class="flex items-center gap-2">
                 <img :src="note.author_avatar" class="w-6 h-6 rounded-full border border-[#333] object-cover" />
                 <div class="flex flex-col">
@@ -205,13 +212,15 @@ onMounted(async () => {
                     {{ formatTime(note.created_at) }}
                     <span
                       v-if="isEdited(note.created_at, note.updated_at)"
-                      class="text-[#9a203e] italic ml-1 block sm:inline">
+                      :class="getTheme(note.id).text"
+                      class="italic ml-1 block sm:inline">
                       (diedit)
                     </span>
                   </span>
 
                   <div
-                    class="text-[#e5e5e5] group-hover/card:text-[#9a203e] transition-colors transform group-hover/card:translate-x-1 duration-300">
+                    :class="getTheme(note.id).text_hover"
+                    class="text-[#e5e5e5] transition-colors transform group-hover/card:translate-x-1 duration-300">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="16"
@@ -254,214 +263,191 @@ onMounted(async () => {
       </RouterLink>
     </div>
 
-    <Transition name="fade">
-      <div
-        v-if="showModal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
-        @click.self="closeModalDetail">
+    <Teleport to="body">
+      <Transition name="fade">
         <div
-          class="bg-[#1c1516] w-full max-w-[420px] rounded-[24px] shadow-2xl border border-[#2c2021] flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
-          :class="showModal ? 'scale-100' : 'scale-95'">
-          <button
-            @click="closeModalDetail"
-            class="absolute top-4 right-4 z-50 bg-black/40 hover:bg-[#9a203e] text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-
+          v-if="showModal"
+          class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+          @click.self="closeModalDetail">
           <div
-            class="bg-gradient-to-b from-[#251a1c] to-[#1c1516] p-6 pt-10 border-b border-[#2c2021] flex flex-col items-center shrink-0">
-            <div
-              class="w-[160px] h-[160px] rounded-full bg-[#111] shadow-2xl border-4 border-[#1c1516] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
-              :class="{ 'animate-spin-slow': isVinylSpinning }">
-              <div class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
-              <img
-                :src="selectedNote?.music_album_image"
-                class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
-            </div>
-
-            <h2 class="text-xl font-bold text-white text-center leading-tight">
-              {{ selectedNote?.music_track_name }}
-            </h2>
-            <p class="text-[#9a203e] text-xs font-medium uppercase tracking-wide mb-4 mt-1">
-              {{ selectedNote?.music_artist_name }}
-            </p>
-
-            <a
-              v-if="selectedNote?.music_track_id"
-              :href="`https://www.deezer.com/track/${selectedNote?.music_track_id}`"
-              target="_blank"
-              class="flex items-center gap-2 bg-[#9a203e] hover:bg-[#7d1a33] text-white px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 shadow-[0_0_20px_rgba(154,32,62,0.3)] no-underline decoration-0 group">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              <span>Putar Lagu Penuh</span>
-            </a>
-          </div>
-
-          <div class="flex-1 bg-[#161213] p-6 overflow-y-auto custom-scrollbar">
-            <div class="flex justify-between items-center mb-6 pb-4 border-b border-[#2c2021]">
-              <div class="flex items-center gap-3">
-                <div
-                  @click.stop="openPreview(selectedNote?.author_avatar)"
-                  class="relative group/avatar cursor-zoom-in">
-                  <img
-                    :src="selectedNote?.author_avatar"
-                    class="w-10 h-10 rounded-full border border-[#3f3233] object-cover transition-transform group-hover/avatar:scale-110" />
-                </div>
-                <div>
-                  <p class="text-[10px] text-[#666] uppercase tracking-wide">DARI</p>
-                  <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
-                </div>
-              </div>
-
+            class="w-full max-w-[420px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+            :class="[showModal ? 'scale-100' : 'scale-95', selectedTheme.bg, selectedTheme.border]">
+            <button
+              @click="closeModalDetail"
+              :class="selectedTheme.btn_hover"
+              class="absolute top-4 right-4 z-50 bg-black/40 text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#555"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
+                stroke="currentColor"
+                stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
+            </button>
 
-              <div class="text-right">
-                <p class="text-[10px] text-[#666] uppercase tracking-wide">UNTUK</p>
-                <p class="text-sm font-bold text-[#9a203e]">{{ selectedNote?.recipient }}</p>
+            <div
+              class="relative p-6 pt-10 border-b flex flex-col items-center shrink-0 overflow-hidden"
+              :class="selectedTheme.border">
+              <div
+                class="absolute inset-0 opacity-40 pointer-events-none bg-gradient-to-b to-transparent"
+                :class="selectedTheme.gradient"></div>
+
+              <div class="relative z-10 w-full flex flex-col items-center">
+                <div
+                  class="w-[160px] h-[160px] rounded-full bg-[#111] border-4 border-[#1c1c1c] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
+                  :class="[isVinylSpinning ? 'animate-spin-slow' : '', selectedTheme.shadow]">
+                  <div
+                    class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
+                  <img
+                    :src="selectedNote?.music_album_image"
+                    class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
+                </div>
+
+                <h2 class="text-xl font-bold text-white text-center leading-tight">
+                  {{ selectedNote?.music_track_name }}
+                </h2>
+                <p :class="selectedTheme.text" class="text-xs font-medium uppercase tracking-wide mb-4 mt-1">
+                  {{ selectedNote?.music_artist_name }}
+                </p>
+
+                <a
+                  v-if="selectedNote?.music_track_id"
+                  :href="`https://www.deezer.com/track/${selectedNote?.music_track_id}`"
+                  target="_blank"
+                  :class="selectedTheme.modal_btn"
+                  class="flex items-center gap-2 text-white px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 no-underline decoration-0 group">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                  <span>Putar Lagu Penuh</span>
+                </a>
               </div>
             </div>
 
-            <div class="mb-6">
-              <p class="font-hand text-xl text-[#d4d4d4] leading-loose tracking-wide break-words">
-                "{{ selectedNote?.content }}"
-              </p>
-            </div>
+            <div class="flex-1 bg-black/20 p-6 overflow-y-auto custom-scrollbar">
+              <div class="flex justify-between items-center mb-6 pb-4 border-b" :class="selectedTheme.border">
+                <div class="flex items-center gap-3">
+                  <div
+                    @click.stop="openPreview(selectedNote?.author_avatar)"
+                    class="relative group/avatar cursor-zoom-in">
+                    <img
+                      :src="selectedNote?.author_avatar"
+                      class="w-10 h-10 rounded-full border border-white/10 object-cover transition-transform group-hover/avatar:scale-110" />
+                  </div>
+                  <div>
+                    <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
+                    <p class="text-sm font-bold text-white">{{ selectedNote?.author }}</p>
+                  </div>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  class="text-white/30"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+                <div class="text-right">
+                  <p class="text-[10px] text-white/50 uppercase tracking-wide">UNTUK</p>
+                  <p :class="selectedTheme.text" class="text-sm font-bold">{{ selectedNote?.recipient }}</p>
+                </div>
+              </div>
 
-            <div
-              class="flex items-center gap-2 text-[11px] text-[#555] font-mono bg-[#1c1a1b] p-3 rounded-lg border border-[#2c2021]">
+              <div class="mb-6">
+                <p class="font-hand text-xl text-[#e5e5e5] leading-loose tracking-wide break-words">
+                  "{{ selectedNote?.content }}"
+                </p>
+              </div>
+
+              <div
+                class="flex items-center gap-2 text-[11px] text-white/60 font-mono bg-black/20 p-3 rounded-lg border"
+                :class="selectedTheme.border">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span>
+                  Dikirim: {{ formatDateDetail(selectedNote?.created_at) }}
+                  <span
+                    v-if="isEdited(selectedNote?.created_at, selectedNote?.updated_at)"
+                    :class="selectedTheme.text"
+                    class="italic ml-1 font-bold">
+                    (diedit)
+                  </span>
+                </span>
+              </div>
+
+              <div class="mt-6">
+                <button
+                  @click="closeModalDetail"
+                  :class="[
+                    selectedTheme.btn_hover, // 1. Saat hover, background berubah jadi warna tema
+                    'border-white/10 text-white/50', // 2. State normal (Netral/Abu-abu)
+                    'hover:text-white hover:border-transparent', // 3. Saat hover, text jadi putih & border hilang
+                  ]"
+                  class="w-full py-3 rounded-[12px] border font-bold text-xs uppercase tracking-widest transition-all cursor-pointer">
+                  Tutup Pesan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="showImagePreview"
+          class="fixed inset-0 z-[10000] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
+          @click="closePreview">
+          <div class="relative flex flex-col items-center w-full max-w-[90vw] max-h-[90vh] cursor-default">
+            <button
+              @click.stop="closePreview"
+              class="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors p-2 z-50">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
+                width="32"
+                height="32"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
-              <span>Dikirim: {{ formatDateDetail(selectedNote?.created_at) }}</span>
-            </div>
-
-            <div class="mt-6">
-              <button
-                @click="closeModalDetail"
-                class="w-full py-3 rounded-[12px] border border-[#3f3233] text-[#888] font-bold text-xs uppercase tracking-widest hover:bg-[#2c2021] hover:text-white transition-all cursor-pointer">
-                Tutup Pesan
-              </button>
-            </div>
+            </button>
+            <img
+              :src="previewImageUrl"
+              class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+              @click.stop />
+            <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
           </div>
         </div>
-      </div>
-    </Transition>
-
-    <Transition name="fade">
-      <div
-        v-if="showImagePreview"
-        class="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl p-4 cursor-pointer"
-        @click="closePreview">
-        <div class="relative flex flex-col items-center w-full max-w-[90vw] max-h-[90vh]">
-          <button
-            @click.stop="closePreview"
-            class="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors p-2 z-50">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-          <img
-            :src="previewImageUrl"
-            class="w-auto h-auto max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl cursor-default"
-            @click.stop />
-          <p class="text-white/50 text-sm tracking-widest uppercase font-bold mt-4" @click.stop>Foto Profil</p>
-        </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
-<style scoped>
-/* CSS Sama Seperti Sebelumnya */
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap");
-
-.font-jakarta {
-  font-family: "Plus Jakarta Sans", sans-serif;
-}
-.font-hand {
-  font-family: "Patrick Hand", cursive;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #3f3233 #1c1516;
-}
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #1c1516;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #3f3233;
-  border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #9a203e;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.animate-spin-slow {
-  animation: spin 8s linear infinite;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
+<style scoped></style>
