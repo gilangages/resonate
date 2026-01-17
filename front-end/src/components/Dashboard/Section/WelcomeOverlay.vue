@@ -1,6 +1,6 @@
 <script setup>
 // 1. Tambahkan 'watch' di import
-import { onBeforeMount, ref, watch } from "vue";
+import { onBeforeMount, ref, watch, defineEmits, onMounted } from "vue";
 import { userState } from "../../../lib/store";
 
 const emit = defineEmits(["animation-complete"]);
@@ -38,7 +38,10 @@ async function checkAnimationRequirement() {
   const currentNameInMemory = userState.value?.name;
 
   // Jika nama belum ada, jangan lakukan apa-apa (tunggu watcher)
-  if (!currentNameInMemory) return;
+  if (!currentNameInMemory) {
+    showIntro.value = true;
+    return;
+  }
 
   const storedAnimName = sessionStorage.getItem("last_anim_name");
 
@@ -90,7 +93,7 @@ watch(
   }
 );
 
-onBeforeMount(() => {
+onMounted(() => {
   // Cek awal (berjaga-jaga jika data sudah ada di cache/store)
   checkAnimationRequirement();
 });

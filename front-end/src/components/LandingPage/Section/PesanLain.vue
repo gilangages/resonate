@@ -21,9 +21,10 @@ async function fetchNoteGlobal() {
   try {
     const response = await noteListGlobal();
     const responseBody = await response.json();
+    console.log(responseBody);
+
     if (response.ok) {
       notes.value = responseBody.data;
-      console.log(responseBody);
     } else {
       const pesanError = responseBody.errors ? Object.values(responseBody.errors)[0][0] : responseBody.message;
       await alertError(pesanError);
