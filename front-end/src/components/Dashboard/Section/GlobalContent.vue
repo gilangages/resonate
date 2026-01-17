@@ -164,7 +164,11 @@ const columns = computed(() => {
 const getImageUrl = (url, uniqueId = "global") => {
   if (!url) return "";
 
-  const isExternalApi = url.includes("dicebear.com") || url.includes("deezer.com") || url.includes("dzcdn.net");
+  const isExternalApi =
+    url.includes("dicebear.com") ||
+    url.includes("deezer.com") ||
+    url.includes("dzcdn.net") ||
+    url.includes("googleusercontent.com");
 
   if (isExternalApi) {
     return url;
