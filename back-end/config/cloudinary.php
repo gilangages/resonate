@@ -1,53 +1,46 @@
 <?php
 
+/*
+|--------------------------------------------------------------------------
+| Cloudinary Configuration (Auto-Build)
+|--------------------------------------------------------------------------
+|
+| Daripada pusing parsing error, kita rakit URL-nya secara manual
+| menggunakan variabel environment yang sudah dipastikan ADA di Render.
+|
+ */
+
+// Ambil bahan-bahan dari Render
+$apiKey = env('CLOUDINARY_API_KEY');
+$apiSecret = env('CLOUDINARY_API_SECRET');
+$cloudName = env('CLOUDINARY_CLOUD_NAME');
+
+// Rakit URL-nya!
+// Format: cloudinary://KEY:SECRET@CLOUD_NAME
+$generatedUrl = null;
+if ($apiKey && $apiSecret && $cloudName) {
+    $generatedUrl = "cloudinary://{$apiKey}:{$apiSecret}@{$cloudName}";
+}
+
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cloudinary Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure your Cloudinary settings. Cloudinary is a cloud
-    | hosted media management service for all your file uploads, storage,
-    | delivery and transformation needs.
-    |
-     */
+    // Masukkan URL rakitan kita ke sini
+    'cloud_url' => $generatedUrl,
 
-    'cloud_url' => null,
-
-    /**
-     * Upload Preset Name
-     */
+    // Sisanya standar (biarkan saja)
     'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
-
-    /**
-     * Notification URL
-     */
     'notification_url' => env('CLOUDINARY_NOTIFICATION_URL'),
-
-    /**
-     * Cloudinary URL for the secure distribution of images.
-     * It is used to deliver the images from a custom domain/subdomain.
-     */
     'secure_url' => env('CLOUDINARY_SECURE_URL'),
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cloudinary Configuration (Advanced)
-    |--------------------------------------------------------------------------
-    |
-    | Here you can configure the Cloudinary client implementation.
-    |
-     */
     'client' => [
-        'api_key' => env('CLOUDINARY_API_KEY'),
-        'api_secret' => env('CLOUDINARY_API_SECRET'),
-        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key' => $apiKey,
+        'api_secret' => $apiSecret,
+        'cloud_name' => $cloudName,
     ],
 
     'admin' => [
-        'api_key' => env('CLOUDINARY_API_KEY'),
-        'api_secret' => env('CLOUDINARY_API_SECRET'),
-        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key' => $apiKey,
+        'api_secret' => $apiSecret,
+        'cloud_name' => $cloudName,
     ],
 ];
