@@ -14,7 +14,7 @@ class SuperAdminSeeder extends Seeder
     public function run(): void
     {
         // Buat Akun Super Admin
-        User::updateOrCreate(
+        User::firstOrCreate(
             ['email' => 'qbdian@gmail.com'], // Cek berdasarkan email agar tidak duplikat
             [
                 'name' => 'Super Admin Abdian',
