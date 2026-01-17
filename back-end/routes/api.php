@@ -18,6 +18,15 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/debug-cloudinary', function () {
+    return [
+        'config_exists' => !empty(config('cloudinary')),
+        'cloud_url_set' => !empty(config('cloudinary.cloud_url')),
+        // Jangan tampilkan full URL biar aman, cukup cek ada/tidak
+        'env_set' => !empty(env('CLOUDINARY_URL')),
+    ];
+});
+
 // === ROUTE KHUSUS PING / HEALTH CHECK ===
 // Diakses oleh UptimeRobot / Cron-job agar server tidak tidur
 Route::get('/health', function () {
