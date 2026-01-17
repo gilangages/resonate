@@ -6,10 +6,13 @@ import { formatTime, isEdited } from "../../../lib/dateFormatter";
 import { useDebounceFn } from "@vueuse/core";
 import DashboardToolbar from "./DashboardToolbar.vue";
 import { useCardTheme } from "../../../lib/useCardTheme";
+import { useShareImage } from "../../../lib/useShareImage";
 
 const { getTheme, getSelectedTheme } = useCardTheme();
+const { captureRef, downloadImage, isDownloading } = useShareImage();
 const token = useLocalStorage("token", "");
 const notes = ref([]);
+const cacheBuster = ref(Date.now());
 
 // --- AUDIO PLAYER STATE ---
 const currentAudio = ref(new Audio());
@@ -94,6 +97,9 @@ const openModalDetail = (note) => {
     return;
   }
 
+  // Update Cache Buster agar gambar direfresh saat modal dibuka
+  cacheBuster.value = Date.now();
+
   selectedNote.value = note;
   showModal.value = true;
   currentTime.value = 0;
@@ -145,7 +151,6 @@ const closePreview = () => {
 
 const handleSearch = useDebounceFn(() => fetchNoteList(true), 500);
 
-// Fungsi pembagi kolom untuk Masonry (Sama dengan FillContent)
 const columns = computed(() => {
   const cols = [[], [], []];
   notes.value.forEach((note, index) => {
@@ -153,6 +158,26 @@ const columns = computed(() => {
   });
   return cols;
 });
+
+// --- HELPER CERDAS URL GAMBAR (VERSI FIX PROXY) ---
+const getImageUrl = (url, uniqueId = "global") => {
+  if (!url) return "";
+
+  const isExternalApi = url.includes("dicebear.com") || url.includes("deezer.com") || url.includes("dzcdn.net");
+
+  if (isExternalApi) {
+    return url;
+  }
+
+  // Gunakan Proxy API
+  const apiUrl = import.meta.env.VITE_APP_PATH || "http://localhost:8000/api";
+  const encodedImageUrl = encodeURIComponent(url);
+
+  // Buat timestamp unik berdasarkan ID User atau Note agar tidak tertukar
+  // Kita gabung Date.now() + uniqueId
+  const timestamp = new Date().getTime();
+  return `${apiUrl}/image-proxy?url=${encodedImageUrl}&t=${timestamp}-${uniqueId}`;
+};
 
 onMounted(async () => {
   await fetchNoteList(true);
@@ -212,10 +237,7 @@ onMounted(async () => {
             </div>
 
             <div
-              :class="[
-                getTheme(note.id).border, // 1. Border mengikuti tema (misal: Biru Tua)
-                `group-hover/card:border-${getTheme(note.id).id}-500/50`, // 2. Efek hover menyala sesuai warna
-              ]"
+              :class="[getTheme(note.id).border, `group-hover/card:border-${getTheme(note.id).id}-500/50`]"
               class="bg-black/20 rounded-[16px] p-4 border mb-4 transition-colors relative z-10">
               <p
                 v-text="'&quot;' + note.content + '&quot;'"
@@ -289,12 +311,13 @@ onMounted(async () => {
           class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
           @click.self="closeModalDetail">
           <div
+            ref="captureRef"
             class="w-full max-w-[420px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
             :class="[showModal ? 'scale-100' : 'scale-95', selectedTheme.bg, selectedTheme.border]">
             <button
               @click="closeModalDetail"
               :class="selectedTheme.btn_hover"
-              class="absolute top-4 right-4 z-50 bg-black/40 text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
+              class="exclude-from-capture absolute top-4 right-4 z-50 bg-black/40 text-white p-2 rounded-full transition-colors backdrop-blur-md border border-white/10 cursor-pointer">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="20"
@@ -318,16 +341,15 @@ onMounted(async () => {
               <div class="relative z-10 w-full flex flex-col items-center">
                 <div
                   class="w-[160px] h-[160px] rounded-full bg-[#111] border-4 border-[#1c1c1c] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
-                  :class="[
-                    isVinylSpinning ? 'animate-spin-slow' : '',
-                    selectedTheme.shadow /* INI YANG BARU: Efek cahaya di belakang vinyl */,
-                  ]">
+                  :class="[isVinylSpinning ? 'animate-spin-slow' : '', selectedTheme.shadow]">
                   <div
                     class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
                   <div class="absolute inset-0 rounded-full border border-[#333] opacity-30 transform scale-75"></div>
 
                   <img
-                    :src="selectedNote?.music_album_image"
+                    v-if="selectedNote?.music_album_image"
+                    :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album')"
+                    crossorigin="anonymous"
                     class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                 </div>
 
@@ -375,8 +397,10 @@ onMounted(async () => {
               <div class="flex justify-between items-center mb-6 pb-4 border-b" :class="selectedTheme.border">
                 <div class="flex items-center gap-3">
                   <img
+                    v-if="selectedNote?.author_avatar"
                     @click="openPreview(selectedNote?.author_avatar)"
-                    :src="selectedNote?.author_avatar"
+                    :src="getImageUrl(selectedNote?.author_avatar, selectedNote?.id + '-avatar')"
+                    crossorigin="anonymous"
                     class="w-10 h-10 rounded-full border border-white/10 object-cover cursor-zoom-in hover:scale-110 transition-transform" />
                   <div>
                     <p class="text-[10px] text-white/50 uppercase tracking-wide">DARI</p>
@@ -433,16 +457,42 @@ onMounted(async () => {
                 </span>
               </div>
 
-              <div class="mt-6">
+              <div class="mt-6 flex gap-3 exclude-from-capture">
                 <button
                   @click="closeModalDetail"
                   :class="[
-                    selectedTheme.btn_hover, // 1. Saat hover, background berubah jadi warna tema
-                    'border-white/10 text-white/50', // 2. State normal (Netral/Abu-abu)
-                    'hover:text-white hover:border-transparent', // 3. Saat hover, text jadi putih & border hilang
+                    selectedTheme.btn_hover,
+                    'border-white/10 text-white/50',
+                    'hover:text-white hover:border-transparent',
                   ]"
-                  class="w-full py-3 rounded-[12px] border font-bold text-xs uppercase tracking-widest transition-all cursor-pointer">
-                  Tutup Pesan
+                  class="flex-1 py-3 rounded-[12px] border font-bold text-xs uppercase tracking-widest transition-all cursor-pointer">
+                  Tutup
+                </button>
+
+                <button
+                  @click="downloadImage(`pesan-dari-${selectedNote?.author || 'user'}`)"
+                  :disabled="isDownloading"
+                  :class="[
+                    selectedTheme.modal_btn,
+                    isDownloading ? 'opacity-70 cursor-wait' : 'hover:brightness-110 cursor-pointer',
+                  ]"
+                  class="flex-1 py-3 rounded-[12px] text-white font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg">
+                  <span v-if="isDownloading">Proses...</span>
+                  <span v-else class="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Simpan
+                  </span>
                 </button>
               </div>
             </div>
@@ -450,6 +500,7 @@ onMounted(async () => {
         </div>
       </Transition>
     </Teleport>
+
     <Teleport to="body">
       <Transition name="fade">
         <div
