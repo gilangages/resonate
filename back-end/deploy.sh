@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# 1. Jalankan Migrasi Database
-echo "Running Migrations..."
-php artisan migrate --force
+# 1. Jalankan Migrasi Database (RESET TOTAL)
+echo "Wiping and Refreshing Database..."
+php artisan migrate:fresh --force
 
 # 2. Jalankan Seeder (Super Admin)
 echo "Running Seeder..."

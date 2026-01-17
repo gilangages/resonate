@@ -33,6 +33,9 @@ RUN composer install --no-dev --optimize-autoloader
 # Beri izin agar deploy.sh bisa dijalankan
 RUN chmod +x deploy.sh
 
+# Buat folder views agar artisan view:cache tidak error
+RUN mkdir -p /var/www/html/resources/views
+
 # Beri izin folder storage agar Laravel bisa nulis log & cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
