@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary; // IMPORT PENTING 1
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+
+// use Illuminate\Support\Facades\Storage; // Tidak dipakai lagi untuk avatar
 
 class UserController extends Controller
 {
@@ -29,38 +31,39 @@ class UserController extends Controller
         $user = $request->user();
         $validated = $request->validated();
 
-        // Simpan tema jika ada di request
+        // 1. Simpan tema jika ada
         if ($request->has('card_theme')) {
             $user->card_theme = $validated['card_theme'];
         }
 
-        // 1. Update Nama
+        // 2. Update Nama
         if ($request->has('name')) {
             $user->name = $validated['name'];
         }
 
-        // 2. Update Password (logika lama..)
+        // 3. Update Password
         if ($request->filled('password')) {
             $user->password = Hash::make($validated['password']);
         }
 
-        // 3. LOGIKA BARU: Update Avatar
+        // 4. LOGIKA BARU: Update Avatar ke Cloudinary ☁️
         if ($request->hasFile('avatar')) {
-            // Hapus foto lama jika ada (optional, biar server gak penuh)
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
+            try {
+                // Upload ke Cloudinary (Folder: resonate/avatars)
+                $uploadedFile = Cloudinary::upload($request->file('avatar')->getRealPath(), [
+                    'folder' => 'resonate/avatars',
+                ]);
 
-            // Simpan foto baru ke folder 'avatars' di storage public
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar = $path;
-        }
-        // Cek apakah user mengisi kolom password
-        if ($request->filled('password')) {
-            $validated['password'] = Hash::make($request->password);
-        } else {
-            // Jangan update password jika inputnya kosong
-            unset($validated['password']);
+                // Ambil URL Aman (HTTPS) dari hasil upload
+                $url = $uploadedFile->getSecurePath();
+
+                // Simpan URL tersebut ke database user
+                $user->avatar = $url;
+
+            } catch (\Exception $e) {
+                // Opsional: Jika upload gagal, kembalikan error (atau biarkan null)
+                return response()->json(['message' => 'Upload failed'], 500);
+            }
         }
 
         $user->save();
@@ -82,22 +85,18 @@ class UserController extends Controller
         if ($user->role === 'admin') {
             return response()->json([
                 'message' => 'Admin account cannot be deleted for safety reasons.',
-            ], 403); // 403 Forbidden
+            ], 403);
         }
 
-        // Gunakan Transaction agar atomik (semua sukses atau semua gagal)
         DB::transaction(function () use ($user) {
-            // 1. Hapus Avatar dari Storage (Clean Code: Hindari sampah file)
-            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
-                Storage::disk('public')->delete($user->avatar);
-            }
+            // Note: Kita tidak menghapus gambar di Cloudinary saat akun dihapus
+            // untuk menjaga performa delete agar cepat.
+            // Gambar di Cloudinary akan tetap ada (bisa dibersihkan manual nanti).
 
-            // 2. Hapus Semua Token (Force Logout dari semua device)
+            // 1. Hapus Semua Token (Force Logout)
             $user->tokens()->delete();
 
-            // 3. Hapus User
-            // Note: Karena di migration 'notes' sudah 'cascadeOnDelete',
-            // maka notes akan otomatis terhapus oleh database.
+            // 2. Hapus User
             $user->delete();
         });
 
