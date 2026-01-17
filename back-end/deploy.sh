@@ -2,8 +2,9 @@
 set -e
 
 # 1. Jalankan Migrasi Database (RESET TOTAL)
-echo "Wiping and Refreshing Database..."
-php artisan migrate:fresh --force
+echo "Running Migrations..."
+# Pakai migrate biasa dulu biar lebih aman
+php artisan migrate --force
 
 # 2. Jalankan Seeder (Super Admin)
 echo "Running Seeder..."
