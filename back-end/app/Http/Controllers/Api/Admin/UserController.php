@@ -10,7 +10,7 @@ class UserController extends Controller
     // 1. Lihat semua user
     public function index()
     {
-        $users = User::select('id', 'name', 'email', 'role', 'created_at')->latest()->get();
+        $users = User::select('id', 'name', 'email', 'avatar', 'role', 'created_at')->latest()->get();
         return response()->json(['data' => $users]);
     }
 

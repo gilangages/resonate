@@ -16,7 +16,7 @@ class StoreNoteRequest extends FormRequest
     {
         return [
             // 1. CONTENT (Pesan): Wajib
-            'content' => ['required|string|max:1000', new NoBadWords()],
+            'content' => ['required', 'string', 'max:1000', new NoBadWords()],
 
             // 2. RECIPIENT (Kepada): Wajib (Sesuai UI kamu)
             'recipient' => 'required|string|max:50',

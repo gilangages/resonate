@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\AudioStreamController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
@@ -56,8 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     // Kelola User
-    Route::get('/users', [UserController::class, 'index']);
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
 
     // Nanti bisa tambah: Route::delete('/notes/{id}', ...) untuk hapus pesan kasar
 });
