@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AudioStreamController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\LogoutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\MusicController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\UserController;
@@ -23,8 +24,10 @@ Route::post('/users/login', LoginController::class);
 
 //get  Global Notes (Bisa diakses siapa saja)
 Route::get('/notes/global', [NoteController::class, 'globalIndex']);
-
 Route::get('/stream/{trackId}', [AudioStreamController::class, 'stream']);
+
+Route::get('/auth/google/redirect', [SocialAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
 
 // 🔐 AUTH ROUTES (Prioritas Tinggi)
 Route::middleware('auth:sanctum')->group(function () {

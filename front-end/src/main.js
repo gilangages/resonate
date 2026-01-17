@@ -12,6 +12,7 @@ import UserLogout from "./components/User/UserLogout.vue";
 import DashboardUser from "./components/Dashboard/DashboardUser.vue";
 import DashboardGlobal from "./components/Dashboard/DashboardGlobal.vue";
 import NotFound from "./components/NotFound.vue";
+import AuthCallback from "./components/User/AuthCallback.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -60,6 +61,10 @@ const router = createRouter({
     {
       path: "/:pathMatch(.*)*",
       component: NotFound,
+    },
+    {
+      path: "/auth/callback",
+      component: AuthCallback,
     },
   ],
 });

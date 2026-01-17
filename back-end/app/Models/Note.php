@@ -20,6 +20,7 @@ class Note extends Model
         'music_album_image', // sebelumnya spotify_album_image
         'music_preview_url', // sebelumnya spotify_preview_url
         'music_track_link', // sebelumnya spotify_track_link
+        'google_id',
     ];
 
     // Note milik satu user
