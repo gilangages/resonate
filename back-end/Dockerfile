@@ -13,12 +13,12 @@ RUN apt-get update && apt-get install -y \
 # Aktifkan mod_rewrite untuk URL Laravel yang cantik
 RUN a2enmod rewrite
 
-# Ganti Document Root Apache ke folder public Laravel
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
-RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
+# === BAGIAN PENTING: CONFIG APACHE ===
+# Copy config Apache buatan kita ke dalam server
+COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
+# =====================================
 
-# Copy Composer (Manajer Paket PHP)
+# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set folder kerja
@@ -30,9 +30,10 @@ COPY . .
 # Install paket PHP via Composer
 RUN composer install --no-dev --optimize-autoloader
 
+# Beri izin agar deploy.sh bisa dijalankan
 RUN chmod +x deploy.sh
 
-# Beri izin agar server bisa nulis ke folder storage
+# Beri izin folder storage agar Laravel bisa nulis log & cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Buka Port 80
