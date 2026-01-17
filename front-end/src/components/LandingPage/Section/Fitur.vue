@@ -24,7 +24,7 @@ const features = ref([
   {
     title: "Mode Anonim",
     desc: "Ingin menyampaikan perasaan kepada seseorang tapi tak ingin identitasmu diketahui? Gunakan mode anonim (inisial) agar kamu bisa bebas bercerita tanpa rasa khawatir.",
-    img: "./../../../public/personal.svg",
+    img: "../../../../public/note.svg",
     isGeneric: false,
   },
   {
