@@ -7,6 +7,8 @@ const triggerModal = () => {
 };
 </script>
 
+<!-- udah ga dipakai -->
+
 <template>
   <div class="flex flex-col items-center justify-center gap-[3em] mt-[4em] text-[#e5e5e5] sm:mt-[2em]">
     <img src="../../../assets/img/add-note.svg" alt="" class="w-[240px] h-[240px]" />

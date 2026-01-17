@@ -1,6 +1,6 @@
 <script setup>
 // 1. Tambahkan 'watch' di import
-import { onBeforeMount, ref, watch, defineEmits, onMounted } from "vue";
+import { ref, watch, defineEmits, onMounted } from "vue";
 import { userState } from "../../../lib/store";
 
 const emit = defineEmits(["animation-complete"]);
