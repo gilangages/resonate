@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # 1. Jalankan Migrasi Database (RESET TOTAL)
 echo "Wiping and Refreshing Database..."
