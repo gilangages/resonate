@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+// use Illuminate\Http\UploadedFile; // Tidak perlu lagi import ini
+// use Illuminate\Support\Facades\Storage; // Tidak perlu lagi import ini
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -17,15 +17,12 @@ class UserAccountDeletionTest extends TestCase
     public function test_user_can_delete_their_own_account()
     {
         // 1. Setup User & Data
-        Storage::fake('public');
         $user = User::factory()->create();
 
-        // Buat Avatar palsu
-        $avatar = UploadedFile::fake()->image('avatar.jpg');
-        $path = $avatar->store('avatars', 'public');
-        $user->update(['avatar' => $path]);
+        // Kita tidak perlu lagi membuat file avatar palsu karena logika
+        // penghapusan file sudah kita hapus di Controller demi performa.
 
-        // Buat Note dummy
+        // Buat Note dummy untuk cek fitur Cascade Delete
         Note::factory()->create(['user_id' => $user->id]);
 
         // 2. Login
@@ -41,11 +38,10 @@ class UserAccountDeletionTest extends TestCase
         // Pastikan User hilang dari DB
         $this->assertDatabaseMissing('users', ['id' => $user->id]);
 
-        // Pastikan Note hilang (Cascade check)
+        // Pastikan Note user tersebut juga hilang (Cascade check)
         $this->assertDatabaseEmpty('notes');
 
-        // Pastikan File Avatar hilang dari Storage
-        Storage::disk('public')->assertMissing($path);
+        // HAPUS baris Storage::assertMissing karena Controller tidak lagi menghapus file.
     }
 
     public function test_guest_cannot_delete_account()
