@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://resonate-music.vercel.app'], //ganti ke url vercell
+    'allowed_origins' => ['http://localhost:5173', 'https://resonate-music.vercel.app'], //ganti ke url vercell
 
     'allowed_origins_patterns' => [],
 
