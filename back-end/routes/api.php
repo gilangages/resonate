@@ -18,6 +18,28 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
+// === ROUTE KHUSUS PING / HEALTH CHECK ===
+// Diakses oleh UptimeRobot / Cron-job agar server tidak tidur
+Route::get('/health', function () {
+    try {
+        // Coba koneksi ke database (ringan)
+        DB::connection()->getPdo();
+
+        return response()->json([
+            'status' => 'ok',
+            'server' => 'alive',
+            'database' => 'connected',
+            'timestamp' => now(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Database connection failed',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+});
+
 Route::get('/test', function () {
     return response()->json(['status' => 'API works!']);
 });
