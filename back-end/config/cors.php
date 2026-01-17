@@ -19,7 +19,14 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://resonate-music.vercel.app'], //ganti ke url vercell
+    'allowed_origins' => ['*'], //ganti ke url vercell
+
+    // OPSI LEBIH AMAN (Recommended): Pakai Pattern
+    // Ini mengizinkan URL utama DAN URL preview Vercel yang acak itu.
+    'allowed_origins_patterns' => [
+        'https://resonate-*.vercel.app', // <--- INI KUNCINYA
+        'http://localhost:*', // Buat local development
+    ],
 
     'allowed_origins_patterns' => [],
 
