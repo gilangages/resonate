@@ -30,6 +30,8 @@ COPY . .
 # Install paket PHP via Composer
 RUN composer install --no-dev --optimize-autoloader
 
+RUN chmod +x deploy.sh
+
 # Beri izin agar server bisa nulis ke folder storage
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
