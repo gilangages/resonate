@@ -7,7 +7,7 @@ const emit = defineEmits(["animation-complete"]);
 
 const displayDetail = ref("");
 const isTextVisible = ref(false);
-const showIntro = ref(false);
+const showIntro = ref(true);
 
 // ... (kode typeWriter dan wait biarkan sama) ...
 
@@ -39,7 +39,7 @@ async function checkAnimationRequirement() {
 
   // Jika nama belum ada, jangan lakukan apa-apa (tunggu watcher)
   if (!currentNameInMemory) {
-    showIntro.value = true;
+    // showIntro.value = true;
     return;
   }
 
