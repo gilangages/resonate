@@ -45,7 +45,7 @@ const features = ref([
   {
     title: "Ruang Personal",
     desc: "Kontrol penuh di tanganmu. Edit kesalahan ketik atau hapus pesan kapan saja kamu mau.",
-    img: "../../src/assets/img/personal.svg",
+    img: "../../../../public/personal.svg",
     isGeneric: false,
   },
   {

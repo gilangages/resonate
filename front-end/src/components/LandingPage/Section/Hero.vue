@@ -20,7 +20,7 @@
     </div>
 
     <div class="mt-[3em] sm:mt-0 sm:mr-[1em]">
-      <img src="../../../assets/img/note.svg" alt="" class="w-[320px] md:w-[700px]" />
+      <img src="../../../../public/note.svg" alt="" class="w-[320px] md:w-[700px]" />
     </div>
   </div>
 </template>
