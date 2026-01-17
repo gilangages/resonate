@@ -13,7 +13,7 @@ return [
     |
      */
 
-    'cloud_url' => env('CLOUDINARY_URL'),
+    'cloud_url' => null,
 
     /**
      * Upload Preset Name
