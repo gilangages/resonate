@@ -549,7 +549,7 @@ defineExpose({
             class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
             @click.self="closeModalDetail">
             <div
-              class="w-full max-w-[480px] md:max-w-[600px] rounded-[32px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
+              class="w-full max-w-[420px] md:max-w-[600px] rounded-[24px] shadow-2xl border flex flex-col overflow-hidden relative max-h-[90vh] transition-transform duration-300"
               :class="[showModal ? 'scale-100' : 'scale-95', selectedTheme.bg, selectedTheme.border]">
               <button
                 @click="closeModalDetail"
@@ -577,7 +577,7 @@ defineExpose({
 
                 <div class="relative z-10 w-full flex flex-col items-center">
                   <div
-                    class="w-[140px] h-[140px] rounded-full bg-[#111] shadow-2xl border-4 border-[#1c1516] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
+                    class="w-[160px] h-[160px] rounded-full bg-[#111] shadow-2xl border-4 border-[#1c1516] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
                     :class="[isVinylSpinning ? 'animate-spin-slow' : '', selectedTheme.shadow]">
                     <div
                       class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>

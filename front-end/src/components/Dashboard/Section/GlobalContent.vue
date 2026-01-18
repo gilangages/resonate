@@ -665,7 +665,7 @@ onMounted(async () => {
                         :src="
                           getImageUrl(
                             selectedNote?.author_avatar || selectedNote?.author_photo_url,
-                            'avatar-' + selectedNote?.id
+                            'avatar-' + selectedNote?.id,
                           )
                         "
                         crossorigin="anonymous"
@@ -683,6 +683,19 @@ onMounted(async () => {
                       </div>
                     </div>
                   </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    class="text-white/30"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
                   <div class="text-right">
                     <p class="text-[10px] text-white/50 uppercase tracking-wide">UNTUK</p>
                     <p :class="selectedTheme.text" class="text-sm font-bold">{{ selectedNote?.recipient }}</p>

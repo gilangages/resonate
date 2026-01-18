@@ -179,17 +179,32 @@ onBeforeMount(async () => {
 
           <div
             v-if="searchResults.length > 0"
-            class="custom-scrollbar absolute z-20 top-[60px] left-0 w-full bg-[#2b2122] border border-[#9a203e] rounded-[10px] max-h-[200px] overflow-y-auto shadow-lg">
+            class="custom-scrollbar absolute z-20 top-[60px] left-0 w-full bg-[#2b2122] border border-[#9a203e] rounded-[10px] max-h-[240px] overflow-y-auto shadow-lg flex flex-col">
             <div
               v-for="song in searchResults"
               :key="song.id"
               @click="selectSong(song)"
-              class="p-3 hover:bg-[#9a203e] cursor-pointer flex items-center gap-3 border-b border-[#1c1516] last:border-0">
+              class="p-3 hover:bg-[#9a203e] cursor-pointer flex items-center gap-3 border-b border-[#1c1516] last:border-0 shrink-0">
               <img :src="song.album.images[0]?.url" class="w-10 h-10 rounded" alt="art" />
               <div>
                 <p class="font-bold text-sm">{{ song.name }}</p>
                 <p class="text-xs text-gray-400">{{ song.artists[0].name }}</p>
               </div>
+            </div>
+
+            <div class="sticky bottom-0 bg-[#2b2122] border-t border-[#9a203e]/30 p-2 flex justify-end">
+              <a
+                href="https://www.deezer.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity cursor-pointer group"
+                title="Search powered by Deezer">
+                <span class="text-[9px] text-gray-400 group-hover:text-gray-200">Search results by</span>
+                <img
+                  src="https://cdn.brandfetch.io/idEUKgCNtu/theme/light/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+                  class="h-3 w-auto grayscale group-hover:grayscale-0 transition-all"
+                  alt="Deezer" />
+              </a>
             </div>
           </div>
         </div>

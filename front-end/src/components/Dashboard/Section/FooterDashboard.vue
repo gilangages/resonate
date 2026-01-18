@@ -10,6 +10,19 @@
         <span class="text-[#9a203e] font-medium ml-1">Resonate</span>
       </div>
 
+      <a
+        href="https://www.deezer.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity duration-300 select-none cursor-pointer"
+        title="Visit Deezer.com">
+        <span class="text-[9px] uppercase tracking-widest text-[#e5e5e5]/60">Music by</span>
+        <img
+          src="https://cdn.brandfetch.io/idEUKgCNtu/theme/light/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+          alt="Deezer"
+          class="h-3 w-auto grayscale hover:grayscale-0 transition-all" />
+      </a>
+
       <router-link
         to="/about"
         class="text-[#e5e5e5]/40 hover:text-[#9a203e] text-[10px] font-medium transition-colors duration-300 md:py-2">

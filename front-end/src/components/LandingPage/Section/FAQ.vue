@@ -45,6 +45,18 @@ const faqs = ref([
     open: false,
   },
   {
+    question: "Kenapa lagu yang saya cari tidak ditemukan?",
+    answer:
+      "Koleksi lagu di Resonate terhubung langsung secara <em>real-time</em> dengan database <strong>Deezer</strong>. Jika lagu favoritmu tidak muncul, kemungkinan besar lagu tersebut memang belum tersedia di katalog mereka. Hal ini di luar kendali kami, mohon pengertiannya ya!",
+    open: false,
+  },
+  {
+    question: "Kenapa menggunakan Deezer, bukan Spotify?",
+    answer:
+      "Kami mengerti bahwa Spotify adalah platform favorit banyak orang. Namun saat ini, akses integrasi baru sedang <strong>ditangguhkan sementara</strong> oleh pihak Spotify untuk pemeliharaan sistem. <br><br>Agar fitur preview lagu tetap berjalan lancar, saat ini kami menggunakan Deezer. Tenang saja! Jika akses Spotify sudah dibuka kembali, kami berencana untuk <strong>mendukung kedua platform sekaligus</strong> agar pencarian musikmu makin maksimal dan tanpa batas.",
+    open: false,
+  },
+  {
     question: "Akun saya dibatasi/banned, apa solusinya?", // FAQ PENTING (Fitur Appeal)
     answer:
       "Kami menindak tegas pelanggaran komunitas. Namun jika kamu merasa sanksi ini keliru, kamu bisa mengajukan <strong>Banding (Appeal)</strong> langsung lewat aplikasi. Tim kami akan meninjau ulang status akunmu.",
