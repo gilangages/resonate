@@ -607,13 +607,15 @@ onMounted(async () => {
                   :class="selectedTheme.gradient"></div>
                 <div class="relative z-10 w-full flex flex-col items-center">
                   <div
-                    class="w-[160px] h-[160px] rounded-full bg-[#111] border-4 border-[#1c1c1c] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
+                    class="w-[160px] h-[160px] rounded-full bg-[#111] border-4 border-[#1c1516] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
                     :class="[isVinylSpinning ? 'animate-spin-slow' : '', selectedTheme.shadow]">
+                    <div
+                      class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
                     <img
                       v-if="selectedNote?.music_album_image"
                       :src="getImageUrl(selectedNote?.music_album_image, selectedNote?.id + '-album')"
                       crossorigin="anonymous"
-                      class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
+                      class="w-[80px] h-[80px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                   </div>
                   <h2 class="text-xl font-bold text-white text-center leading-tight px-4">
                     {{ selectedNote?.music_track_name }}

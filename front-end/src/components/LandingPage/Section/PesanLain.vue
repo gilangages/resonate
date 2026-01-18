@@ -344,7 +344,7 @@ onMounted(async () => {
                     class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
                   <img
                     :src="selectedNote?.music_album_image"
-                    class="w-[65px] h-[65px] rounded-full object-cover border-2 border-[#111] relative z-10" />
+                    class="w-[80px] h-[80px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                 </div>
 
                 <h2 class="text-xl font-bold text-white text-center leading-tight">

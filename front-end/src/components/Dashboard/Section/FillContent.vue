@@ -583,7 +583,7 @@ defineExpose({
                       class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
                     <img
                       :src="selectedNote?.music_album_image"
-                      class="w-[60px] h-[60px] rounded-full object-cover border-2 border-[#111] relative z-10" />
+                      class="w-[80px] h-[80px] rounded-full object-cover border-2 border-[#111] relative z-10" />
                   </div>
 
                   <h2 class="text-2xl font-bold text-white text-center leading-tight px-4">
