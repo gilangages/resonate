@@ -45,6 +45,12 @@ const faqs = ref([
     open: false,
   },
   {
+    question: "Kenapa lagu hanya berputar selama 30 detik?",
+    answer:
+      "Ini adalah standar internasional untuk <strong>Audio Preview</strong> yang diizinkan oleh label musik secara gratis. Karena Resonate bukan aplikasi streaming berbayar (seperti Spotify/Deezer Premium), kami hanya diperbolehkan memutar cuplikan 30 detik agar tetap menghargai hak cipta musisi.",
+    open: false,
+  },
+  {
     question: "Kenapa lagu yang saya cari tidak ditemukan?",
     answer:
       "Koleksi lagu di Resonate terhubung langsung secara <em>real-time</em> dengan database <strong>Deezer</strong>. Jika lagu favoritmu tidak muncul, kemungkinan besar lagu tersebut memang belum tersedia di katalog mereka. Hal ini di luar kendali kami, mohon pengertiannya ya!",
