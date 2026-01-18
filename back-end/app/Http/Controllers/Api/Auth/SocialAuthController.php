@@ -4,79 +4,81 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
 {
-    // 1. Mengarahkan user ke halaman login Google
     public function redirectToGoogle()
     {
         return Socialite::driver('google')->stateless()->redirect();
     }
-
-    // 2. Menerima balasan dari Google
-    // ... namespace dan use imports tetap sama ...
 
     public function handleGoogleCallback()
     {
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
 
-            // Proses Avatar dari Google (High Res)
+            // 1. Ambil Foto Resolusi Tinggi dari Google
             $googleAvatar = $googleUser->getAvatar();
             if ($googleAvatar) {
                 $googleAvatar = preg_replace('/=s\d+(-c)?$/', '=s1024', $googleAvatar);
             }
 
-            $user = User::where('google_id', $googleUser->getId())
-                ->orWhere('email', $googleUser->getEmail())
-                ->first();
+            // Cari User
+            $user = User::where('email', $googleUser->getEmail())->first();
 
-            // 1. CEK STATUS BANNED
+            // 2. Cek Status Banned (Fitur Lama Tetap Ada)
             if ($user && $user->is_banned) {
                 $message = "Akun Anda telah dibekukan oleh Admin.";
                 return redirect(env('FRONTEND_URL') . "/login?status=banned&email={$user->email}&message=" . urlencode($message));
             }
 
-            if (!$user) {
-                // CREATE USER BARU
-                $user = User::create([
-                    'name' => $googleUser->getName(),
-                    'email' => $googleUser->getEmail(),
-                    'google_id' => $googleUser->getId(),
-                    'avatar' => $googleAvatar, // User baru pasti pakai foto Google
-                    'password' => null,
-                ]);
-            } else {
-                // UPDATE USER LAMA (Sinkronisasi Data)
+            if ($user) {
+                // --- LOGIKA PINTAR (SMART SYNC) ---
 
                 $updateData = [
                     'google_id' => $googleUser->getId(),
                 ];
 
-                // LOGIC PENTING:
-                // Cek apakah avatar user saat ini adalah URL (dari Google/eksternal) atau File Lokal?
-                // Jika avatar saat ini adalah URL valid (atau null), kita update dengan avatar Google yang baru.
-                // Jika avatar saat ini TIDAK valid URL (berarti path file lokal 'avatars/...'), JANGAN ditimpa.
+                // Cek: Apakah foto profil user saat ini berasal dari Cloudinary?
+                // (Kita asumsikan URL dari Cloudinary pasti mengandung teks 'cloudinary')
+                $isCustomPhoto = $user->avatar && str_contains($user->avatar, 'cloudinary');
 
-                $currentAvatarIsUrl = filter_var($user->avatar, FILTER_VALIDATE_URL);
-                $currentAvatarIsNull = is_null($user->avatar);
-
-                if ($currentAvatarIsUrl || $currentAvatarIsNull) {
+                // JIKA BUKAN foto Cloudinary (berarti masih foto Google lama atau kosong),
+                // MAKA: Update dengan foto Google terbaru biar sinkron.
+                if (!$isCustomPhoto) {
                     $updateData['avatar'] = $googleAvatar;
                 }
-                // Else: User punya foto lokal, jangan masukkan 'avatar' ke $updateData
+
+                // Kalau $isCustomPhoto = true, kita DIAMKAN saja kolom 'avatar'.
+                // Foto Cloudinary kamu aman, tidak akan tertimpa.
 
                 $user->update($updateData);
+
+            } else {
+                // --- REGISTER (USER BARU) ---
+                // User baru WAJIB pakai foto Google sebagai modal awal
+
+                $user = User::create([
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleAvatar,
+                    'password' => Hash::make(Str::random(24)),
+                    'role' => 'user',
+                    'email_verified_at' => now(),
+                ]);
             }
 
+            // Buat Token & Redirect
             $token = $user->createToken('auth_token')->plainTextToken;
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
 
-            return redirect("{$frontendUrl}/auth/callback?token={$token}&name={$user->name}");
+            return redirect("{$frontendUrl}/auth/callback?token={$token}&name=" . urlencode($user->name));
 
         } catch (\Exception $e) {
-            // Log::error($e->getMessage());
             return redirect(env('FRONTEND_URL') . '/login?error=Gagal login dengan Google');
         }
     }
