@@ -338,7 +338,7 @@ onMounted(async () => {
 
               <div class="relative z-10 w-full flex flex-col items-center">
                 <div
-                  class="w-[160px] h-[160px] rounded-full bg-[#111] border-4 border-[#1c1c1c] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
+                  class="w-[160px] h-[160px] rounded-full bg-[#111] border-4 border-[#1c1516] flex items-center justify-center relative mb-5 transition-transform duration-[8s] ease-linear"
                   :class="[isVinylSpinning ? 'animate-spin-slow' : '', selectedTheme.shadow]">
                   <div
                     class="absolute inset-0 rounded-full border-[2px] border-[#222] opacity-50 transform scale-90"></div>
