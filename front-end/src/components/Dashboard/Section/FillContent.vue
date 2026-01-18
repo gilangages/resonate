@@ -612,14 +612,10 @@ defineExpose({
                     target="_blank"
                     :class="selectedTheme.modal_btn"
                     class="flex items-center gap-2 text-white px-5 py-2.5 rounded-full text-xs font-bold transition-transform hover:scale-105 no-underline decoration-0 group">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="currentColor">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
+                    <img
+                      src="https://cdn.brandfetch.io/idEUKgCNtu/theme/dark/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+                      alt="Deezer"
+                      class="w-4 h-4 object-contain filter brightness-0 invert" />
                     <span>Putar Lagu Penuh</span>
                   </a>
                 </div>
