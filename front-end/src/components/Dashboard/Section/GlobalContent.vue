@@ -795,17 +795,32 @@ onMounted(async () => {
 
                       <div
                         v-if="replySearchResults.length > 0"
-                        class="absolute z-50 left-0 right-0 top-full mt-1 bg-[#1c1516] border border-white/10 rounded-lg max-h-40 overflow-y-auto shadow-xl custom-scrollbar">
+                        class="absolute z-50 left-0 right-0 top-full mt-1 bg-[#1c1516] border border-white/10 rounded-lg max-h-48 overflow-y-auto shadow-xl custom-scrollbar flex flex-col">
                         <div
                           v-for="song in replySearchResults"
                           :key="song.id"
                           @click="selectSongForReply(song)"
-                          class="flex items-center gap-3 p-2 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0">
+                          class="flex items-center gap-3 p-2 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0 shrink-0">
                           <img :src="song.album.images[0]?.url" class="w-8 h-8 rounded" />
                           <div class="min-w-0">
                             <p class="text-xs font-bold text-white truncate">{{ song.name }}</p>
-                            <p class="text-[10px] text-white/50 truncate">{{ song.artists[0].name }}</p>
+                            <p class="text-xs text-white/50 truncate">{{ song.artists[0].name }}</p>
                           </div>
+                        </div>
+
+                        <div class="sticky bottom-0 bg-[#1c1516] border-t border-white/10 p-1.5 flex justify-end">
+                          <a
+                            href="https://www.deezer.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity cursor-pointer group"
+                            title="Search powered by Deezer">
+                            <span class="text-[8px] text-white/40 group-hover:text-white/60">Search by</span>
+                            <img
+                              src="https://cdn.brandfetch.io/idEUKgCNtu/theme/light/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+                              class="h-2.5 w-auto grayscale group-hover:grayscale-0 transition-all"
+                              alt="Deezer" />
+                          </a>
                         </div>
                       </div>
                     </div>
