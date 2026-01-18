@@ -67,7 +67,7 @@ const getThemeLabel = (themeId) => {
     </div>
 
     <div class="flex gap-3 w-full md:w-auto items-center relative z-40">
-      <div class="relative w-full md:w-auto">
+      <div class="relative w-auto">
         <button
           @click="
             showThemeDropdown = !showThemeDropdown;
@@ -105,7 +105,7 @@ const getThemeLabel = (themeId) => {
         <Transition name="fade">
           <div
             v-if="showThemeDropdown"
-            class="absolute top-full mt-2 right-0 w-full md:w-[200px] bg-[#1c1516] border border-[#2c2021] rounded-lg shadow-xl overflow-hidden z-50 flex flex-col max-h-[400px] overflow-y-auto custom-scrollbar">
+            class="absolute top-full mt-2 right-0 md:right-0 left-0 md:left-auto w-[200px] bg-[#1c1516] border border-[#2c2021] rounded-lg shadow-xl overflow-hidden z-50 flex flex-col max-h-[400px] overflow-y-auto custom-scrollbar">
             <div class="px-4 py-2 text-[10px] text-[#666] font-bold uppercase tracking-wider bg-[#150f10]">
               Pilih Suasana
             </div>
@@ -137,14 +137,14 @@ const getThemeLabel = (themeId) => {
           @click="showThemeDropdown = false"></div>
       </div>
 
-      <div class="relative w-full md:w-auto min-w-[140px]">
+      <div class="relative flex-1 md:flex-none md:w-auto min-w-0 md:min-w-[140px]">
         <button
           @click="
             showSortDropdown = !showSortDropdown;
             showThemeDropdown = false;
           "
           class="w-full bg-[#1c1516] text-[#e5e5e5] text-xs font-bold uppercase tracking-wider border border-[#2c2021] rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#9a203e] cursor-pointer flex items-center justify-center gap-2 hover:bg-[#251a1c] transition-colors">
-          <span>{{ sortLabel[sortBy] || "TERBARU" }}</span>
+          <span class="truncate">{{ sortLabel[sortBy] || "TERBARU" }}</span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="14"
@@ -155,7 +155,7 @@ const getThemeLabel = (themeId) => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="transition-transform duration-200"
+            class="transition-transform duration-200 flex-shrink-0"
             :class="showSortDropdown ? 'rotate-180' : 'rotate-0'">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
@@ -194,7 +194,9 @@ const getThemeLabel = (themeId) => {
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .fade-enter-from,
 .fade-leave-to {
