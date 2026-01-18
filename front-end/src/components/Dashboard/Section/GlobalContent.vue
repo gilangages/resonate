@@ -815,7 +815,7 @@ onMounted(async () => {
                             rel="noopener noreferrer"
                             class="flex items-center gap-1 opacity-50 hover:opacity-100 transition-opacity cursor-pointer group"
                             title="Search powered by Deezer">
-                            <span class="text-[8px] text-white/40 group-hover:text-white/60">Search by</span>
+                            <span class="text-[8px] text-white/40 group-hover:text-white/60">Search results by</span>
                             <img
                               src="https://cdn.brandfetch.io/idEUKgCNtu/theme/light/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B"
                               class="h-2.5 w-auto grayscale group-hover:grayscale-0 transition-all"
